@@ -74,7 +74,7 @@ function Home() {
 	return (
 		<StyledApp>
 			<HeaderContainer>
-				<Logo src={VibeChessLogo} alt="VibeChess Logo" />
+				<Logo src={VibeChessLogo} alt="VibeChess Logo" loading="lazy" />
 				<H1>VibeChess</H1>
 			</HeaderContainer>
 			<ButtonContainer>
@@ -106,15 +106,25 @@ function Home() {
 					style={{ backgroundColor: "#4c6663" }}
 					onClick={() => alert("SETTINGS")}
 				>
-					SETTINGS
+					OPTIONS
 				</BoxButton>
 			</ButtonContainer>
 			<CircleButtonContainer>
-				<CircleButton onClick={() => alert("Circle Button 1")}>1</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 2")}>2</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 3")}>3</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 1")}>4</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 2")}>5</CircleButton>
+				<CircleButton onClick={() => alert("Circle Button 1")}>
+					FAQ
+				</CircleButton>
+				<CircleButton onClick={() => alert("Circle Button 2")}>
+					GitHub
+				</CircleButton>
+				<CircleButton onClick={() => alert("Circle Button 3")}>
+					Coffee
+				</CircleButton>
+				<CircleButton onClick={() => alert("Circle Button 4")}>
+					Theme Toggle
+				</CircleButton>
+				<CircleButton onClick={() => alert("Circle Button 5")}>
+					Music
+				</CircleButton>
 			</CircleButtonContainer>
 		</StyledApp>
 	);
