@@ -1,11 +1,12 @@
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, lazy } from "react";
 import Loading from "./components/Loading";
-import WelcomeScreen from "./components/WelcomeScreen";
 import Menu from "./components/Menu";
 import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+
+const WelcomeScreen = lazy(() => import("./components/WelcomeScreen"));
 
 const darkTheme = createTheme({
 	palette: {
@@ -57,26 +58,3 @@ const App = () => {
 };
 
 export default App;
-
-// const App = () => {
-// 	const [username, setUsername] = useState(
-// 		window.localStorage.getItem("username")
-// 	);
-
-// 	const setUsernameCallback = (newUsername) => {
-// 		setUsername(newUsername);
-// 	};
-
-// 	return (
-// 		<>
-// 			<Suspense fallback={<Loading />}>
-// 				{!username ? (
-// 					<WelcomeScreen setUsernameCallback={setUsernameCallback} />
-// 				) : (
-// 					<Menu />
-// 				)}
-// 			</Suspense>
-// 			<ToastContainer />
-// 		</>
-// 	);
-// };

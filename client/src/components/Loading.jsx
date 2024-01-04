@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled, { keyframes } from "styled-components";
 
-const SpinnerContainer = styled.div`
+const Container = styled.div`
 	background-color: #101010;
 	display: flex;
 	align-items: center;
@@ -10,22 +10,12 @@ const SpinnerContainer = styled.div`
 	height: 100vh;
 `;
 
-const rotateAnimation = keyframes`
-  20% {
-    transform: rotate(90deg);
-  }
-  40% {
-    transform: rotate(180deg);
-  }
-  60% {
-    transform: rotate(270deg);
-  }
-  80% {
-    transform: rotate(360deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+const Animation = keyframes`
+  20% { transform: rotate(90deg); }
+  40% { transform: rotate(180deg); }
+  60% { transform: rotate(270deg); }
+  80% { transform: rotate(360deg); }
+  100% { transform: rotate(360deg); }
 `;
 
 const Spinner = styled.div`
@@ -44,16 +34,14 @@ const Spinner = styled.div`
 		var(--light-clr) 270deg,
 		var(--light-clr) 360deg
 	);
-	animation: ${rotateAnimation} 5s infinite;
+	animation: ${Animation} 5s infinite;
 `;
 
-const Loading = ({ size }) => {
-	return (
-		<SpinnerContainer>
-			<Spinner size={size} />
-		</SpinnerContainer>
-	);
-};
+const Loading = ({ size }) => (
+	<Container>
+		<Spinner size={size} />
+	</Container>
+);
 
 Loading.propTypes = {
 	size: PropTypes.string,

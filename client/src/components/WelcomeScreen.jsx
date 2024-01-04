@@ -9,15 +9,21 @@ import {
 } from "@mui/material";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { toast } from "react-toastify";
-import ReactFlagsSelect, { Ph } from "react-flags-select";
+import { CircleFlag } from "react-circle-flags";
 import { generateRandomUsername } from "../utils/randomName";
-
 import VibeChessLogo from "../icons/vibechess.svg";
+import FlagSelectorModal from "./FlagSelectorModal";
 
-const WelcomeScreen = ({ setUsernameCallback }) => {
+const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 	const [username, setUsername] = useState("");
 	const [error, setError] = useState(null);
-	const [selectedFlag, setSelectedFlag] = useState("PH");
+	const [selectedFlag, setSelectedFlag] = useState("ph");
+	const [isFlagModalOpen, setFlagModalOpen] = useState(false);
+
+	const handleFlagSelect = (code) => {
+		setSelectedFlag(code);
+		setFlagModalOpen(false);
+	};
 
 	const handleSubmit = () => {
 		let newUsername = username || generateRandomUsername();
@@ -28,6 +34,7 @@ const WelcomeScreen = ({ setUsernameCallback }) => {
 		}
 
 		setUsernameCallback(newUsername);
+		setFlagCallback(selectedFlag);
 		window.localStorage.setItem("username", newUsername);
 		window.localStorage.setItem("selectedFlag", selectedFlag);
 
@@ -42,6 +49,8 @@ const WelcomeScreen = ({ setUsernameCallback }) => {
 			icon: "👋🏼",
 			style: { background: "#ce1126" },
 		});
+
+		onSubmit();
 	};
 
 	return (
@@ -56,6 +65,7 @@ const WelcomeScreen = ({ setUsernameCallback }) => {
 			color="white"
 		>
 			<img
+				loading="lazy"
 				src={VibeChessLogo}
 				alt="VibeChess Logo"
 				style={{ width: "100px", marginBottom: "20px" }}
@@ -68,7 +78,17 @@ const WelcomeScreen = ({ setUsernameCallback }) => {
 			>
 				Welcome to VibeChess
 			</Typography>
-			<Box display="flex" width={{ xs: "auto", md: "30%", lg: "20%" }}>
+			<Box
+				display="flex"
+				width={{ xs: "auto", md: "32%", lg: "22%" }}
+				alignItems="center"
+			>
+				<IconButton
+					onClick={() => setFlagModalOpen(true)}
+					style={{ marginRight: "0px", borderRadius: "100%" }}
+				>
+					<CircleFlag countryCode={selectedFlag} height="40" />
+				</IconButton>
 				<TextField
 					onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
 					value={username}
@@ -80,38 +100,17 @@ const WelcomeScreen = ({ setUsernameCallback }) => {
 					error={error}
 					helperText={error}
 					autoComplete="off"
-					placeholder="What's your name?"
+					label="What's your name?"
 					inputProps={{ maxLength: 14 }}
+					InputLabelProps={{
+						sx: {
+							color: "#a6a6a6",
+							"&.Mui-focused": {
+								color: "#fff",
+							},
+						},
+					}}
 					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<ReactFlagsSelect
-									defaultCountry="PH"
-									selected={selectedFlag}
-									onSelect={(code) => setSelectedFlag(code)}
-									placeholder={<Ph />}
-									countries={[
-										"PH",
-										"US",
-										"IN",
-										"UA",
-										"FR",
-										"GB",
-										"AZ",
-										"RU",
-										"DE",
-										"ES",
-									]}
-									showSelectedLabel={false}
-									showOptionLabel={false}
-									showSecondarySelectedLabel={false}
-									showSecondaryOptionLabel={false}
-									alignOptionsToRight
-									selectedSize={21}
-									optionsSize={21}
-								/>
-							</InputAdornment>
-						),
 						endAdornment: (
 							<InputAdornment position="end">
 								<IconButton
@@ -137,12 +136,19 @@ const WelcomeScreen = ({ setUsernameCallback }) => {
 					}}
 				/>
 			</Box>
+			<FlagSelectorModal
+				open={isFlagModalOpen}
+				onClose={() => setFlagModalOpen(false)}
+				onSelect={handleFlagSelect}
+			/>
 		</Box>
 	);
 };
 
 WelcomeScreen.propTypes = {
 	setUsernameCallback: PropTypes.func.isRequired,
+	setFlagCallback: PropTypes.func.isRequired,
+	onSubmit: PropTypes.func.isRequired,
 };
 
 export default WelcomeScreen;
