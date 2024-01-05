@@ -1,133 +1,333 @@
 import React from "react";
-import styled from "styled-components";
-import VibeChessLogo from "../icons/vibechess.svg";
+import {
+	Box,
+	Button,
+	Container,
+	IconButton,
+	Typography,
+	TextField,
+	InputAdornment,
+	Slide,
+	Zoom,
+} from "@mui/material";
+import {
+	PassNPlayIcon,
+	MatchmakingIcon,
+	PlayWithFriendsIcon,
+	VersusBotIcon,
+	SettingsIcon,
+	VibeChessLogo,
+	styles,
+} from "../styles/styles";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import QuizIcon from "@mui/icons-material/Quiz";
+import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import PropTypes from "prop-types";
 
-const HeaderContainer = styled.div`
-	display: flex;
-	align-items: center;
-	flex-direction: column;
-	margin-bottom: 20px;
-`;
+const ActionButton = React.memo(
+	({ onClick, icon, label, backgroundColor, description }) => (
+		<Slide direction="up" in={true} mountOnEnter unmountOnExit>
+			<Button
+				onClick={onClick}
+				variant="contained"
+				sx={{
+					...styles.commonButtonStyles,
+					backgroundColor,
+					position: "relative",
+					overflow: "hidden",
+					"&:hover": {
+						"& img": { filter: "brightness(0%)" },
+						"& .description": {
+							position: "relative",
+							visibility: "visible",
+							transform: "translateY(-10px)",
+							transition: "transform 0.5s ease, opacity 0.5s ease",
+							opacity: 1,
+						},
+						"& .buttonContent": {
+							transform: "translateY(-20px)",
+							transition: "transform 0.5s ease",
+						},
+					},
+					"&.MuiButton-root:hover": { bgcolor: "white", color: "black" },
+					".MuiTouchRipple-child": {
+						backgroundColor: "#ce1126",
+					},
+				}}
+			>
+				<Box
+					className="buttonContent"
+					sx={{
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						transition: "transform 0.5s ease",
+					}}
+				>
+					<Typography
+						variant="body2"
+						className="empty-space"
+						sx={{
+							visibility: "hidden",
+						}}
+					>
+						{description}
+					</Typography>
+					<img src={icon} alt="Icon" style={styles.iconStyles} />
+					<Typography variant="h5" sx={styles.buttonTextStyles}>
+						{label}
+					</Typography>
+					<Typography
+						variant="body2"
+						className="description"
+						sx={{
+							top: "100%",
+							left: "0",
+							width: "100%",
+							fontSize: 12,
+							visibility: "hidden",
+							transform: "translateY(0)",
+							mt: "15px",
+							opacity: 0,
+						}}
+					>
+						{description}
+					</Typography>
+				</Box>
+			</Button>
+		</Slide>
+	)
+);
+ActionButton.displayName = "ActionButton";
 
-const Logo = styled.img`
-	width: 8%;
-	height: auto;
-	margin-bottom: 10px;
-`;
+ActionButton.propTypes = {
+	onClick: PropTypes.func.isRequired,
+	icon: PropTypes.string.isRequired,
+	label: PropTypes.string.isRequired,
+	backgroundColor: PropTypes.string.isRequired,
+	description: PropTypes.string.isRequired,
+};
 
-const H1 = styled.h1`
-	font-size: 3rem;
-	font-weight: 600;
-	color: white;
-	text-align: center;
-`;
-
-const ButtonContainer = styled.div`
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	margin-top: 20px;
-`;
-
-const CircleButtonContainer = styled.div`
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	margin-top: 20px;
-`;
-
-const CircleButton = styled.button`
-	width: 7.1vh;
-	height: 7.1vh;
-	border-radius: 50%;
-	background-color: #fff;
-	margin: 10px;
-	border: none;
-	cursor: pointer;
-`;
-
-const StyledApp = styled.div`
-	background-color: #101010;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	height: 100vh;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-`;
-
-const BoxButton = styled.button`
-	color: #fff;
-	font-size: 1.4rem;
-	width: 30vh;
-	height: 33.5vh;
-	font-weight: 500;
-	border: none;
-	border-radius: 7px;
-	margin: 10px;
-	cursor: pointer;
-`;
-
-function Home() {
+function Menu() {
 	return (
-		<StyledApp>
-			<HeaderContainer>
-				<Logo src={VibeChessLogo} alt="VibeChess Logo" loading="lazy" />
-				<H1>VibeChess</H1>
-			</HeaderContainer>
-			<ButtonContainer>
-				<BoxButton
-					style={{ backgroundColor: "#d264b6" }}
+		<Box
+			sx={{
+				backgroundColor: "#101010",
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				justifyContent: "center",
+				height: "100vh",
+				margin: 0,
+				padding: 0,
+				overflow: "hidden",
+			}}
+		>
+			<Container
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					flexDirection: "column",
+					marginBottom: "20px",
+				}}
+			>
+				<Zoom in={true}>
+					<img
+						src={VibeChessLogo}
+						alt="VibeChess Logo"
+						style={{ width: "120px", height: "auto", marginBottom: "10px" }}
+					/>
+				</Zoom>
+				<Zoom in={true}>
+					<Typography variant="h2" color="white" textAlign="center">
+						<span style={{ color: "#ce1126" }}>Vibe</span>Chess
+					</Typography>
+				</Zoom>
+			</Container>
+
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "row",
+					alignItems: "center",
+					marginTop: "5px",
+					"&.MuiButton-root:hover": { bgcolor: "white", color: "black" },
+				}}
+			>
+				{/* Main Buttons */}
+				<ActionButton
 					onClick={() => alert("PASS AND PLAY")}
-				>
-					PASS AND PLAY
-				</BoxButton>
-				<BoxButton
-					style={{ backgroundColor: "#2176ff" }}
+					icon={PassNPlayIcon}
+					label="PASS AND PLAY"
+					backgroundColor="#d264b6"
+					description="Practice locally in a solo game or pass-and-play with friends."
+				/>
+				<ActionButton
 					onClick={() => alert("MATCHMAKING")}
+					icon={MatchmakingIcon}
+					label="MATCHMAKING"
+					backgroundColor="#2176ff"
+					description="Search for an opponent through random matchmaking."
+				/>
+
+				<Box
+					style={{
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+					}}
 				>
-					MATCHMAKING
-				</BoxButton>
-				<BoxButton
-					style={{ backgroundColor: "#ce1126" }}
-					onClick={() => alert("PLAY WITH FRIEND")}
-				>
-					PLAY WITH FRIEND
-				</BoxButton>
-				<BoxButton
-					style={{ backgroundColor: "#fb8b24" }}
+					<ActionButton
+						onClick={() => alert("PLAY WITH FRIEND")}
+						icon={PlayWithFriendsIcon}
+						label="PLAY WITH FRIENDS"
+						backgroundColor="#ce1126"
+						description="Create a room and invite your friend for a multiplayer match."
+					/>
+
+					<Slide direction="up" in={true} mountOnEnter unmountOnExit>
+						<TextField
+							label="Room Code"
+							variant="outlined"
+							color="primary"
+							sx={{ width: "30vh", marginBottom: "10px" }}
+							InputProps={{
+								endAdornment: (
+									<InputAdornment position="end">
+										<IconButton
+											sx={{
+												color: "#a6a6a6",
+												"&:hover, &:focus": { color: "#ce1126" },
+											}}
+											disabled={false}
+											onClick={null}
+											edge="end"
+										>
+											<ArrowIcon />
+										</IconButton>
+									</InputAdornment>
+								),
+							}}
+						/>
+					</Slide>
+				</Box>
+
+				<ActionButton
 					onClick={() => alert("VERSUS BOT")}
-				>
-					VERSUS BOT
-				</BoxButton>
-				<BoxButton
-					style={{ backgroundColor: "#4c6663" }}
+					icon={VersusBotIcon}
+					label="VERSUS BOT"
+					backgroundColor="#fb8b24"
+					description="Test your skills against an AI opponent."
+				/>
+
+				<ActionButton
 					onClick={() => alert("SETTINGS")}
+					icon={SettingsIcon}
+					label="OPTIONS"
+					backgroundColor="#4c6663"
+					description="Adjust board theme, sound settings, and chat preferences."
+				/>
+			</Box>
+
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "row",
+					alignItems: "center",
+					marginTop: "25px",
+				}}
+			>
+				{/* Icon Buttons */}
+				<Slide
+					direction="up"
+					in={true}
+					style={{ transitionDelay: "100ms" }}
+					mountOnEnter
+					unmountOnExit
 				>
-					OPTIONS
-				</BoxButton>
-			</ButtonContainer>
-			<CircleButtonContainer>
-				<CircleButton onClick={() => alert("Circle Button 1")}>
-					FAQ
-				</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 2")}>
-					GitHub
-				</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 3")}>
-					Coffee
-				</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 4")}>
-					Theme Toggle
-				</CircleButton>
-				<CircleButton onClick={() => alert("Circle Button 5")}>
-					Music
-				</CircleButton>
-			</CircleButtonContainer>
-		</StyledApp>
+					<IconButton
+						disableRipple
+						onClick={() => alert("Circle Button 1")}
+						style={styles.circleButtonStyle}
+					>
+						<QuizIcon sx={{ color: "#2176ff", fontSize: 30 }} />
+					</IconButton>
+				</Slide>
+
+				<Slide
+					direction="up"
+					in={true}
+					style={{ transitionDelay: "150ms" }}
+					mountOnEnter
+					unmountOnExit
+				>
+					<IconButton
+						disableRipple
+						onClick={() =>
+							window.open(
+								"https://github.com/nathanielseth/VibeChess",
+								"_blank"
+							)
+						}
+						style={styles.circleButtonStyle}
+					>
+						<GitHubIcon sx={{ color: "#ce1126", fontSize: 30 }} />
+					</IconButton>
+				</Slide>
+
+				<Slide
+					direction="up"
+					in={true}
+					style={{ transitionDelay: "200ms" }}
+					mountOnEnter
+					unmountOnExit
+				>
+					<IconButton
+						disableRipple
+						onClick={() => alert("Circle Button 3")}
+						style={styles.circleButtonStyle}
+					>
+						<FreeBreakfastIcon sx={{ color: "#fb8b24", fontSize: 30 }} />
+					</IconButton>
+				</Slide>
+
+				<Slide
+					direction="up"
+					in={true}
+					style={{ transitionDelay: "250ms" }}
+					mountOnEnter
+					unmountOnExit
+				>
+					<IconButton
+						disableRipple
+						onClick={() => alert("Circle Button 4")}
+						style={styles.circleButtonStyle}
+					>
+						<LightModeIcon sx={{ fontSize: 30 }} />
+					</IconButton>
+				</Slide>
+
+				<Slide
+					direction="up"
+					in={true}
+					style={{ transitionDelay: "300ms" }}
+					mountOnEnter
+					unmountOnExit
+				>
+					<IconButton
+						disableRipple
+						onClick={() => alert("Circle Button 5")}
+						style={styles.circleButtonStyle}
+					>
+						<MusicNoteIcon sx={{ fontSize: 30 }} />
+					</IconButton>
+				</Slide>
+			</Box>
+		</Box>
 	);
 }
 
-export default Home;
+export default Menu;
