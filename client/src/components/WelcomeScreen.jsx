@@ -10,7 +10,7 @@ import {
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { toast } from "react-toastify";
 import { CircleFlag } from "react-circle-flags";
-import { generateRandomUsername } from "../utils/randomName";
+import { generateRandomUsername } from "../data/randomName";
 import VibeChessLogo from "../icons/vibechess.svg";
 import FlagSelectorModal from "./FlagSelectorModal";
 
@@ -68,27 +68,21 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 				loading="lazy"
 				src={VibeChessLogo}
 				alt="VibeChess Logo"
-				style={{ width: "100px", marginBottom: "20px" }}
+				style={{ width: "100px", marginBottom: "25px" }}
 			/>
 			<Typography
 				marginBottom={4}
 				textAlign="center"
-				variant="h5"
+				variant="h3"
 				color="inherit"
 			>
-				Welcome to VibeChess
+				<span style={{ color: "#ce1126" }}>Vibe</span>Chess
 			</Typography>
 			<Box
 				display="flex"
 				width={{ xs: "auto", md: "32%", lg: "22%" }}
 				alignItems="center"
 			>
-				<IconButton
-					onClick={() => setFlagModalOpen(true)}
-					style={{ marginRight: "0px", borderRadius: "100%" }}
-				>
-					<CircleFlag countryCode={selectedFlag} height="40" />
-				</IconButton>
 				<TextField
 					onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
 					value={username}
@@ -102,17 +96,22 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 					autoComplete="off"
 					label="What's your name?"
 					inputProps={{ maxLength: 14 }}
-					InputLabelProps={{
-						sx: {
-							color: "#a6a6a6",
-							"&.Mui-focused": {
-								color: "#fff",
-							},
+					variant="outlined"
+					sx={{
+						height: "65px",
+						"& .MuiOutlinedInput-input": {
+							padding: "18px 14px",
 						},
 					}}
 					InputProps={{
 						endAdornment: (
 							<InputAdornment position="end">
+								<IconButton
+									onClick={() => setFlagModalOpen(true)}
+									style={{ borderRadius: "100%" }}
+								>
+									<CircleFlag countryCode={selectedFlag} height="40" />
+								</IconButton>
 								<IconButton
 									sx={{
 										color: "#a6a6a6",
@@ -126,13 +125,6 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 								</IconButton>
 							</InputAdornment>
 						),
-					}}
-					variant="outlined"
-					sx={{
-						"& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-							{
-								borderColor: "#ce1126",
-							},
 					}}
 				/>
 			</Box>
