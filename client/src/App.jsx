@@ -1,10 +1,12 @@
 import React, { Suspense, useState, lazy } from "react";
-import Loading from "./components/Loading";
-import Menu from "./components/Menu";
 import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Loading from "./components/Loading";
+import Menu from "./components/Menu";
+import PassAndPlay from "./components/PassAndPlay";
 
 const WelcomeScreen = lazy(() => import("./components/WelcomeScreen"));
 
@@ -81,20 +83,28 @@ const App = () => {
 	return (
 		<ThemeProvider theme={darkTheme}>
 			<CssBaseline />
-			<>
-				<Suspense fallback={<Loading />}>
-					{!usernameSubmitted || !username ? (
-						<WelcomeScreen
-							setUsernameCallback={setUsernameCallback}
-							setFlagCallback={setFlagCallback}
-							onSubmit={handleUsernameSubmit}
-						/>
-					) : (
-						<Menu username={username} flag={flag} />
-					)}
-				</Suspense>
-				<ToastContainer transition={Slide} />
-			</>
+			<Router>
+				<Routes>
+					<Route
+						path="/"
+						element={
+							<Suspense fallback={<Loading />}>
+								{!usernameSubmitted || !username ? (
+									<WelcomeScreen
+										setUsernameCallback={setUsernameCallback}
+										setFlagCallback={setFlagCallback}
+										onSubmit={handleUsernameSubmit}
+									/>
+								) : (
+									<Menu username={username} flag={flag} />
+								)}
+							</Suspense>
+						}
+					/>
+					<Route path="/pass-and-play" element={<PassAndPlay />} />
+				</Routes>
+			</Router>
+			<ToastContainer transition={Slide} />
 		</ThemeProvider>
 	);
 };

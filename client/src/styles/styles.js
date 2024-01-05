@@ -9,8 +9,8 @@ const styles = {
 	circleButtonStyle: {
 		backgroundColor: "#fff",
 		color: "#000",
-		width: "55px",
-		height: "55px",
+		width: "2.8vw",
+		height: "2.8vw",
 		margin: "8px",
 	},
 	commonButtonStyles: {
@@ -25,7 +25,7 @@ const styles = {
 		textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
 	},
 	iconStyles: {
-		width: "100px",
+		width: "5.3vw",
 		height: "auto",
 		marginBottom: "25px",
 		transition: "filter 0.3s",

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
 	Box,
 	Button,
@@ -21,11 +21,14 @@ import {
 } from "../styles/styles";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import QuizIcon from "@mui/icons-material/Quiz";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
+import { Howl } from "howler";
 
 const ActionButton = React.memo(
 	({ onClick, icon, label, backgroundColor, description }) => (
@@ -112,6 +115,56 @@ ActionButton.propTypes = {
 };
 
 function Menu() {
+	const navigate = useNavigate();
+	const [isMusicMuted, setIsMusicMuted] = useState(() => {
+		return localStorage.getItem("isMusicMuted") === "true" || false;
+	});
+
+	const handlePassAndPlayClick = () => {
+		clickSound.play();
+		navigate("/pass-and-play");
+	};
+
+	const music = useMemo(
+		() =>
+			new Howl({
+				src: ["/sound/music.mp3"],
+				loop: true,
+				volume: 0.5,
+			}),
+		[]
+	);
+
+	const clickSound = useMemo(
+		() =>
+			new Howl({
+				src: ["/sound/click.mp3"],
+				volume: 0.6,
+			}),
+		[]
+	);
+
+	const handleMusicToggle = () => {
+		if (isMusicMuted) {
+			music.play();
+		} else {
+			music.stop();
+		}
+		setIsMusicMuted(!isMusicMuted);
+	};
+
+	useEffect(() => {
+		if (!isMusicMuted) {
+			music.play();
+		} else {
+			music.stop();
+		}
+
+		localStorage.setItem("isMusicMuted", String(isMusicMuted));
+
+		return () => music.stop();
+	}, [isMusicMuted, music]);
+
 	return (
 		<Box
 			sx={{
@@ -159,14 +212,17 @@ function Menu() {
 			>
 				{/* Main Buttons */}
 				<ActionButton
-					onClick={() => alert("PASS AND PLAY")}
+					onClick={handlePassAndPlayClick}
 					icon={PassNPlayIcon}
 					label="PASS AND PLAY"
 					backgroundColor="#d264b6"
 					description="Practice locally in a solo game or pass-and-play with friends."
 				/>
+
 				<ActionButton
-					onClick={() => alert("MATCHMAKING")}
+					onClick={() => {
+						clickSound.play();
+					}}
 					icon={MatchmakingIcon}
 					label="MATCHMAKING"
 					backgroundColor="#2176ff"
@@ -181,7 +237,9 @@ function Menu() {
 					}}
 				>
 					<ActionButton
-						onClick={() => alert("PLAY WITH FRIEND")}
+						onClick={() => {
+							clickSound.play();
+						}}
 						icon={PlayWithFriendsIcon}
 						label="PLAY WITH FRIENDS"
 						backgroundColor="#ce1126"
@@ -216,7 +274,9 @@ function Menu() {
 				</Box>
 
 				<ActionButton
-					onClick={() => alert("VERSUS BOT")}
+					onClick={() => {
+						clickSound.play();
+					}}
 					icon={VersusBotIcon}
 					label="VERSUS BOT"
 					backgroundColor="#fb8b24"
@@ -224,7 +284,9 @@ function Menu() {
 				/>
 
 				<ActionButton
-					onClick={() => alert("SETTINGS")}
+					onClick={() => {
+						clickSound.play();
+					}}
 					icon={SettingsIcon}
 					label="OPTIONS"
 					backgroundColor="#4c6663"
@@ -319,10 +381,14 @@ function Menu() {
 				>
 					<IconButton
 						disableRipple
-						onClick={() => alert("Circle Button 5")}
+						onClick={handleMusicToggle}
 						style={styles.circleButtonStyle}
 					>
-						<MusicNoteIcon sx={{ fontSize: 30 }} />
+						{isMusicMuted ? (
+							<MusicOffRoundedIcon sx={{ fontSize: 30 }} />
+						) : (
+							<MusicNoteRoundedIcon sx={{ fontSize: 30 }} />
+						)}
 					</IconButton>
 				</Slide>
 			</Box>
