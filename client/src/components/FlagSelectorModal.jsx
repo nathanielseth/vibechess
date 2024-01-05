@@ -411,7 +411,7 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						left: "50%",
 						transform: "translate(-50%, -50%)",
 						width: 800,
-						bgcolor: "background.paper",
+						bgcolor: "#1f2123",
 						border: "2px solid #000",
 						boxShadow: 24,
 						p: 4,
