@@ -2,6 +2,11 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Howl } from "howler";
+import { IconButton, Box, Container, Grid } from "@mui/material";
+import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
 
 const moveSound = new Howl({
 	src: ["/sound/move.mp3"],
@@ -18,20 +23,21 @@ const containerStyle = {
 	justifyContent: "center",
 	alignItems: "center",
 	height: "100vh",
-	width: "100vw",
+	flexWrap: "wrap",
 };
 
-const boardWrapper = {
+const trackerBoxStyle = {
 	display: "flex",
 	flexDirection: "column",
 	alignItems: "center",
-};
-
-const buttonStyle = {
-	marginTop: "10px",
-	padding: "5px 10px",
-	fontSize: "16px",
-	cursor: "pointer",
+	backgroundColor: "black",
+	my: 4,
+	marginLeft: "10px",
+	bgcolor: "#1f2123",
+	border: "2px solid #000",
+	height: "100%",
+	width: 500,
+	margin: 0,
 };
 
 const PassAndPlay = () => {
@@ -40,14 +46,16 @@ const PassAndPlay = () => {
 	const [rightClickedSquares, setRightClickedSquares] = useState({});
 	const [optionSquares, setOptionSquares] = useState({});
 	const [moveFrom, setMoveFrom] = useState("");
+	const [history, setHistory] = useState([{ fen: game.fen(), lastMove: null }]);
+	const [currentIndex, setCurrentIndex] = useState(0);
 
-	function safeGameMutate(modify) {
-		setGame((g) => {
-			const update = new Chess(g.fen());
-			modify(update);
-			return update;
-		});
-	}
+	// function safeGameMutate(modify) {
+	// 	setGame((g) => {
+	// 		const update = new Chess(g.fen());
+	// 		modify(update);
+	// 		return update;
+	// 	});
+	// }
 
 	const getMoveOptions = (square) => {
 		const moves = game.moves({
@@ -87,6 +95,10 @@ const PassAndPlay = () => {
 
 		if (move) {
 			setLastMove(move);
+			setHistory((prevHistory) => [
+				...prevHistory,
+				{ fen: gameCopy.fen(), lastMove },
+			]);
 		}
 
 		setOptionSquares({});
@@ -165,52 +177,113 @@ const PassAndPlay = () => {
 		return pieceComponents;
 	}, []);
 
+	const navigateMove = (index) => {
+		setCurrentIndex(index);
+		setGame(new Chess(history[index].fen));
+	};
+
 	return (
-		<div style={containerStyle}>
-			<div style={boardWrapper}>
-				<Chessboard
-					id="StyledBoard"
-					boardOrientation="white"
-					boardWidth={700}
-					position={game.fen()}
-					onPieceDrop={onDrop}
-					onSquareClick={onSquareClick}
-					customBoardStyle={{
-						borderRadius: "4px",
-						boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-					}}
-					customSquareStyles={{
-						...optionSquares,
-						...rightClickedSquares,
-					}}
-					customDarkSquareStyle={{ backgroundColor: "#84828f" }}
-					customLightSquareStyle={{ backgroundColor: "#eeeeee" }}
-					customPieces={customPieces}
-				/>
-				<button
-					style={buttonStyle}
-					onClick={() => {
-						safeGameMutate((game) => {
-							game.reset();
-							setLastMove(null);
-						});
-					}}
+		<Container fixed>
+			<div style={containerStyle}>
+				<Grid
+					container
+					spacing={1}
+					style={{ margin: 0, alignItems: "stretch" }}
 				>
-					reset
-				</button>
-				<button
-					style={buttonStyle}
-					onClick={() => {
-						safeGameMutate((game) => {
-							game.undo();
-							setLastMove(null);
-						});
-					}}
-				>
-					undo
-				</button>
+					{/* Chessboard */}
+					<Grid item xs={8}>
+						<Chessboard
+							id="StyledBoard"
+							boardOrientation="white"
+							boardWidth={700}
+							position={game.fen()}
+							onPieceDrop={onDrop}
+							onSquareClick={onSquareClick}
+							customBoardStyle={{
+								borderRadius: "4px",
+								boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+							}}
+							customSquareStyles={{
+								...optionSquares,
+								...rightClickedSquares,
+							}}
+							customDarkSquareStyle={{ backgroundColor: "#84828f" }}
+							customLightSquareStyle={{ backgroundColor: "#eeeeee" }}
+							customPieces={customPieces}
+						/>
+					</Grid>
+
+					{/* Tracker Box */}
+					<Grid item xs={4}>
+						<Box sx={trackerBoxStyle}>
+							<Box>
+								<IconButton
+									disabled={currentIndex === 0}
+									onClick={() => navigateMove(0)}
+								>
+									<FirstPageRoundedIcon />
+								</IconButton>
+								<IconButton
+									disabled={currentIndex === 0}
+									onClick={() => navigateMove(currentIndex - 1)}
+								>
+									<ChevronLeftRoundedIcon />
+								</IconButton>
+								<IconButton
+									disabled={currentIndex === history.length - 1}
+									onClick={() => navigateMove(currentIndex + 1)}
+								>
+									<ChevronRightRoundedIcon />
+								</IconButton>
+								<IconButton
+									disabled={currentIndex === history.length - 1}
+									onClick={() => navigateMove(history.length - 1)}
+								>
+									<LastPageRoundedIcon />
+								</IconButton>
+							</Box>
+
+							<Box
+								flex="1"
+								display="flex"
+								flexDirection="column"
+								alignItems="center"
+								style={{ overflowY: "auto" }}
+							>
+								{history.map((state, index) => (
+									<div
+										key={index}
+										onClick={() => navigateMove(index)}
+										style={{
+											cursor: "pointer",
+											padding: "5px",
+											border:
+												index === currentIndex ? "2px solid #000" : "none",
+										}}
+									>
+										{state.lastMove
+											? `${state.lastMove.from}-${state.lastMove.to}`
+											: ""}
+									</div>
+								))}
+							</Box>
+
+							<Box
+								display="flex"
+								justifyContent="center"
+								backgroundColor="black"
+								mt={4}
+								sx={{
+									width: "100%",
+									height: 100,
+									bgcolor: "#1f2123",
+								}}
+							></Box>
+						</Box>
+					</Grid>
+				</Grid>
 			</div>
-		</div>
+		</Container>
 	);
 };
 
