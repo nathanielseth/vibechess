@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
+import Navbar from "../common/Navbar";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Howl } from "howler";
-import { IconButton, Box, Container, Grid, Button } from "@mui/material";
+import { Stack, IconButton, Box, Grid, Button } from "@mui/material";
 import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -260,7 +261,14 @@ const PassAndPlay = () => {
 	);
 
 	return (
-		<Container fixed>
+		<Stack
+			direction="column"
+			justifyContent="center"
+			alignItems="center"
+			spacing={-10}
+			minHeight="100vh"
+		>
+			<Navbar title="" />
 			<div style={styles.passAndPlayContainerStyle}>
 				<Grid
 					container
@@ -278,7 +286,7 @@ const PassAndPlay = () => {
 									? "black"
 									: "white"
 							}
-							boardWidth={700}
+							boardWidth={680}
 							position={game.fen()}
 							onPieceDrop={onDrop}
 							onSquareClick={onSquareClick}
@@ -313,13 +321,14 @@ const PassAndPlay = () => {
 								display="flex"
 								justifyContent="flex-start"
 								alignItems="center"
-								mb={2}
 							>
 								<IconButton
 									disabled={currentIndex === 0}
 									onClick={() => navigateMove(0)}
 								>
-									<FirstPageRoundedIcon />
+									<FirstPageRoundedIcon
+										sx={{ fontSize: "1.8rem" }}
+									/>
 								</IconButton>
 								<IconButton
 									disabled={currentIndex === 0}
@@ -327,7 +336,9 @@ const PassAndPlay = () => {
 										navigateMove(currentIndex - 1)
 									}
 								>
-									<ChevronLeftRoundedIcon />
+									<ChevronLeftRoundedIcon
+										sx={{ fontSize: "1.8rem" }}
+									/>
 								</IconButton>
 
 								<IconButton
@@ -338,7 +349,9 @@ const PassAndPlay = () => {
 										navigateMove(currentIndex + 1)
 									}
 								>
-									<ChevronRightRoundedIcon />
+									<ChevronRightRoundedIcon
+										sx={{ fontSize: "1.8rem" }}
+									/>
 								</IconButton>
 								<IconButton
 									disabled={
@@ -348,7 +361,9 @@ const PassAndPlay = () => {
 										navigateMove(history.length - 1)
 									}
 								>
-									<LastPageRoundedIcon />
+									<LastPageRoundedIcon
+										sx={{ fontSize: "1.8rem" }}
+									/>
 								</IconButton>
 							</Box>
 
@@ -360,7 +375,6 @@ const PassAndPlay = () => {
 								alignItems="center"
 								style={{
 									overflowY: "auto",
-									border: "1px solid #000",
 									borderRadius: "4px",
 									padding: "8px",
 									width: "100%",
@@ -373,48 +387,32 @@ const PassAndPlay = () => {
 										const isWhiteMove = index % 2 === 0;
 										const move = state.lastMove;
 
-										return isWhiteMove ? (
-											<React.Fragment key={index}>
-												<Grid item>
-													<span>{moveNumber}.</span>
-												</Grid>
-												<Grid item>
-													<Button
-														variant="outlined"
-														onClick={() =>
-															navigateMove(
-																index + 1
-															)
-														}
-														sx={{
-															minWidth: "48px",
-															...(move && {
-																borderColor:
-																	"#000",
-															}),
-														}}
-													>
-														{move?.san}
-													</Button>
-												</Grid>
-											</React.Fragment>
-										) : (
-											<Grid item key={index}>
+										return (
+											<Grid item key={index} xs={6}>
 												<Button
 													variant="outlined"
 													onClick={() =>
 														navigateMove(index + 1)
 													}
 													sx={{
-														minWidth: "48px",
+														width: "100%",
 														...(move && {
 															borderColor: "#000",
 															backgroundColor:
-																"#000",
-															color: "#fff",
+																isWhiteMove
+																	? "inherit"
+																	: "#000",
+															color: isWhiteMove
+																? "inherit"
+																: "#fff",
 														}),
 													}}
 												>
+													{isWhiteMove && (
+														<span>
+															{moveNumber}.
+														</span>
+													)}{" "}
 													{move?.san}
 												</Button>
 											</Grid>
@@ -445,7 +443,7 @@ const PassAndPlay = () => {
 					</Grid>
 				</Grid>
 			</div>
-		</Container>
+		</Stack>
 	);
 };
 

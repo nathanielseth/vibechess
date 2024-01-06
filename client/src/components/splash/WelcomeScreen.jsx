@@ -93,7 +93,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 					error={error}
 					helperText={error}
 					autoComplete="off"
-					label="What's your name?"
+					label="What should we call you?"
 					inputProps={{ maxLength: 14 }}
 					variant="outlined"
 					sx={{
