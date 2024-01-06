@@ -2,11 +2,12 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Howl } from "howler";
-import { IconButton, Box, Container, Grid } from "@mui/material";
+import { IconButton, Box, Container, Grid, Button } from "@mui/material";
 import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { styles } from "../../styles/styles";
 
 const moveSound = new Howl({
@@ -54,6 +55,12 @@ const PassAndPlay = () => {
 				return false;
 			}
 
+			if (currentIndex !== history.length - 1) {
+				setOptionSquares({});
+				setHighlightedSquares({});
+				return false;
+			}
+
 			const newSquares = {};
 			moves.forEach((move) => {
 				const isCapture = move.flags.includes("c");
@@ -77,7 +84,7 @@ const PassAndPlay = () => {
 			setOptionSquares(newSquares);
 			return true;
 		},
-		[game]
+		[game, currentIndex, history.length]
 	);
 
 	const onDrop = (sourceSquare, targetSquare, piece) => {
@@ -87,6 +94,10 @@ const PassAndPlay = () => {
 			to: targetSquare,
 			promotion: piece[1].toLowerCase() ?? "q",
 		});
+
+		if (currentIndex !== history.length - 1) {
+			return false;
+		}
 
 		if (move) {
 			setLastMove(move);
@@ -106,6 +117,7 @@ const PassAndPlay = () => {
 
 		setGame(gameCopy);
 		setOptionSquares({});
+		setCurrentIndex(history.length);
 		console.log(gameCopy.pgn());
 		return move;
 	};
@@ -135,21 +147,15 @@ const PassAndPlay = () => {
 
 	const onSquareClick = (square) => {
 		setRightClickedSquares({});
-		setMoveFrom("");
-		setOptionSquares({});
 
+		if (currentIndex !== history.length - 1) {
+			return;
+		}
 		if (square === moveFrom) {
 			setMoveFrom("");
 			setOptionSquares({});
 			return;
 		}
-
-		const hasMoveOptions = getMoveOptions(square);
-
-		if (hasMoveOptions) {
-			setMoveFrom(square);
-		}
-
 		if (moveFrom) {
 			const gameCopy = new Chess(game.fen());
 			const move = gameCopy.move({
@@ -160,14 +166,24 @@ const PassAndPlay = () => {
 
 			if (move) {
 				setLastMove(move);
+				setHistory([
+					...history,
+					{ fen: gameCopy.fen(), lastMove: move },
+				]);
 				setHighlightedSquares({
-					[moveFrom]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
-					[square]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
+					[move.from]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
+					[move.to]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
 				});
+				setKingInCheck(isKingInCheck(gameCopy));
+				setCurrentIndex(history.length);
 			}
 
-			setGame(gameCopy);
+			setOptionSquares({});
 			setMoveFrom("");
+			setGame(gameCopy);
+		} else {
+			setMoveFrom(square);
+			getMoveOptions(square);
 		}
 	};
 
@@ -213,10 +229,31 @@ const PassAndPlay = () => {
 		return pieceComponents;
 	}, []);
 
-	const navigateMove = (index) => {
-		setCurrentIndex(index);
-		setGame(new Chess(history[index].fen));
-	};
+	const navigateMove = useCallback(
+		(moveIndex) => {
+			setGame(new Chess(history[moveIndex].fen));
+			setCurrentIndex(moveIndex);
+
+			// Clear move options when navigating
+			setOptionSquares({});
+
+			// If navigating back to the current index, restore the last move's highlights
+			if (moveIndex === history.length - 1 && lastMove) {
+				setHighlightedSquares({
+					[lastMove.from]: {
+						backgroundColor: "rgba(255, 255, 0, 0.4)",
+					},
+					[lastMove.to]: {
+						backgroundColor: "rgba(255, 255, 0, 0.4)",
+					},
+				});
+			} else {
+				// Otherwise, clear highlights
+				setHighlightedSquares({});
+			}
+		},
+		[history, lastMove] // Add lastMove to the dependency array
+	);
 
 	return (
 		<Container fixed>
@@ -258,10 +295,16 @@ const PassAndPlay = () => {
 						/>
 					</Grid>
 
-					{/* Tracker Box */}
+					{/* Board Control Box */}
 					<Grid item xs={4}>
-						<Box sx={styles.trackerBoxStyle}>
-							<Box>
+						<Box sx={styles.boardControlStyle}>
+							{/* Move Controls */}
+							<Box
+								display="flex"
+								justifyContent="flex-start"
+								alignItems="center"
+								mb={2}
+							>
 								<IconButton
 									disabled={currentIndex === 0}
 									onClick={() => navigateMove(0)}
@@ -276,6 +319,7 @@ const PassAndPlay = () => {
 								>
 									<ChevronLeftRoundedIcon />
 								</IconButton>
+
 								<IconButton
 									disabled={
 										currentIndex === history.length - 1
@@ -298,44 +342,91 @@ const PassAndPlay = () => {
 								</IconButton>
 							</Box>
 
+							{/* Moves Box */}
 							<Box
 								flex="1"
 								display="flex"
 								flexDirection="column"
 								alignItems="center"
-								style={{ overflowY: "auto" }}
+								style={{
+									overflowY: "auto",
+									border: "1px solid #000",
+									borderRadius: "4px",
+									padding: "8px",
+									width: "100%",
+								}}
 							>
-								{history.map((state, index) => (
-									<div
-										key={index}
-										onClick={() => navigateMove(index)}
-										style={{
-											cursor: "pointer",
-											padding: "5px",
-											border:
-												index === currentIndex
-													? "2px solid #000"
-													: "none",
-										}}
-									>
-										{state.lastMove
-											? `${state.lastMove.from}-${state.lastMove.to}`
-											: ""}
-									</div>
-								))}
+								<Grid container spacing={1}>
+									{history.slice(1).map((state, index) => {
+										// Calculate the move number based on the index
+										const moveNumber =
+											Math.floor(index / 2) + 1;
+										// Check if the move is white's move by checking if the index is even
+										const isWhiteMove = index % 2 === 0;
+										const move = state.lastMove;
+
+										return isWhiteMove ? (
+											// Display move number and white's move button on the same row
+											<React.Fragment key={index}>
+												<Grid item>
+													<span>{moveNumber}.</span>
+												</Grid>
+												<Grid item>
+													<Button
+														variant="outlined"
+														onClick={() =>
+															navigateMove(
+																index + 1
+															)
+														}
+														sx={{
+															minWidth: "48px",
+															...(move && {
+																borderColor:
+																	"#000",
+															}),
+														}}
+													>
+														{move?.san}
+													</Button>
+												</Grid>
+											</React.Fragment>
+										) : (
+											// Display black's move button on the same row as white's move
+											<Grid item key={index}>
+												<Button
+													variant="outlined"
+													onClick={() =>
+														navigateMove(index + 1)
+													}
+													sx={{
+														minWidth: "48px",
+														...(move && {
+															borderColor: "#000",
+															backgroundColor:
+																"#000",
+															color: "#fff",
+														}),
+													}}
+												>
+													{move?.san}
+												</Button>
+											</Grid>
+										);
+									})}
+								</Grid>
 							</Box>
 
+							{/* Settings Icon Button */}
 							<Box
 								display="flex"
-								justifyContent="center"
-								backgroundColor="black"
-								mt={4}
-								sx={{
-									width: "100%",
-									height: 100,
-									bgcolor: "#1f2123",
-								}}
-							></Box>
+								justifyContent="flex-end"
+								alignItems="flex-end"
+							>
+								<IconButton>
+									<SettingsIcon />
+								</IconButton>
+							</Box>
 						</Box>
 					</Grid>
 				</Grid>

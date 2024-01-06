@@ -7,7 +7,6 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { toast } from "react-toastify";
 import { CircleFlag } from "react-circle-flags";
 import { generateRandomUsername } from "../../data/randomName";
@@ -80,7 +79,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 			</Typography>
 			<Box
 				display="flex"
-				width={{ xs: "auto", md: "32%", lg: "22%" }}
+				width={{ xs: "auto", md: "30%", lg: "20%" }}
 				alignItems="center"
 			>
 				<TextField
@@ -109,24 +108,12 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 								<IconButton
 									onClick={() => setFlagModalOpen(true)}
 									style={{ borderRadius: "100%" }}
+									edge="end"
 								>
 									<CircleFlag
 										countryCode={selectedFlag}
 										height="40"
 									/>
-								</IconButton>
-								<IconButton
-									sx={{
-										color: "#a6a6a6",
-										"&:hover, &:focus": {
-											color: "#ce1126",
-										},
-									}}
-									disabled={false}
-									onClick={handleSubmit}
-									edge="end"
-								>
-									<ArrowIcon />
 								</IconButton>
 							</InputAdornment>
 						),
