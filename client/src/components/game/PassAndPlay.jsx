@@ -11,6 +11,9 @@ import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
 import { styles } from "../../styles/styles";
+import SettingsModal from "../common/SettingsModal";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const moveSound = new Howl({
 	src: ["/sound/move.mp3"],
@@ -37,8 +40,28 @@ const PassAndPlay = () => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [autoFlip, setAutoFlip] = useState(false);
+	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+	const openSettingsModal = () => {
+		setIsSettingsModalOpen(true);
+	};
+
+	const closeSettingsModal = () => {
+		setIsSettingsModalOpen(false);
+	};
+
+	const toastId = React.useRef(null);
 
 	const toggleAutoFlip = () => {
+		if (!autoFlip) {
+			if (!toastId.current) {
+				toastId.current = toast.success("Auto-flip is enabled!", {
+					position: toast.POSITION.TOP_CENTER,
+					autoClose: 2000,
+				});
+			}
+		}
+
 		setAutoFlip(!autoFlip);
 	};
 
@@ -435,10 +458,16 @@ const PassAndPlay = () => {
 								>
 									<LoopRoundedIcon />
 								</IconButton>
-								<IconButton>
+								<IconButton onClick={openSettingsModal}>
 									<SettingsIcon />
 								</IconButton>
 							</Box>
+
+							{/* Settings Modal */}
+							<SettingsModal
+								isOpen={isSettingsModalOpen}
+								onClose={closeSettingsModal}
+							/>
 						</Box>
 					</Grid>
 				</Grid>

@@ -39,14 +39,15 @@ function SettingsModal({ isOpen, onClose }) {
 					sx={{
 						display: "flex",
 						justifyContent: "space-between",
+						alignItems: "center",
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>Board:</Typography>
+					<Typography sx={{ fontSize: 16 }}>Board</Typography>
 					<Select
 						value={selectedBoard}
 						onChange={(e) => setSelectedBoard(e.target.value)}
-						style={{ maxHeight: 38 }}
+						style={{ maxHeight: 38, width: 210 }}
 					>
 						<MenuItem value="calmGrey">Calm Grey</MenuItem>
 						<MenuItem value="vibeRed">Vibe Red</MenuItem>
@@ -66,11 +67,11 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>Pieces:</Typography>
+					<Typography sx={{ fontSize: 16 }}>Pieces</Typography>
 					<Select
 						value={selectedPieces}
 						onChange={(e) => setSelectedPieces(e.target.value)}
-						style={{ maxHeight: 38 }}
+						style={{ maxHeight: 38, width: 210 }}
 					>
 						<MenuItem value="tatiana">Tatiana</MenuItem>
 						<MenuItem value="staunty">Staunty</MenuItem>
@@ -88,7 +89,7 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>Premoves:</Typography>
+					<Typography sx={{ fontSize: 16 }}>Premoves</Typography>
 					<Switch
 						checked={premoves}
 						onChange={() => setPremove(!premoves)}
@@ -102,11 +103,11 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>UI Theme:</Typography>
+					<Typography sx={{ fontSize: 16 }}>UI Theme</Typography>
 					<Select
 						value={selectedUITheme}
 						onChange={(e) => setSelectedUITheme(e.target.value)}
-						style={{ maxHeight: 38 }}
+						style={{ maxHeight: 38, width: 210 }}
 					>
 						<MenuItem value="dark">Dark</MenuItem>
 						<MenuItem value="light">Light</MenuItem>
@@ -120,7 +121,7 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>Auto Rematch:</Typography>
+					<Typography sx={{ fontSize: 16 }}>Auto Rematch</Typography>
 					<Switch
 						checked={autoRematch}
 						onChange={() => setAutoRematch(!autoRematch)}
@@ -134,7 +135,7 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>Sounds:</Typography>
+					<Typography sx={{ fontSize: 16 }}>Sounds</Typography>
 					<Switch
 						checked={sounds}
 						onChange={() => setSounds(!sounds)}
@@ -148,7 +149,7 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 2,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>Mute Chat:</Typography>
+					<Typography sx={{ fontSize: 16 }}>Mute Chat</Typography>
 					<Switch
 						checked={muteChat}
 						onChange={() => setMuteChat(!muteChat)}
@@ -162,8 +163,8 @@ function SettingsModal({ isOpen, onClose }) {
 						mb: 3,
 					}}
 				>
-					<Typography sx={{ fontSize: 17 }}>
-						Enable Chat Filter:
+					<Typography sx={{ fontSize: 16 }}>
+						Enable Chat Filter
 					</Typography>
 					<Switch
 						checked={enableChatFilter}
