@@ -27,6 +27,7 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
 import PropTypes from "prop-types";
+import SettingsModal from "../common/SettingsModal";
 import { useNavigate } from "react-router-dom";
 import { Howl } from "howler";
 
@@ -123,6 +124,16 @@ function Menu() {
 	const [isMusicMuted, setIsMusicMuted] = useState(() => {
 		return localStorage.getItem("isMusicMuted") === "true" || false;
 	});
+	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+	const handleSettingsClick = () => {
+		clickSound.play();
+		setIsSettingsModalOpen(true);
+	};
+
+	const handleCloseSettingsModal = () => {
+		setIsSettingsModalOpen(false);
+	};
 
 	const handlePassAndPlayClick = () => {
 		clickSound.play();
@@ -297,13 +308,16 @@ function Menu() {
 				/>
 
 				<ActionButton
-					onClick={() => {
-						clickSound.play();
-					}}
+					onClick={handleSettingsClick}
 					icon={SettingsIcon}
 					label="OPTIONS"
 					backgroundColor="#4c6663"
 					description="Adjust board theme, sound settings, and chat preferences."
+				/>
+
+				<SettingsModal
+					isOpen={isSettingsModalOpen}
+					onClose={handleCloseSettingsModal}
 				/>
 			</Box>
 
