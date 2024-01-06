@@ -41,6 +41,7 @@ const PassAndPlay = () => {
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+	const [isGameOver, setIsGameOver] = useState(false);
 
 	const openSettingsModal = () => {
 		setIsSettingsModalOpen(true);
@@ -64,6 +65,28 @@ const PassAndPlay = () => {
 
 		setAutoFlip(!autoFlip);
 	};
+
+	const checkGameOver = useCallback(() => {
+		if (game.isCheckmate()) {
+			toast.error(
+				`Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`
+			);
+			setIsGameOver(true);
+			openSettingsModal();
+		} else if (
+			game.isDraw() ||
+			game.isStalemate() ||
+			game.isThreefoldRepetition()
+		) {
+			toast.info("It's a draw!");
+			setIsGameOver(true);
+			openSettingsModal();
+		}
+	}, [game]);
+
+	useEffect(() => {
+		checkGameOver();
+	}, [game, checkGameOver]);
 
 	const getMoveOptions = useCallback(
 		(square) => {
@@ -117,7 +140,7 @@ const PassAndPlay = () => {
 			promotion: piece[1].toLowerCase() ?? "q",
 		});
 
-		if (currentIndex !== history.length - 1) {
+		if (currentIndex !== history.length - 1 || isGameOver) {
 			return false;
 		}
 
@@ -133,6 +156,7 @@ const PassAndPlay = () => {
 			});
 			setKingInCheck(isKingInCheck(gameCopy));
 			getMoveOptions(targetSquare);
+			checkGameOver();
 		} else {
 			setKingInCheck(null);
 		}
@@ -208,6 +232,7 @@ const PassAndPlay = () => {
 				});
 				setKingInCheck(isKingInCheck(gameCopy));
 				setCurrentIndex(history.length);
+				checkGameOver();
 			}
 			setOptionSquares({});
 			setMoveFrom("");
@@ -344,6 +369,9 @@ const PassAndPlay = () => {
 								display="flex"
 								justifyContent="flex-start"
 								alignItems="center"
+								style={{
+									marginTop: "6px",
+								}}
 							>
 								<IconButton
 									disabled={currentIndex === 0}
@@ -401,6 +429,7 @@ const PassAndPlay = () => {
 									borderRadius: "4px",
 									padding: "8px",
 									width: "100%",
+									maxHeight: "30vh",
 								}}
 							>
 								<Grid container spacing={1}>

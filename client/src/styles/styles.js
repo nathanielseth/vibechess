@@ -45,7 +45,6 @@ const styles = {
 		alignItems: "center",
 		backgroundColor: "black",
 		my: 4,
-		marginLeft: "10px",
 		bgcolor: "#1f2123",
 		border: "2px solid #000",
 		height: "50%",

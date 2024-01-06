@@ -45,6 +45,7 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 
 	const handleOK = () => {
 		onSelect(selectedFlag);
+		window.localStorage.setItem("selectedFlag", selectedFlag);
 		onClose();
 	};
 

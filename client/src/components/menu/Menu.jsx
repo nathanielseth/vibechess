@@ -9,6 +9,7 @@ import {
 	InputAdornment,
 	Slide,
 	Zoom,
+	Tooltip,
 } from "@mui/material";
 import {
 	PassNPlayIcon,
@@ -337,13 +338,15 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<IconButton
-						disableRipple
-						onClick={() => alert("Circle Button 1")}
-						style={styles.circleButtonStyle}
-					>
-						<QuizIcon sx={{ color: "#2176ff", fontSize: 30 }} />
-					</IconButton>
+					<Tooltip title="FAQ's">
+						<IconButton
+							disableRipple
+							onClick={() => alert("Circle Button 1")}
+							style={styles.circleButtonStyle}
+						>
+							<QuizIcon sx={{ color: "#2176ff", fontSize: 30 }} />
+						</IconButton>
+					</Tooltip>
 				</Slide>
 
 				<Slide
@@ -353,18 +356,22 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<IconButton
-						disableRipple
-						onClick={() =>
-							window.open(
-								"https://github.com/nathanielseth/VibeChess",
-								"_blank"
-							)
-						}
-						style={styles.circleButtonStyle}
-					>
-						<GitHubIcon sx={{ color: "#ce1126", fontSize: 30 }} />
-					</IconButton>
+					<Tooltip title="Source Code">
+						<IconButton
+							disableRipple
+							onClick={() =>
+								window.open(
+									"https://github.com/nathanielseth/VibeChess",
+									"_blank"
+								)
+							}
+							style={styles.circleButtonStyle}
+						>
+							<GitHubIcon
+								sx={{ color: "#ce1126", fontSize: 30 }}
+							/>
+						</IconButton>
+					</Tooltip>
 				</Slide>
 
 				<Slide
@@ -374,15 +381,17 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<IconButton
-						disableRipple
-						onClick={() => alert("Circle Button 3")}
-						style={styles.circleButtonStyle}
-					>
-						<FreeBreakfastIcon
-							sx={{ color: "#fb8b24", fontSize: 30 }}
-						/>
-					</IconButton>
+					<Tooltip title="Buy Me A Coffee">
+						<IconButton
+							disableRipple
+							onClick={() => alert("Circle Button 3")}
+							style={styles.circleButtonStyle}
+						>
+							<FreeBreakfastIcon
+								sx={{ color: "#fb8b24", fontSize: 30 }}
+							/>
+						</IconButton>
+					</Tooltip>
 				</Slide>
 
 				<Slide
@@ -392,13 +401,15 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<IconButton
-						disableRipple
-						onClick={() => alert("Circle Button 4")}
-						style={styles.circleButtonStyle}
-					>
-						<LightModeIcon sx={{ fontSize: 30 }} />
-					</IconButton>
+					<Tooltip title="Toggle UI Mode">
+						<IconButton
+							disableRipple
+							onClick={() => alert("Circle Button 4")}
+							style={styles.circleButtonStyle}
+						>
+							<LightModeIcon sx={{ fontSize: 30 }} />
+						</IconButton>
+					</Tooltip>
 				</Slide>
 
 				<Slide
@@ -408,17 +419,19 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<IconButton
-						disableRipple
-						onClick={handleMusicToggle}
-						style={styles.circleButtonStyle}
-					>
-						{isMusicMuted ? (
-							<MusicOffRoundedIcon sx={{ fontSize: 30 }} />
-						) : (
-							<MusicNoteRoundedIcon sx={{ fontSize: 30 }} />
-						)}
-					</IconButton>
+					<Tooltip title="Toggle Music">
+						<IconButton
+							disableRipple
+							onClick={handleMusicToggle}
+							style={styles.circleButtonStyle}
+						>
+							{isMusicMuted ? (
+								<MusicOffRoundedIcon sx={{ fontSize: 30 }} />
+							) : (
+								<MusicNoteRoundedIcon sx={{ fontSize: 30 }} />
+							)}
+						</IconButton>
+					</Tooltip>
 				</Slide>
 			</Box>
 		</Box>
