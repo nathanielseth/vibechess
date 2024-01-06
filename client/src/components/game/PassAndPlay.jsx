@@ -8,6 +8,7 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
+import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
 import { styles } from "../../styles/styles";
 
 const moveSound = new Howl({
@@ -34,14 +35,11 @@ const PassAndPlay = () => {
 	]);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [kingInCheck, setKingInCheck] = useState(null);
+	const [autoFlip, setAutoFlip] = useState(false);
 
-	// function safeGameMutate(modify) {
-	// 	setGame((g) => {
-	// 		const update = new Chess(g.fen());
-	// 		modify(update);
-	// 		return update;
-	// 	});
-	// }
+	const toggleAutoFlip = () => {
+		setAutoFlip(!autoFlip);
+	};
 
 	const getMoveOptions = useCallback(
 		(square) => {
@@ -147,15 +145,25 @@ const PassAndPlay = () => {
 
 	const onSquareClick = (square) => {
 		setRightClickedSquares({});
+		setMoveFrom("");
+		setOptionSquares({});
+
+		const hasMoveOptions = getMoveOptions(square);
+
+		if (hasMoveOptions) {
+			setMoveFrom(square);
+		}
 
 		if (currentIndex !== history.length - 1) {
 			return;
 		}
+
 		if (square === moveFrom) {
 			setMoveFrom("");
 			setOptionSquares({});
 			return;
 		}
+
 		if (moveFrom) {
 			const gameCopy = new Chess(game.fen());
 			const move = gameCopy.move({
@@ -177,7 +185,6 @@ const PassAndPlay = () => {
 				setKingInCheck(isKingInCheck(gameCopy));
 				setCurrentIndex(history.length);
 			}
-
 			setOptionSquares({});
 			setMoveFrom("");
 			setGame(gameCopy);
@@ -233,11 +240,9 @@ const PassAndPlay = () => {
 		(moveIndex) => {
 			setGame(new Chess(history[moveIndex].fen));
 			setCurrentIndex(moveIndex);
-
-			// Clear move options when navigating
 			setOptionSquares({});
 
-			// If navigating back to the current index, restore the last move's highlights
+			// if navigating back to the current index, restore the last move's highlights
 			if (moveIndex === history.length - 1 && lastMove) {
 				setHighlightedSquares({
 					[lastMove.from]: {
@@ -248,11 +253,10 @@ const PassAndPlay = () => {
 					},
 				});
 			} else {
-				// Otherwise, clear highlights
 				setHighlightedSquares({});
 			}
 		},
-		[history, lastMove] // Add lastMove to the dependency array
+		[history, lastMove]
 	);
 
 	return (
@@ -267,7 +271,13 @@ const PassAndPlay = () => {
 					<Grid item xs={8}>
 						<Chessboard
 							id="StyledBoard"
-							boardOrientation="white"
+							boardOrientation={
+								autoFlip && game.turn() === "w"
+									? "white"
+									: autoFlip && game.turn() === "b"
+									? "black"
+									: "white"
+							}
 							boardWidth={700}
 							position={game.fen()}
 							onPieceDrop={onDrop}
@@ -358,15 +368,12 @@ const PassAndPlay = () => {
 							>
 								<Grid container spacing={1}>
 									{history.slice(1).map((state, index) => {
-										// Calculate the move number based on the index
 										const moveNumber =
 											Math.floor(index / 2) + 1;
-										// Check if the move is white's move by checking if the index is even
 										const isWhiteMove = index % 2 === 0;
 										const move = state.lastMove;
 
 										return isWhiteMove ? (
-											// Display move number and white's move button on the same row
 											<React.Fragment key={index}>
 												<Grid item>
 													<span>{moveNumber}.</span>
@@ -392,7 +399,6 @@ const PassAndPlay = () => {
 												</Grid>
 											</React.Fragment>
 										) : (
-											// Display black's move button on the same row as white's move
 											<Grid item key={index}>
 												<Button
 													variant="outlined"
@@ -423,6 +429,14 @@ const PassAndPlay = () => {
 								justifyContent="flex-end"
 								alignItems="flex-end"
 							>
+								<IconButton
+									onClick={toggleAutoFlip}
+									sx={{
+										color: autoFlip ? "" : "grey",
+									}}
+								>
+									<LoopRoundedIcon />
+								</IconButton>
 								<IconButton>
 									<SettingsIcon />
 								</IconButton>
