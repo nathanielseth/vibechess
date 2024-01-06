@@ -10,8 +10,8 @@ import {
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { toast } from "react-toastify";
 import { CircleFlag } from "react-circle-flags";
-import { generateRandomUsername } from "../data/randomName";
-import VibeChessLogo from "../icons/vibechess.svg";
+import { generateRandomUsername } from "../../data/randomName";
+import VibeChessLogo from "../../icons/vibechess.svg";
 import FlagSelectorModal from "./FlagSelectorModal";
 
 const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
@@ -110,12 +110,17 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 									onClick={() => setFlagModalOpen(true)}
 									style={{ borderRadius: "100%" }}
 								>
-									<CircleFlag countryCode={selectedFlag} height="40" />
+									<CircleFlag
+										countryCode={selectedFlag}
+										height="40"
+									/>
 								</IconButton>
 								<IconButton
 									sx={{
 										color: "#a6a6a6",
-										"&:hover, &:focus": { color: "#ce1126" },
+										"&:hover, &:focus": {
+											color: "#ce1126",
+										},
 									}}
 									disabled={false}
 									onClick={handleSubmit}

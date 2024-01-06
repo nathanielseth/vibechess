@@ -31,6 +31,35 @@ const styles = {
 		transition: "filter 0.3s",
 		"&:hover": { filter: "brightness(0)" },
 	},
+	passAndPlayContainerStyle: {
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+		height: "100vh",
+		flexWrap: "wrap",
+	},
+	trackerBoxStyle: {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		backgroundColor: "black",
+		my: 4,
+		marginLeft: "10px",
+		bgcolor: "#1f2123",
+		border: "2px solid #000",
+		height: "100%",
+		width: 500,
+		margin: 0,
+	},
+	kingInCheckStyle: {
+		background: "radial-gradient(red, rgba(255,0,0,.9), transparent 70%)",
+		borderRadius: "30%",
+	},
+	captureSquareStyle: {
+		background:
+			"radial-gradient(circle, transparent 60%, rgba(0,0,0,.1) 1%)",
+		borderRadius: "50%",
+	},
 };
 
 export {

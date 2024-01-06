@@ -10,8 +10,8 @@ import {
 	Tooltip,
 } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
-import flagData from "../data/flags";
-import "../styles/scrollbar.css";
+import flagData from "../../data/flags";
+import "../../styles/scrollbar.css";
 
 const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -95,9 +95,14 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						{rows.map((row, rowIndex) => (
 							<React.Fragment key={rowIndex}>
 								{row.map((countryCode) => (
-									<Tooltip key={countryCode} title={flagData[countryCode]}>
+									<Tooltip
+										key={countryCode}
+										title={flagData[countryCode]}
+									>
 										<Button
-											onClick={() => handleFlagSelect(countryCode)}
+											onClick={() =>
+												handleFlagSelect(countryCode)
+											}
 											sx={{
 												mb: 1,
 												padding: 3,
@@ -111,7 +116,10 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 												boxSizing: "border-box",
 											}}
 										>
-											<CircleFlag countryCode={countryCode} height="55" />
+											<CircleFlag
+												countryCode={countryCode}
+												height="55"
+											/>
 										</Button>
 									</Tooltip>
 								))}
@@ -131,7 +139,10 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						<Box mr={1} />
 						<Button
 							variant="contained"
-							style={{ backgroundColor: "#ce1126", color: "white" }}
+							style={{
+								backgroundColor: "#ce1126",
+								color: "white",
+							}}
 							onClick={handleOK}
 						>
 							CONFIRM

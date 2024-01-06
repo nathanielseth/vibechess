@@ -4,11 +4,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Loading from "./components/Loading";
-import Menu from "./components/Menu";
-import PassAndPlay from "./components/PassAndPlay";
+import Loading from "./components/common/Loading";
+import Menu from "./components/menu/Menu";
+import PassAndPlay from "./components/game/PassAndPlay";
 
-const WelcomeScreen = lazy(() => import("./components/WelcomeScreen"));
+const WelcomeScreen = lazy(() => import("./components/splash/WelcomeScreen"));
 
 const getTheme = (mode) =>
 	createTheme({
@@ -91,7 +91,9 @@ const App = () => {
 							<Suspense fallback={<Loading />}>
 								{!usernameSubmitted || !username ? (
 									<WelcomeScreen
-										setUsernameCallback={setUsernameCallback}
+										setUsernameCallback={
+											setUsernameCallback
+										}
 										setFlagCallback={setFlagCallback}
 										onSubmit={handleUsernameSubmit}
 									/>

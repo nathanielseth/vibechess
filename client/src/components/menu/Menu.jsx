@@ -18,7 +18,7 @@ import {
 	SettingsIcon,
 	VibeChessLogo,
 	styles,
-} from "../styles/styles";
+} from "../../styles/styles";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
 import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
@@ -47,7 +47,8 @@ const ActionButton = React.memo(
 							position: "relative",
 							visibility: "visible",
 							transform: "translateY(-10px)",
-							transition: "transform 0.5s ease, opacity 0.5s ease",
+							transition:
+								"transform 0.5s ease, opacity 0.5s ease",
 							opacity: 1,
 						},
 						"& .buttonContent": {
@@ -55,7 +56,10 @@ const ActionButton = React.memo(
 							transition: "transform 0.5s ease",
 						},
 					},
-					"&.MuiButton-root:hover": { bgcolor: "white", color: "black" },
+					"&.MuiButton-root:hover": {
+						bgcolor: "white",
+						color: "black",
+					},
 					".MuiTouchRipple-child": {
 						backgroundColor: "#ce1126",
 					},
@@ -191,7 +195,11 @@ function Menu() {
 					<img
 						src={VibeChessLogo}
 						alt="VibeChess Logo"
-						style={{ width: "120px", height: "auto", marginBottom: "10px" }}
+						style={{
+							width: "120px",
+							height: "auto",
+							marginBottom: "10px",
+						}}
 					/>
 				</Zoom>
 				<Zoom in={true}>
@@ -207,7 +215,10 @@ function Menu() {
 					flexDirection: "row",
 					alignItems: "center",
 					marginTop: "5px",
-					"&.MuiButton-root:hover": { bgcolor: "white", color: "black" },
+					"&.MuiButton-root:hover": {
+						bgcolor: "white",
+						color: "black",
+					},
 				}}
 			>
 				{/* Main Buttons */}
@@ -258,7 +269,9 @@ function Menu() {
 										<IconButton
 											sx={{
 												color: "#a6a6a6",
-												"&:hover, &:focus": { color: "#ce1126" },
+												"&:hover, &:focus": {
+													color: "#ce1126",
+												},
 											}}
 											disabled={false}
 											onClick={null}
@@ -352,7 +365,9 @@ function Menu() {
 						onClick={() => alert("Circle Button 3")}
 						style={styles.circleButtonStyle}
 					>
-						<FreeBreakfastIcon sx={{ color: "#fb8b24", fontSize: 30 }} />
+						<FreeBreakfastIcon
+							sx={{ color: "#fb8b24", fontSize: 30 }}
+						/>
 					</IconButton>
 				</Slide>
 
