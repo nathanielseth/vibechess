@@ -1,4 +1,4 @@
-const flagData = {
+const flags = {
 	ph: "Philippines",
 	us: "United States",
 	in: "India",
@@ -345,5 +345,15 @@ const flagData = {
 	zm: "Zambia",
 	zw: "Zimbabwe",
 };
+
+const first9Items = Object.fromEntries(Object.entries(flags).slice(0, 9));
+
+const restOfItems = Object.fromEntries(
+	Object.entries(flags)
+		.slice(9)
+		.sort(([, countryA], [, countryB]) => countryA.localeCompare(countryB))
+);
+
+const flagData = { ...first9Items, ...restOfItems };
 
 export default flagData;

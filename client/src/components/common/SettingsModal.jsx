@@ -17,13 +17,12 @@ import FlagSelectorModal from "../common/FlagSelectorModal";
 import { generateRandomUsername } from "../../data/randomName";
 
 function SettingsModal({ isOpen, onClose }) {
-	const [selectedBoard, setSelectedBoard] = useState("default");
-	const [selectedPieces, setSelectedPieces] = useState("default");
-	const [premoves, setPremove] = useState(false);
+	const [selectedBoard, setSelectedBoard] = useState("");
+	const [selectedPieces, setSelectedPieces] = useState("");
+	const [premoves, setPremove] = useState(true);
 	const [selectedUITheme, setSelectedUITheme] = useState("dark");
-	const [autoRematch, setAutoRematch] = useState(true);
 	const [sounds, setSounds] = useState(true);
-	const [enableChatFilter, setEnableChatFilter] = useState(false);
+	const [enableChatFilter, setEnableChatFilter] = useState(true);
 	const [flagSelectorOpen, setFlagSelectorOpen] = useState(false);
 
 	const selectedFlag = window.localStorage.getItem("selectedFlag");
@@ -174,22 +173,6 @@ function SettingsModal({ isOpen, onClose }) {
 							<MenuItem value="dark">Dark</MenuItem>
 							<MenuItem value="light">Light</MenuItem>
 						</Select>
-					</Box>
-
-					<Box
-						sx={{
-							display: "flex",
-							justifyContent: "space-between",
-							mb: 2,
-						}}
-					>
-						<Typography sx={{ fontSize: 16 }}>
-							Auto Rematch
-						</Typography>
-						<Switch
-							checked={autoRematch}
-							onChange={() => setAutoRematch(!autoRematch)}
-						/>
 					</Box>
 
 					<Box

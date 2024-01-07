@@ -10,6 +10,7 @@ import { Stack, Grid } from "@mui/material";
 import { styles } from "../../styles/styles";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import GameOverModal from "./GameOverModal";
 
 const moveSound = new Howl({
 	src: ["/sound/move.mp3"],
@@ -21,14 +22,13 @@ const captureSound = new Howl({
 	volume: 0.6,
 });
 
-// functional yet spaghetti, the formatting of the notation could use some work
+// the formatting of the notation could use some work
 const generatePGN = (history) => {
-	let pgn = `[Event "Game Mode"]\n`;
+	let pgn = `[Event "Pass & Play"]\n`;
 	pgn += `[Site "VibeChess"]\n`;
 	pgn += `[Date "${new Date().toLocaleDateString()}"]\n`;
-
-	pgn += `[White "undefined"]\n`;
-	pgn += `[Black "undefined"]\n\n`;
+	pgn += `[White "${window.localStorage.getItem("username")}"]\n`;
+	pgn += `[Black "${window.localStorage.getItem("username")}"]\n\n`;
 
 	for (let i = 0; i < history.length; i += 2) {
 		const whiteMove = history[i].lastMove
@@ -58,9 +58,26 @@ const PassAndPlay = () => {
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [isGameOver, setIsGameOver] = useState(false);
+	const [gameEndReason, setGameEndReason] = useState(null);
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 	const [pgn, setPgn] = useState("");
+
+	const handleRematch = () => {
+		setGame(new Chess());
+		setLastMove(null);
+		setRightClickedSquares({});
+		setHighlightedSquares({});
+		setOptionSquares({});
+		setMoveFrom("");
+		setHistory([{ fen: game.fen(), lastMove: null }]);
+		setCurrentIndex(0);
+		setKingInCheck(null);
+		setAutoFlip(false);
+		setIsGameOver(false);
+		setGameEndReason(null);
+		setPgn("");
+	};
 
 	const openShareModal = () => {
 		setPgn(generatePGN(history));
@@ -95,18 +112,25 @@ const PassAndPlay = () => {
 	};
 
 	const checkGameOver = useCallback(() => {
+		let reason = null;
+
 		if (game.isCheckmate()) {
-			toast.error(
-				`Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`
-			);
-			setIsGameOver(true);
+			reason = `Checkmate! ${
+				game.turn() === "w" ? "Black" : "White"
+			} wins!`;
 		} else if (
 			game.isDraw() ||
 			game.isStalemate() ||
 			game.isThreefoldRepetition()
 		) {
-			toast.info("It's a draw!");
+			reason = "It's a draw!";
+		}
+
+		setGameEndReason(reason);
+
+		if (reason) {
 			setIsGameOver(true);
+			toast.error(reason);
 		}
 	}, [game]);
 
@@ -183,7 +207,6 @@ const PassAndPlay = () => {
 			});
 			setKingInCheck(isKingInCheck(gameCopy));
 			getMoveOptions(targetSquare);
-			checkGameOver();
 		} else {
 			setKingInCheck(null);
 		}
@@ -260,7 +283,6 @@ const PassAndPlay = () => {
 				});
 				setKingInCheck(isKingInCheck(gameCopy));
 				setCurrentIndex(history.length);
-				checkGameOver();
 			}
 			setOptionSquares({});
 			setMoveFrom("");
@@ -413,6 +435,13 @@ const PassAndPlay = () => {
 				isOpen={shareModalOpen}
 				onClose={closeShareModal}
 				pgn={pgn}
+			/>
+			<GameOverModal
+				isOpen={isGameOver}
+				onClose={() => setIsGameOver(false)}
+				onRematch={handleRematch}
+				onNewGame={handleRematch}
+				endReason={gameEndReason}
 			/>
 		</Stack>
 	);

@@ -10,9 +10,7 @@ const ShareModal = ({ isOpen, onClose, pgn }) => {
 	const [showCheck, setShowCheck] = useState(false);
 
 	useEffect(() => {
-		console.log("ShareModal useEffect triggered!");
 		if (pgn && pgnTextRef.current) {
-			console.log("PGN updated in ShareModal:", pgn);
 			pgnTextRef.current.value = pgn;
 			pgnTextRef.current.scrollTop = pgnTextRef.current.scrollHeight;
 		}
@@ -22,7 +20,6 @@ const ShareModal = ({ isOpen, onClose, pgn }) => {
 		if (navigator.clipboard) {
 			navigator.clipboard.writeText(shareLink).then(
 				() => {
-					console.log("Share link copied to clipboard!");
 					setShowCheck(true);
 
 					setTimeout(() => {
@@ -45,7 +42,6 @@ const ShareModal = ({ isOpen, onClose, pgn }) => {
 		if (pgnTextRef.current) {
 			navigator.clipboard.writeText(pgnTextRef.current.value).then(
 				() => {
-					console.log("PGN copied to clipboard!");
 					setShowCheck(true);
 
 					setTimeout(() => {

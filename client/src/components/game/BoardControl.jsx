@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { Box, IconButton, Button, Grid, Tooltip } from "@mui/material";
 import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
@@ -21,6 +21,7 @@ const BoardControl = ({
 	pgn,
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
+	const movesBoxRef = useRef();
 
 	const openShareModal = () => {
 		setShareModalOpen(true);
@@ -29,6 +30,13 @@ const BoardControl = ({
 	const closeShareModal = () => {
 		setShareModalOpen(false);
 	};
+
+	useEffect(() => {
+		// Scroll to the latest move when currentIndex changes
+		if (movesBoxRef.current) {
+			movesBoxRef.current.scrollTop = movesBoxRef.current.scrollHeight;
+		}
+	}, [currentIndex]);
 
 	return (
 		<Box sx={styles.boardControlStyle}>
@@ -79,6 +87,7 @@ const BoardControl = ({
 					width: "100%",
 					maxHeight: "30vh",
 				}}
+				ref={movesBoxRef}
 			>
 				<Grid container spacing={1}>
 					{history.slice(1).map((state, index) => {
@@ -107,7 +116,6 @@ const BoardControl = ({
 					})}
 				</Grid>
 			</Box>
-			${pgn}
 			<Box display="flex" justifyContent="flex-end" alignItems="flex-end">
 				<Tooltip title="Auto-Flip">
 					<IconButton

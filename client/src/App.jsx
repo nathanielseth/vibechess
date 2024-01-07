@@ -62,7 +62,9 @@ const App = () => {
 
 	const [username, setUsername] = useState(storedUsername);
 	const [flag, setFlag] = useState(storedFlag || "PH");
-	const [usernameSubmitted, setUsernameSubmitted] = useState(false);
+	const [usernameSubmitted, setUsernameSubmitted] = useState(
+		!!storedUsername
+	);
 
 	const setUsernameCallback = (newUsername) => {
 		setUsername(newUsername);
