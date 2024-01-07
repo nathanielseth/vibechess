@@ -1,17 +1,13 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Navbar from "../common/Navbar";
+import BoardControl from "./BoardControl";
+import SettingsModal from "../common/SettingsModal";
+import ShareModal from "../common/ShareModal";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Howl } from "howler";
-import { Stack, IconButton, Box, Grid, Button } from "@mui/material";
-import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
-import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
-import SettingsIcon from "@mui/icons-material/Settings";
-import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
+import { Stack, Grid } from "@mui/material";
 import { styles } from "../../styles/styles";
-import SettingsModal from "../common/SettingsModal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -25,7 +21,28 @@ const captureSound = new Howl({
 	volume: 0.6,
 });
 
-// bunch of spaghetti :')
+// functional yet spaghetti, the formatting of the notation could use some work
+const generatePGN = (history) => {
+	let pgn = `[Event "Game Mode"]\n`;
+	pgn += `[Site "VibeChess"]\n`;
+	pgn += `[Date "${new Date().toLocaleDateString()}"]\n`;
+
+	pgn += `[White "undefined"]\n`;
+	pgn += `[Black "undefined"]\n\n`;
+
+	for (let i = 0; i < history.length; i += 2) {
+		const whiteMove = history[i].lastMove
+			? `${history[i].lastMove.san} `
+			: "";
+		const blackMove =
+			i + 1 < history.length && history[i + 1].lastMove
+				? `${history[i + 1].lastMove.san} `
+				: "";
+
+		pgn += `${whiteMove}${blackMove}\n`;
+	}
+	return pgn;
+};
 
 const PassAndPlay = () => {
 	const [game, setGame] = useState(() => new Chess());
@@ -40,8 +57,19 @@ const PassAndPlay = () => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [autoFlip, setAutoFlip] = useState(false);
-	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [isGameOver, setIsGameOver] = useState(false);
+	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+	const [shareModalOpen, setShareModalOpen] = useState(false);
+	const [pgn, setPgn] = useState("");
+
+	const openShareModal = () => {
+		setPgn(generatePGN(history));
+		setShareModalOpen(true);
+	};
+
+	const closeShareModal = () => {
+		setShareModalOpen(false);
+	};
 
 	const openSettingsModal = () => {
 		setIsSettingsModalOpen(true);
@@ -72,7 +100,6 @@ const PassAndPlay = () => {
 				`Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`
 			);
 			setIsGameOver(true);
-			openSettingsModal();
 		} else if (
 			game.isDraw() ||
 			game.isStalemate() ||
@@ -80,13 +107,13 @@ const PassAndPlay = () => {
 		) {
 			toast.info("It's a draw!");
 			setIsGameOver(true);
-			openSettingsModal();
 		}
 	}, [game]);
 
 	useEffect(() => {
 		checkGameOver();
-	}, [game, checkGameOver]);
+		setPgn(generatePGN(history));
+	}, [game, checkGameOver, history]);
 
 	const getMoveOptions = useCallback(
 		(square) => {
@@ -165,6 +192,7 @@ const PassAndPlay = () => {
 		setOptionSquares({});
 		setCurrentIndex(history.length);
 		console.log(gameCopy.pgn());
+		setPgn(generatePGN(history));
 		return move;
 	};
 
@@ -237,6 +265,7 @@ const PassAndPlay = () => {
 			setOptionSquares({});
 			setMoveFrom("");
 			setGame(gameCopy);
+			setPgn(generatePGN(history));
 		} else {
 			setMoveFrom(square);
 			getMoveOptions(square);
@@ -363,144 +392,28 @@ const PassAndPlay = () => {
 
 					{/* Board Control Box */}
 					<Grid item xs={4}>
-						<Box sx={styles.boardControlStyle}>
-							{/* Move Controls */}
-							<Box
-								display="flex"
-								justifyContent="flex-start"
-								alignItems="center"
-								style={{
-									marginTop: "6px",
-								}}
-							>
-								<IconButton
-									disabled={currentIndex === 0}
-									onClick={() => navigateMove(0)}
-								>
-									<FirstPageRoundedIcon
-										sx={{ fontSize: "1.8rem" }}
-									/>
-								</IconButton>
-								<IconButton
-									disabled={currentIndex === 0}
-									onClick={() =>
-										navigateMove(currentIndex - 1)
-									}
-								>
-									<ChevronLeftRoundedIcon
-										sx={{ fontSize: "1.8rem" }}
-									/>
-								</IconButton>
-
-								<IconButton
-									disabled={
-										currentIndex === history.length - 1
-									}
-									onClick={() =>
-										navigateMove(currentIndex + 1)
-									}
-								>
-									<ChevronRightRoundedIcon
-										sx={{ fontSize: "1.8rem" }}
-									/>
-								</IconButton>
-								<IconButton
-									disabled={
-										currentIndex === history.length - 1
-									}
-									onClick={() =>
-										navigateMove(history.length - 1)
-									}
-								>
-									<LastPageRoundedIcon
-										sx={{ fontSize: "1.8rem" }}
-									/>
-								</IconButton>
-							</Box>
-
-							{/* Moves Box */}
-							<Box
-								flex="1"
-								display="flex"
-								flexDirection="column"
-								alignItems="center"
-								style={{
-									overflowY: "auto",
-									borderRadius: "4px",
-									padding: "8px",
-									width: "100%",
-									maxHeight: "30vh",
-								}}
-							>
-								<Grid container spacing={1}>
-									{history.slice(1).map((state, index) => {
-										const moveNumber =
-											Math.floor(index / 2) + 1;
-										const isWhiteMove = index % 2 === 0;
-										const move = state.lastMove;
-
-										return (
-											<Grid item key={index} xs={6}>
-												<Button
-													variant="outlined"
-													onClick={() =>
-														navigateMove(index + 1)
-													}
-													sx={{
-														width: "100%",
-														...(move && {
-															borderColor: "#000",
-															backgroundColor:
-																isWhiteMove
-																	? "inherit"
-																	: "#000",
-															color: isWhiteMove
-																? "inherit"
-																: "#fff",
-														}),
-													}}
-												>
-													{isWhiteMove && (
-														<span>
-															{moveNumber}.
-														</span>
-													)}{" "}
-													{move?.san}
-												</Button>
-											</Grid>
-										);
-									})}
-								</Grid>
-							</Box>
-
-							{/* Settings Icon Button */}
-							<Box
-								display="flex"
-								justifyContent="flex-end"
-								alignItems="flex-end"
-							>
-								<IconButton
-									onClick={toggleAutoFlip}
-									sx={{
-										color: autoFlip ? "" : "grey",
-									}}
-								>
-									<LoopRoundedIcon />
-								</IconButton>
-								<IconButton onClick={openSettingsModal}>
-									<SettingsIcon />
-								</IconButton>
-							</Box>
-
-							{/* Settings Modal */}
-							<SettingsModal
-								isOpen={isSettingsModalOpen}
-								onClose={closeSettingsModal}
-							/>
-						</Box>
+						<BoardControl
+							currentIndex={currentIndex}
+							navigateMove={navigateMove}
+							history={history}
+							toggleAutoFlip={toggleAutoFlip}
+							autoFlip={autoFlip}
+							openSettingsModal={openSettingsModal}
+							openShareModal={openShareModal}
+							pgn={pgn}
+						/>
 					</Grid>
 				</Grid>
 			</div>
+			<SettingsModal
+				isOpen={isSettingsModalOpen}
+				onClose={closeSettingsModal}
+			/>
+			<ShareModal
+				isOpen={shareModalOpen}
+				onClose={closeShareModal}
+				pgn={pgn}
+			/>
 		</Stack>
 	);
 };

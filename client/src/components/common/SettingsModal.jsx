@@ -45,7 +45,6 @@ function SettingsModal({ isOpen, onClose }) {
 
 	const handleConfirm = () => {
 		if (!username.trim()) {
-			// If username is empty or contains only whitespace, generate a random username
 			setUsername(generateRandomUsername());
 		}
 

@@ -129,15 +129,10 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 					</Box>
 
 					<Box display="flex" justifyContent="flex-end">
-						<Button
-							variant="text"
-							mr={1}
-							onClick={onClose}
-							style={{ color: "white" }}
-						>
+						<Button variant="outlined" onClick={onClose}>
 							CANCEL
 						</Button>
-						<Box mr={1} />
+						<Box mr={2} />
 						<Button
 							variant="contained"
 							style={{

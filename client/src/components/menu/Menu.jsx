@@ -356,7 +356,7 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<Tooltip title="Source Code">
+					<Tooltip title="GitHub">
 						<IconButton
 							disableRipple
 							onClick={() =>
