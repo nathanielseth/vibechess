@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { Modal, Box, Typography, Grid, Button, Fade } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
 import ReplayIcon from "@mui/icons-material/Replay";
-import CasinoIcon from "@mui/icons-material/Casino";
 
 const GameOverModal = ({
 	isOpen,
@@ -11,6 +10,7 @@ const GameOverModal = ({
 	onRematch,
 	onNewGame,
 	endReason,
+	winner,
 }) => {
 	const selectedFlag = window.localStorage.getItem("selectedFlag");
 
@@ -38,10 +38,10 @@ const GameOverModal = ({
 				>
 					{/* Top Box */}
 					<Box mb={4}>
-						<Typography variant="h4">YOU WON!</Typography>
-						<Typography variant="subtitle1">
-							by {endReason}
+						<Typography variant="h4">
+							{winner ? `${winner} WON!` : "DRAW!"}
 						</Typography>
+						<Typography variant="subtitle1">{endReason}</Typography>
 					</Box>
 
 					{/* Middle Box */}
@@ -88,7 +88,6 @@ const GameOverModal = ({
 								variant="contained"
 								color="primary"
 								fullWidth
-								startIcon={<CasinoIcon />}
 								onClick={onNewGame}
 								sx={{ height: "50px" }}
 							>
@@ -108,6 +107,7 @@ GameOverModal.propTypes = {
 	onRematch: PropTypes.func.isRequired,
 	onNewGame: PropTypes.func.isRequired,
 	endReason: PropTypes.string.isRequired,
+	winner: PropTypes.string,
 };
 
 export default GameOverModal;
