@@ -35,7 +35,10 @@ const PassAndPlay = () => {
 					spacing={1}
 					style={{ margin: 0, alignItems: "stretch" }}
 				>
-					<ChessboardComponent gameMode={gameMode} />
+					<ChessboardComponent
+						gameMode={gameMode}
+						isAnalysisMode={false}
+					/>
 				</Grid>
 			</div>
 			<SettingsModal

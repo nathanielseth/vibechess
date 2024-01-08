@@ -10,6 +10,7 @@ import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { styles } from "../../styles/styles";
 import ShareModal from "../common/ShareModal";
 
@@ -19,6 +20,8 @@ const BoardControl = ({
 	history,
 	toggleAutoFlip,
 	autoFlip,
+	toggleAnalysisMode,
+	analysisMode,
 	openSettingsModal,
 	pgn,
 	gameMode,
@@ -62,25 +65,25 @@ const BoardControl = ({
 					disabled={currentIndex === 0}
 					onClick={() => navigateMove(0)}
 				>
-					<FirstPageRoundedIcon sx={{ fontSize: "1.9rem" }} />
+					<FirstPageRoundedIcon sx={{ fontSize: "2.1rem" }} />
 				</IconButton>
 				<IconButton
 					disabled={currentIndex === 0}
 					onClick={() => navigateMove(currentIndex - 1)}
 				>
-					<ChevronLeftRoundedIcon sx={{ fontSize: "1.9rem" }} />
+					<ChevronLeftRoundedIcon sx={{ fontSize: "2.1rem" }} />
 				</IconButton>
 				<IconButton
 					disabled={currentIndex === history.length - 1}
 					onClick={() => navigateMove(currentIndex + 1)}
 				>
-					<ChevronRightRoundedIcon sx={{ fontSize: "1.9rem" }} />
+					<ChevronRightRoundedIcon sx={{ fontSize: "2.1rem" }} />
 				</IconButton>
 				<IconButton
 					disabled={currentIndex === history.length - 1}
 					onClick={() => navigateMove(history.length - 1)}
 				>
-					<LastPageRoundedIcon sx={{ fontSize: "1.9rem" }} />
+					<LastPageRoundedIcon sx={{ fontSize: "2.1rem" }} />
 				</IconButton>
 			</Box>
 			{/* Moves Box */}
@@ -126,6 +129,15 @@ const BoardControl = ({
 				</Grid>
 			</Box>
 			<Box display="flex" justifyContent="flex-end" alignItems="flex-end">
+				<Tooltip title="Analysis Mode" enterDelay={400}>
+					<IconButton
+						onClick={toggleAnalysisMode}
+						sx={{ color: analysisMode ? "" : "grey" }}
+					>
+						<VisibilityRoundedIcon />
+					</IconButton>
+				</Tooltip>
+
 				{gameMode !== "passandplay" && (
 					<Tooltip title="Auto-Flip" enterDelay={400}>
 						<IconButton
@@ -178,11 +190,13 @@ BoardControl.propTypes = {
 	history: PropTypes.array.isRequired,
 	toggleAutoFlip: PropTypes.func.isRequired,
 	autoFlip: PropTypes.bool.isRequired,
+	toggleAnalysisMode: PropTypes.func.isRequired,
+	analysisMode: PropTypes.bool.isRequired,
 	openSettingsModal: PropTypes.func.isRequired,
 	openShareModal: PropTypes.func.isRequired,
 	pgn: PropTypes.string.isRequired,
-	gameMode: PropTypes.string.isRequired,
-	handleRematch: PropTypes.string.isRequired,
+	gameMode: PropTypes.string,
+	handleRematch: PropTypes.func.isRequired,
 };
 
 export default BoardControl;

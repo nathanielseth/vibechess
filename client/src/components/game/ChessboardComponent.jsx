@@ -67,6 +67,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 	const [autoFlip, setAutoFlip] = useState(false);
+	const [analysisMode, setAnalysisMode] = useState(false);
 	const [gameEndReason, setGameEndReason] = useState(null);
 	const [selectedTheme, setSelectedTheme] = useState(
 		window.localStorage.getItem("selectedBoard") || "grey"
@@ -82,6 +83,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
 
 	const findBestMove = useCallback(() => {
+		if (!analysisMode) return;
 		engine.evaluatePosition(game.fen(), 10);
 		engine.onMessage(({ bestMove }) => {
 			if (bestMove) {
@@ -89,13 +91,13 @@ const ChessboardComponent = ({ gameMode }) => {
 				setChessBoardPosition(game.fen());
 			}
 		});
-	}, [engine, game]);
+	}, [engine, game, analysisMode]);
 
 	useEffect(() => {
-		if (!game.isGameOver() || game.isGameOver()) {
+		if ((!game.isGameOver() || game.isGameOver()) && analysisMode) {
 			setTimeout(findBestMove, 300);
 		}
-	}, [chessBoardPosition, findBestMove, game]);
+	}, [chessBoardPosition, findBestMove, game, analysisMode]);
 
 	const handleRematch = () => {
 		setGame(new Chess());
@@ -108,6 +110,7 @@ const ChessboardComponent = ({ gameMode }) => {
 		setCurrentIndex(0);
 		setKingInCheck(null);
 		setAutoFlip(false);
+		setAnalysisMode;
 		setIsGameOver(false);
 		setGameEndReason(null);
 		setPgn("");
@@ -149,6 +152,19 @@ const ChessboardComponent = ({ gameMode }) => {
 		}
 
 		setAutoFlip(!autoFlip);
+	};
+
+	const toggleAnalysisMode = () => {
+		if (!analysisMode) {
+			if (!toastId.current) {
+				toastId.current = toast.success("Stockfish analysis enabled!", {
+					position: toast.POSITION.TOP_CENTER,
+					autoClose: 4000,
+				});
+			}
+		}
+
+		setAnalysisMode(!analysisMode);
 	};
 
 	const checkGameOver = useCallback(() => {
@@ -435,13 +451,15 @@ const ChessboardComponent = ({ gameMode }) => {
 					customPieces={customPieces}
 					onPieceDragBegin={onPieceDragBegin}
 					customArrows={
-						bestMove && [
-							[
-								bestMove.substring(0, 2),
-								bestMove.substring(2, 4),
-								"rgb(0, 128, 0)",
-							],
-						]
+						analysisMode && bestMove
+							? [
+									[
+										bestMove.substring(0, 2),
+										bestMove.substring(2, 4),
+										"rgb(196, 144, 209)",
+									],
+							  ]
+							: []
 					}
 				/>
 			</Grid>
@@ -452,6 +470,8 @@ const ChessboardComponent = ({ gameMode }) => {
 					history={history}
 					toggleAutoFlip={toggleAutoFlip}
 					autoFlip={autoFlip}
+					toggleAnalysisMode={toggleAnalysisMode}
+					analysisMode={analysisMode}
 					openSettingsModal={openSettingsModal}
 					openShareModal={openShareModal}
 					pgn={pgn}
@@ -483,6 +503,7 @@ const ChessboardComponent = ({ gameMode }) => {
 
 ChessboardComponent.propTypes = {
 	gameMode: PropTypes.string.isRequired,
+	isAnalysisMode: PropTypes.bool.isRequired,
 };
 
 export default ChessboardComponent;
