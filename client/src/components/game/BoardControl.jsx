@@ -29,6 +29,7 @@ const BoardControl = ({
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const movesBoxRef = useRef();
+	const isUserNavigatingRef = useRef(false);
 
 	const handleResign = () => {
 		if (handleRematch) {
@@ -45,10 +46,30 @@ const BoardControl = ({
 	};
 
 	useEffect(() => {
-		if (movesBoxRef.current) {
-			movesBoxRef.current.scrollTop = movesBoxRef.current.scrollHeight;
+		if (!isUserNavigatingRef.current && movesBoxRef.current) {
+			if (currentIndex === 0) {
+				movesBoxRef.current.scrollTop = 0;
+			} else {
+				movesBoxRef.current.scrollTop =
+					movesBoxRef.current.scrollHeight;
+			}
 		}
+		isUserNavigatingRef.current = false;
 	}, [currentIndex]);
+
+	const pieceNotationToUnicode = (notation) => {
+		const pieceMap = {
+			P: "♙",
+			p: "♟",
+			K: "♚",
+			Q: "♛",
+			R: "♜",
+			B: "♝",
+			N: "♞",
+		};
+
+		return pieceMap[notation] || notation;
+	};
 
 	return (
 		<Box sx={styles.boardControlStyle}>
@@ -109,7 +130,10 @@ const BoardControl = ({
 							<Grid item key={index} xs={6}>
 								<Button
 									variant="outlined"
-									onClick={() => navigateMove(index + 1)}
+									onClick={() => {
+										isUserNavigatingRef.current = true;
+										navigateMove(index + 1);
+									}}
 									sx={{
 										width: "100%",
 										borderColor: "#000",
@@ -121,7 +145,13 @@ const BoardControl = ({
 									}}
 								>
 									{isWhiteMove && <span>{moveNumber}.</span>}{" "}
-									{state.lastMove?.san}
+									{state.lastMove?.san
+										.split("")
+										.map((char, charIndex) => (
+											<span key={charIndex}>
+												{pieceNotationToUnicode(char)}
+											</span>
+										))}
 								</Button>
 							</Grid>
 						);

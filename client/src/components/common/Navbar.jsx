@@ -32,9 +32,7 @@ function Navbar({ onClick, title }) {
 						}}
 					/>
 				</IconButton>
-				<Typography variant="h4" style={{ color: "gray" }}>
-					{title}
-				</Typography>
+				<Typography variant="h4">{title}</Typography>
 				<div style={{ width: 48 }} />{" "}
 			</Toolbar>
 		</AppBar>

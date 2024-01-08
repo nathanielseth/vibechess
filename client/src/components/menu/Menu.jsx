@@ -14,7 +14,7 @@ import {
 import {
 	PassNPlayIcon,
 	MatchmakingIcon,
-	PlayWithFriendsIcon,
+	PlayWithFriendIcon,
 	VersusBotIcon,
 	SettingsIcon,
 	VibeChessLogo,
@@ -29,6 +29,7 @@ import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
 import PropTypes from "prop-types";
 import SettingsModal from "../common/SettingsModal";
+import TimeControlModal from "./TimeControlModal";
 import { useNavigate } from "react-router-dom";
 import { Howl } from "howler";
 
@@ -123,6 +124,7 @@ function Menu() {
 		return localStorage.getItem("isMusicMuted") === "true" || false;
 	});
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
 
 	const handleSettingsClick = () => {
 		clickSound.play();
@@ -138,9 +140,13 @@ function Menu() {
 		navigate("/pass-and-play");
 	};
 
-	const handlePlayWithFriendsClick = () => {
+	const handlePlayWithFriendClick = () => {
 		clickSound.play();
-		navigate("/play-with-friend");
+		setIsTimeControlModalOpen(true);
+	};
+
+	const handleTimeControlClose = () => {
+		setIsTimeControlModalOpen(false);
 	};
 
 	const music = useMemo(
@@ -241,7 +247,7 @@ function Menu() {
 					icon={PassNPlayIcon}
 					label="PASS AND PLAY"
 					backgroundColor="#c490d1"
-					description="Practice locally in a solo game or pass-and-play with friends."
+					description="Practice locally in a solo game or pass-and-play with a friend."
 				/>
 
 				<ActionButton
@@ -262,11 +268,20 @@ function Menu() {
 					}}
 				>
 					<ActionButton
-						onClick={handlePlayWithFriendsClick}
-						icon={PlayWithFriendsIcon}
-						label="PLAY WITH FRIENDS"
+						onClick={handlePlayWithFriendClick}
+						icon={PlayWithFriendIcon}
+						label="PLAY WITH FRIEND"
 						backgroundColor="#f24040"
 						description="Create a room and invite your friend for a multiplayer match."
+					/>
+
+					<TimeControlModal
+						isOpen={isTimeControlModalOpen}
+						onClose={handleTimeControlClose}
+						onSelectTimeControl={(timeControl) => {
+							console.log("Selected Time Control:", timeControl);
+							handleTimeControlClose();
+						}}
 					/>
 
 					<Slide direction="up" in={true} mountOnEnter unmountOnExit>

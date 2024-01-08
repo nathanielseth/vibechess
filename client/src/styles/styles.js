@@ -1,6 +1,6 @@
 import PassNPlayIcon from "../icons/passnplay.svg";
 import MatchmakingIcon from "../icons/matchmake.svg";
-import PlayWithFriendsIcon from "../icons/friend.svg";
+import PlayWithFriendIcon from "../icons/friend.svg";
 import VersusBotIcon from "../icons/bot.svg";
 import SettingsIcon from "../icons/cog.svg";
 import VibeChessLogo from "../icons/vibechess.svg";
