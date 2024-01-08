@@ -15,19 +15,19 @@ const getTheme = (mode) =>
 		palette: {
 			mode: mode,
 			primary: {
-				main: "#ce1126",
+				main: "#f24040",
 			},
 			secondary: {
-				main: "#2176ff",
+				main: "#87BCDE",
 			},
 			error: {
-				main: "#d264b6",
+				main: "#c490d1",
 			},
 			warning: {
-				main: "#fb8b24",
+				main: "#f49f0a",
 			},
 			info: {
-				main: "#4c6663",
+				main: "#565676",
 			},
 			background: {
 				default: mode === "dark" ? "#101010" : "#fff",
@@ -57,6 +57,7 @@ const getTheme = (mode) =>
 	});
 
 const App = () => {
+	window.localStorage.setItem("username", "");
 	const storedUsername = window.localStorage.getItem("username");
 	const storedFlag = window.localStorage.getItem("selectedFlag");
 

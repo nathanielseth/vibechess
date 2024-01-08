@@ -100,10 +100,11 @@ const ChessboardComponent = () => {
 	};
 
 	const customDarkSquareColor =
-		themeColors[selectedTheme]?.darkSquare || themeColors["mud"].darkSquare;
+		themeColors[selectedTheme]?.darkSquare ||
+		themeColors["grey"].darkSquare;
 	const customLightSquareColor =
 		themeColors[selectedTheme]?.lightSquare ||
-		themeColors["mud"].lightSquare;
+		themeColors["grey"].lightSquare;
 
 	const handleRematch = () => {
 		setGame(new Chess());
@@ -326,8 +327,8 @@ const ChessboardComponent = () => {
 					{ fen: gameCopy.fen(), lastMove: move },
 				]);
 				setHighlightedSquares({
-					[move.from]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
-					[move.to]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
+					[move.from]: { backgroundColor: "rgba(252, 220, 77, 0.4)" },
+					[move.to]: { backgroundColor: "rgba(252, 220, 77, 0.4)" },
 				});
 				setKingInCheck(isKingInCheck(gameCopy));
 				setCurrentIndex(history.length);

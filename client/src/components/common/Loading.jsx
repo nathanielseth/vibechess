@@ -19,7 +19,7 @@ const Animation = keyframes`
 `;
 
 const Spinner = styled.div`
-	--dark-clr: #ce1126;
+	--dark-clr: #f24040;
 	--light-clr: #fff;
 	height: ${(props) => props.size || "4rem"};
 	width: ${(props) => props.size || "4rem"};

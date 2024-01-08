@@ -46,7 +46,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 			draggable: true,
 			theme: "colored",
 			icon: "👋🏼",
-			style: { background: "#ce1126" },
+			style: { background: "#f24040" },
 		});
 
 		onSubmit();
@@ -67,7 +67,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 				loading="lazy"
 				src={VibeChessLogo}
 				alt="VibeChess Logo"
-				style={{ width: "100px", marginBottom: "25px" }}
+				style={{ width: "100px", marginBottom: "10px" }}
 			/>
 			<Typography
 				marginBottom={4}
@@ -75,7 +75,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 				variant="h3"
 				color="inherit"
 			>
-				<span style={{ color: "#ce1126" }}>Vibe</span>Chess
+				<span style={{ color: "#f24040" }}>Vibe</span>Chess
 			</Typography>
 			<Box
 				display="flex"

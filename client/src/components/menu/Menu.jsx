@@ -63,7 +63,7 @@ const ActionButton = React.memo(
 						color: "black",
 					},
 					".MuiTouchRipple-child": {
-						backgroundColor: "#ce1126",
+						backgroundColor: "#f24040",
 					},
 				}}
 			>
@@ -216,7 +216,7 @@ function Menu() {
 				</Zoom>
 				<Zoom in={true}>
 					<Typography variant="h2" color="white" textAlign="center">
-						<span style={{ color: "#ce1126" }}>Vibe</span>Chess
+						<span style={{ color: "#f24040" }}>Vibe</span>Chess
 					</Typography>
 				</Zoom>
 			</Container>
@@ -238,7 +238,7 @@ function Menu() {
 					onClick={handlePassAndPlayClick}
 					icon={PassNPlayIcon}
 					label="PASS AND PLAY"
-					backgroundColor="#d264b6"
+					backgroundColor="#c490d1"
 					description="Practice locally in a solo game or pass-and-play with friends."
 				/>
 
@@ -248,7 +248,7 @@ function Menu() {
 					}}
 					icon={MatchmakingIcon}
 					label="MATCHMAKING"
-					backgroundColor="#2176ff"
+					backgroundColor="#87BCDE"
 					description="Search for an opponent through random matchmaking."
 				/>
 
@@ -265,7 +265,7 @@ function Menu() {
 						}}
 						icon={PlayWithFriendsIcon}
 						label="PLAY WITH FRIENDS"
-						backgroundColor="#ce1126"
+						backgroundColor="#f24040"
 						description="Create a room and invite your friend for a multiplayer match."
 					/>
 
@@ -282,7 +282,7 @@ function Menu() {
 											sx={{
 												color: "#a6a6a6",
 												"&:hover, &:focus": {
-													color: "#ce1126",
+													color: "#f24040",
 												},
 											}}
 											disabled={false}
@@ -304,7 +304,7 @@ function Menu() {
 					}}
 					icon={VersusBotIcon}
 					label="VERSUS BOT"
-					backgroundColor="#fb8b24"
+					backgroundColor="#F49F0A"
 					description="Test your skills against an AI opponent."
 				/>
 
@@ -312,7 +312,7 @@ function Menu() {
 					onClick={handleSettingsClick}
 					icon={SettingsIcon}
 					label="OPTIONS"
-					backgroundColor="#4c6663"
+					backgroundColor="#565676"
 					description="Adjust board theme, sound settings, and chat preferences."
 				/>
 
@@ -368,7 +368,7 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							<GitHubIcon
-								sx={{ color: "#ce1126", fontSize: 30 }}
+								sx={{ color: "#f24040", fontSize: 30 }}
 							/>
 						</IconButton>
 					</Tooltip>
@@ -388,7 +388,7 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							<FreeBreakfastIcon
-								sx={{ color: "#fb8b24", fontSize: 30 }}
+								sx={{ color: "#F49F0A", fontSize: 30 }}
 							/>
 						</IconButton>
 					</Tooltip>

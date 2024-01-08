@@ -143,11 +143,11 @@ function SettingsModal({ isOpen, onClose }) {
 							onChange={(e) => setSelectedBoard(e.target.value)}
 							style={{ maxHeight: 38, width: 210 }}
 						>
-							<MenuItem value="mud">Mud Keep</MenuItem>
 							<MenuItem value="grey">Calm Grey</MenuItem>
 							<MenuItem value="red">Vibe Red</MenuItem>
-							<MenuItem value="blue">Chill Blue</MenuItem>
-							<MenuItem value="orange">Tabby Cat</MenuItem>
+							<MenuItem value="blue">Cool Blue</MenuItem>
+							<MenuItem value="mud">Mud Keep</MenuItem>
+							<MenuItem value="orange">Orange Cat</MenuItem>
 							<MenuItem value="green">Classic Green</MenuItem>
 							<MenuItem value="lavander">
 								Moonlight Lavander
