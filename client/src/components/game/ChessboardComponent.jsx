@@ -11,6 +11,7 @@ import BoardControl from "./BoardControl";
 import GameOverModal from "./GameOverModal";
 import SettingsModal from "../common/SettingsModal";
 import ShareModal from "../common/ShareModal";
+import Engine from "./engine.js";
 
 const moveSound = new Howl({
 	src: ["/sound/move.mp3"],
@@ -46,6 +47,7 @@ const generatePGN = (history) => {
 
 const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
+	const engine = useMemo(() => new Engine(), []);
 	const [lastMove, setLastMove] = useState(null);
 	const [rightClickedSquares, setRightClickedSquares] = useState({});
 	const [highlightedSquares, setHighlightedSquares] = useState({});
@@ -57,6 +59,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [selectedPieceSet, setSelectedPieceSet] = useState(
 		window.localStorage.getItem("selectedPieces") || "tatiana"
 	);
+	const [chessBoardPosition, setChessBoardPosition] = useState(game.fen());
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [isGameOver, setIsGameOver] = useState(false);
@@ -68,6 +71,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [selectedTheme, setSelectedTheme] = useState(
 		window.localStorage.getItem("selectedBoard") || "grey"
 	);
+	const [bestMove, setBestMove] = useState(null);
 
 	const customDarkSquareColor =
 		boardThemeColors[selectedTheme]?.darkSquare ||
@@ -76,6 +80,22 @@ const ChessboardComponent = ({ gameMode }) => {
 		boardThemeColors[selectedTheme]?.lightSquare ||
 		boardThemeColors.grey.lightSquare;
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
+
+	const findBestMove = useCallback(() => {
+		engine.evaluatePosition(game.fen(), 10);
+		engine.onMessage(({ bestMove }) => {
+			if (bestMove) {
+				setBestMove(bestMove);
+				setChessBoardPosition(game.fen());
+			}
+		});
+	}, [engine, game]);
+
+	useEffect(() => {
+		if (!game.isGameOver() || game.isGameOver()) {
+			setTimeout(findBestMove, 300);
+		}
+	}, [chessBoardPosition, findBestMove, game]);
 
 	const handleRematch = () => {
 		setGame(new Chess());
@@ -414,6 +434,15 @@ const ChessboardComponent = ({ gameMode }) => {
 					customArrowColor="rgb(244,159,10)"
 					customPieces={customPieces}
 					onPieceDragBegin={onPieceDragBegin}
+					customArrows={
+						bestMove && [
+							[
+								bestMove.substring(0, 2),
+								bestMove.substring(2, 4),
+								"rgb(0, 128, 0)",
+							],
+						]
+					}
 				/>
 			</Grid>
 			<Grid item xs={4}>
