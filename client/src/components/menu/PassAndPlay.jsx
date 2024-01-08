@@ -5,7 +5,7 @@ import ShareModal from "../common/ShareModal";
 import { Stack, Grid } from "@mui/material";
 import { styles } from "../../styles/styles";
 import "react-toastify/dist/ReactToastify.css";
-import ChessboardComponent from "./ChessboardComponent";
+import ChessboardComponent from "../game/ChessboardComponent";
 
 const PassAndPlay = () => {
 	const [gameMode] = useState("passandplay");
@@ -23,7 +23,7 @@ const PassAndPlay = () => {
 	return (
 		<Stack
 			direction="column"
-			justifyContent="center"
+			justifyContent="space-between"
 			alignItems="center"
 			spacing={-10}
 			minHeight="100vh"

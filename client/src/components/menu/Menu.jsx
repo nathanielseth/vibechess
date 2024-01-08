@@ -62,9 +62,6 @@ const ActionButton = React.memo(
 						bgcolor: "white",
 						color: "black",
 					},
-					".MuiTouchRipple-child": {
-						backgroundColor: "#f24040",
-					},
 				}}
 			>
 				<Box
@@ -139,6 +136,11 @@ function Menu() {
 	const handlePassAndPlayClick = () => {
 		clickSound.play();
 		navigate("/pass-and-play");
+	};
+
+	const handlePlayWithFriendsClick = () => {
+		clickSound.play();
+		navigate("/play-with-friend");
 	};
 
 	const music = useMemo(
@@ -260,9 +262,7 @@ function Menu() {
 					}}
 				>
 					<ActionButton
-						onClick={() => {
-							clickSound.play();
-						}}
+						onClick={handlePlayWithFriendsClick}
 						icon={PlayWithFriendsIcon}
 						label="PLAY WITH FRIENDS"
 						backgroundColor="#f24040"
