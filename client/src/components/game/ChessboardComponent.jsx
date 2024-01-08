@@ -53,6 +53,9 @@ const ChessboardComponent = () => {
 	const [history, setHistory] = useState([
 		{ fen: game.fen(), lastMove: null },
 	]);
+	const [selectedPieceSet, setSelectedPieceSet] = useState(
+		window.localStorage.getItem("selectedPieces") || "tatiana"
+	);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [isGameOver, setIsGameOver] = useState(false);
@@ -61,6 +64,14 @@ const ChessboardComponent = () => {
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [gameEndReason, setGameEndReason] = useState(null);
+	const [selectedTheme, setSelectedTheme] = useState(
+		window.localStorage.getItem("selectedBoard") || "calmGrey"
+	);
+
+	const customDarkSquareColor =
+		selectedTheme === "vibeRed" ? "#ce1126" : "#84828f";
+	const customLightSquareColor =
+		selectedTheme === "vibeRed" ? "#fff8f0" : "#eeeeee";
 
 	const handleRematch = () => {
 		setGame(new Chess());
@@ -93,6 +104,12 @@ const ChessboardComponent = () => {
 
 	const closeSettingsModal = () => {
 		setIsSettingsModalOpen(false);
+		setSelectedPieceSet(
+			window.localStorage.getItem("selectedPieces") || "tatiana"
+		);
+		setSelectedTheme(
+			window.localStorage.getItem("selectedBoard") || "calmGrey"
+		);
 	};
 
 	const toastId = React.useRef(null);
@@ -124,10 +141,12 @@ const ChessboardComponent = () => {
 		) {
 			reason = "nobody won this one..";
 		}
-		//setGameEndReason(reason);
+		setGameEndReason(reason);
 
 		if (reason) {
-			setIsGameOver(true);
+			setTimeout(() => {
+				setIsGameOver(true);
+			}, 1000);
 		}
 	}, [game]);
 
@@ -324,14 +343,14 @@ const ChessboardComponent = () => {
 					style={{
 						width: squareWidth,
 						height: squareWidth,
-						backgroundImage: `url(/piece/tatiana/${piece}.svg)`,
+						backgroundImage: `url(/piece/${selectedPieceSet}/${piece}.svg)`,
 						backgroundSize: "100%",
 					}}
 				/>
 			);
 		});
 		return pieceComponents;
-	}, []);
+	}, [selectedPieceSet]);
 
 	const navigateMove = useCallback(
 		(moveIndex) => {
@@ -385,10 +404,10 @@ const ChessboardComponent = () => {
 							: {}),
 					}}
 					customDarkSquareStyle={{
-						backgroundColor: "#84828f",
+						backgroundColor: customDarkSquareColor,
 					}}
 					customLightSquareStyle={{
-						backgroundColor: "#eeeeee",
+						backgroundColor: customLightSquareColor,
 					}}
 					customPieces={customPieces}
 					onPieceDragBegin={onPieceDragBegin}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
 	Modal,
@@ -17,12 +17,24 @@ import FlagSelectorModal from "../common/FlagSelectorModal";
 import { generateRandomUsername } from "../../data/randomName";
 
 function SettingsModal({ isOpen, onClose }) {
-	const [selectedBoard, setSelectedBoard] = useState("");
-	const [selectedPieces, setSelectedPieces] = useState("");
-	const [premoves, setPremove] = useState(true);
-	const [selectedUITheme, setSelectedUITheme] = useState("dark");
-	const [sounds, setSounds] = useState(true);
-	const [enableChatFilter, setEnableChatFilter] = useState(true);
+	const [selectedBoard, setSelectedBoard] = useState(
+		window.localStorage.getItem("selectedBoard") || "calmGrey"
+	);
+	const [selectedPieces, setSelectedPieces] = useState(
+		window.localStorage.getItem("selectedPieces") || "tatiana"
+	);
+	const [premoves, setPremove] = useState(
+		window.localStorage.getItem("premoves") === "true" || true
+	);
+	const [selectedUITheme, setSelectedUITheme] = useState(
+		window.localStorage.getItem("selectedUITheme") || "dark"
+	);
+	const [sounds, setSounds] = useState(
+		window.localStorage.getItem("sounds") === "true" || true
+	);
+	const [enableChatFilter, setEnableChatFilter] = useState(
+		window.localStorage.getItem("enableChatFilter") === "true" || true
+	);
 	const [flagSelectorOpen, setFlagSelectorOpen] = useState(false);
 
 	const selectedFlag = window.localStorage.getItem("selectedFlag");
@@ -48,8 +60,31 @@ function SettingsModal({ isOpen, onClose }) {
 		}
 
 		window.localStorage.setItem("username", username);
+		window.localStorage.setItem("selectedBoard", selectedBoard);
+		window.localStorage.setItem("selectedPieces", selectedPieces);
+		window.localStorage.setItem("premoves", premoves);
+		window.localStorage.setItem("selectedUITheme", selectedUITheme);
+		window.localStorage.setItem("sounds", sounds);
+		window.localStorage.setItem("enableChatFilter", enableChatFilter);
+
 		onClose();
 	};
+
+	useEffect(() => {
+		window.localStorage.setItem("selectedBoard", selectedBoard);
+		window.localStorage.setItem("selectedPieces", selectedPieces);
+		window.localStorage.setItem("premoves", premoves);
+		window.localStorage.setItem("selectedUITheme", selectedUITheme);
+		window.localStorage.setItem("sounds", sounds);
+		window.localStorage.setItem("enableChatFilter", enableChatFilter);
+	}, [
+		selectedBoard,
+		selectedPieces,
+		premoves,
+		selectedUITheme,
+		sounds,
+		enableChatFilter,
+	]);
 
 	return (
 		<Modal open={isOpen} onClose={onClose}>

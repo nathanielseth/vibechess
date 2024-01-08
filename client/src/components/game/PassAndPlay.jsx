@@ -13,22 +13,6 @@ const PassAndPlay = () => {
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 
-	// const handleRematch = () => {
-	// 	setGame(new Chess());
-	// 	setLastMove(null);
-	// 	setRightClickedSquares({});
-	// 	setHighlightedSquares({});
-	// 	setOptionSquares({});
-	// 	setMoveFrom("");
-	// 	setHistory([{ fen: game.fen(), lastMove: null }]);
-	// 	setCurrentIndex(0);
-	// 	setKingInCheck(null);
-	// 	setAutoFlip(false);
-	// 	setIsGameOver(false);
-	// 	setGameEndReason(null);
-	// 	setPgn("");
-	// };
-
 	const closeShareModal = () => {
 		setShareModalOpen(false);
 	};
