@@ -68,10 +68,42 @@ const ChessboardComponent = () => {
 		window.localStorage.getItem("selectedBoard") || "calmGrey"
 	);
 
+	const themeColors = {
+		grey: {
+			darkSquare: "#b6b6b6",
+			lightSquare: "#d8d8d8",
+		},
+		red: {
+			darkSquare: "#f24040",
+			lightSquare: "#eeeeee",
+		},
+		blue: {
+			darkSquare: "#3f72af",
+			lightSquare: "#dbe2ef",
+		},
+		mud: {
+			darkSquare: "#b0a392",
+			lightSquare: "#cfc8be",
+		},
+		orange: {
+			darkSquare: "#ff9a00",
+			lightSquare: "#f6f7d7",
+		},
+		green: {
+			darkSquare: "#769656",
+			lightSquare: "#eeeed2",
+		},
+		lavander: {
+			darkSquare: "#c0acb5",
+			lightSquare: "#e5d0cb",
+		},
+	};
+
 	const customDarkSquareColor =
-		selectedTheme === "vibeRed" ? "#ce1126" : "#84828f";
+		themeColors[selectedTheme]?.darkSquare || themeColors["mud"].darkSquare;
 	const customLightSquareColor =
-		selectedTheme === "vibeRed" ? "#fff8f0" : "#eeeeee";
+		themeColors[selectedTheme]?.lightSquare ||
+		themeColors["mud"].lightSquare;
 
 	const handleRematch = () => {
 		setGame(new Chess());
@@ -108,7 +140,7 @@ const ChessboardComponent = () => {
 			window.localStorage.getItem("selectedPieces") || "tatiana"
 		);
 		setSelectedTheme(
-			window.localStorage.getItem("selectedBoard") || "calmGrey"
+			window.localStorage.getItem("selectedBoard") || "grey"
 		);
 	};
 

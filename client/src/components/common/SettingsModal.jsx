@@ -18,7 +18,7 @@ import { generateRandomUsername } from "../../data/randomName";
 
 function SettingsModal({ isOpen, onClose }) {
 	const [selectedBoard, setSelectedBoard] = useState(
-		window.localStorage.getItem("selectedBoard") || "calmGrey"
+		window.localStorage.getItem("selectedBoard") || "grey"
 	);
 	const [selectedPieces, setSelectedPieces] = useState(
 		window.localStorage.getItem("selectedPieces") || "tatiana"
@@ -143,15 +143,14 @@ function SettingsModal({ isOpen, onClose }) {
 							onChange={(e) => setSelectedBoard(e.target.value)}
 							style={{ maxHeight: 38, width: 210 }}
 						>
-							<MenuItem value="calmGrey">Calm Grey</MenuItem>
-							<MenuItem value="vibeRed">Vibe Red</MenuItem>
-							<MenuItem value="chillBlue">Chill Blue</MenuItem>
-							<MenuItem value="vicePink">Vice Pink</MenuItem>
-							<MenuItem value="classicGreen">
-								Classic Green
-							</MenuItem>
-							<MenuItem value="tabbyCatOrange">
-								Tabby Cat Orange
+							<MenuItem value="mud">Mud Keep</MenuItem>
+							<MenuItem value="grey">Calm Grey</MenuItem>
+							<MenuItem value="red">Vibe Red</MenuItem>
+							<MenuItem value="blue">Chill Blue</MenuItem>
+							<MenuItem value="orange">Tabby Cat</MenuItem>
+							<MenuItem value="green">Classic Green</MenuItem>
+							<MenuItem value="lavander">
+								Moonlight Lavander
 							</MenuItem>
 						</Select>
 					</Box>
