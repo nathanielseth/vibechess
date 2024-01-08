@@ -5,11 +5,10 @@ import ShareModal from "../common/ShareModal";
 import { Stack, Grid } from "@mui/material";
 import { styles } from "../../styles/styles";
 import "react-toastify/dist/ReactToastify.css";
-import GameOverModal from "./GameOverModal";
 import ChessboardComponent from "./ChessboardComponent";
 
 const PassAndPlay = () => {
-	const [isGameOver, setIsGameOver] = useState(false);
+	const [gameMode] = useState("passandplay");
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 
@@ -36,7 +35,7 @@ const PassAndPlay = () => {
 					spacing={1}
 					style={{ margin: 0, alignItems: "stretch" }}
 				>
-					<ChessboardComponent />
+					<ChessboardComponent gameMode={gameMode} />
 				</Grid>
 			</div>
 			<SettingsModal
@@ -44,10 +43,6 @@ const PassAndPlay = () => {
 				onClose={closeSettingsModal}
 			/>
 			<ShareModal isOpen={shareModalOpen} onClose={closeShareModal} />
-			<GameOverModal
-				isOpen={isGameOver}
-				onClose={() => setIsGameOver(false)}
-			/>
 		</Stack>
 	);
 };

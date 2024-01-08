@@ -11,6 +11,7 @@ const GameOverModal = ({
 	onNewGame,
 	endReason,
 	winner,
+	gameMode,
 }) => {
 	const selectedFlag = window.localStorage.getItem("selectedFlag");
 
@@ -39,7 +40,11 @@ const GameOverModal = ({
 					{/* Top Box */}
 					<Box mb={4}>
 						<Typography variant="h4">
-							{winner ? `${winner} WON!` : "DRAW!"}
+							{winner && winner !== "passandplay"
+								? `${winner} WON!`
+								: endReason === "nobody won this one.."
+								? "DRAW!"
+								: "YOU WON!"}
 						</Typography>
 						<Typography variant="subtitle1">{endReason}</Typography>
 					</Box>
@@ -91,7 +96,9 @@ const GameOverModal = ({
 								onClick={onNewGame}
 								sx={{ height: "50px" }}
 							>
-								New Game
+								{gameMode === "passandplay"
+									? "Back to Menu"
+									: "New Game"}
 							</Button>
 						</Grid>
 					</Grid>
@@ -108,6 +115,7 @@ GameOverModal.propTypes = {
 	onNewGame: PropTypes.func.isRequired,
 	endReason: PropTypes.string.isRequired,
 	winner: PropTypes.string,
+	gameMode: PropTypes.string.isRequired,
 };
 
 export default GameOverModal;

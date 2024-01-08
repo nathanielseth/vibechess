@@ -4,6 +4,53 @@ import PlayWithFriendsIcon from "../icons/friend.svg";
 import VersusBotIcon from "../icons/bot.svg";
 import SettingsIcon from "../icons/cog.svg";
 import VibeChessLogo from "../icons/vibechess.svg";
+import { createTheme } from "@mui/material/styles";
+
+const getTheme = (mode) =>
+	createTheme({
+		palette: {
+			mode: mode,
+			primary: {
+				main: "#f24040",
+			},
+			secondary: {
+				main: "#87BCDE",
+			},
+			error: {
+				main: "#c490d1",
+			},
+			warning: {
+				main: "#f49f0a",
+			},
+			info: {
+				main: "#565676",
+			},
+			background: {
+				default: mode === "dark" ? "#101010" : "#fff",
+			},
+		},
+		typography: {
+			fontFamily: "'IBM Plex Mono', monospace",
+			h1: {
+				fontFamily: "'Bebas Neue', cursive",
+			},
+			h2: {
+				fontFamily: "'Bebas Neue', cursive",
+			},
+			h3: {
+				fontFamily: "'Bebas Neue', cursive",
+			},
+			h4: {
+				fontFamily: "'Bebas Neue', cursive",
+			},
+			h5: {
+				fontFamily: "'Bebas Neue', cursive",
+			},
+			h6: {
+				fontFamily: "'Bebas Neue', cursive",
+			},
+		},
+	});
 
 const styles = {
 	circleButtonStyle: {
@@ -63,6 +110,37 @@ const styles = {
 	},
 };
 
+const boardThemeColors = {
+	grey: {
+		darkSquare: "#b6b6b6",
+		lightSquare: "#d8d8d8",
+	},
+	red: {
+		darkSquare: "#f24040",
+		lightSquare: "#eeeeee",
+	},
+	blue: {
+		darkSquare: "#3f72af",
+		lightSquare: "#dbe2ef",
+	},
+	mud: {
+		darkSquare: "#b0a392",
+		lightSquare: "#cfc8be",
+	},
+	orange: {
+		darkSquare: "#ff9a00",
+		lightSquare: "#f6f7d7",
+	},
+	green: {
+		darkSquare: "#769656",
+		lightSquare: "#eeeed2",
+	},
+	lavander: {
+		darkSquare: "#c0acb5",
+		lightSquare: "#e5d0cb",
+	},
+};
+
 export {
 	PassNPlayIcon,
 	MatchmakingIcon,
@@ -71,4 +149,6 @@ export {
 	SettingsIcon,
 	VibeChessLogo,
 	styles,
+	boardThemeColors,
+	getTheme,
 };

@@ -12,7 +12,7 @@ function Navbar({ onClick, title }) {
 	return (
 		<AppBar
 			position="static"
-			sx={{ zIndex: 24, background: "none", boxShadow: "none" }}
+			sx={{ zIndex: 1, background: "none", boxShadow: "none" }}
 		>
 			<Toolbar
 				style={{ display: "flex", justifyContent: "space-between" }}

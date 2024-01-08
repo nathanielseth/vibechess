@@ -1,63 +1,17 @@
 import React, { Suspense, useState, lazy } from "react";
 import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Loading from "./components/common/Loading";
 import Menu from "./components/menu/Menu";
 import PassAndPlay from "./components/game/PassAndPlay";
+import { getTheme } from "./styles/styles";
 
 const WelcomeScreen = lazy(() => import("./components/splash/WelcomeScreen"));
 
-const getTheme = (mode) =>
-	createTheme({
-		palette: {
-			mode: mode,
-			primary: {
-				main: "#f24040",
-			},
-			secondary: {
-				main: "#87BCDE",
-			},
-			error: {
-				main: "#c490d1",
-			},
-			warning: {
-				main: "#f49f0a",
-			},
-			info: {
-				main: "#565676",
-			},
-			background: {
-				default: mode === "dark" ? "#101010" : "#fff",
-			},
-		},
-		typography: {
-			fontFamily: "'IBM Plex Mono', monospace",
-			h1: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h2: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h3: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h4: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h5: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h6: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-		},
-	});
-
 const App = () => {
-	window.localStorage.setItem("username", "");
 	const storedUsername = window.localStorage.getItem("username");
 	const storedFlag = window.localStorage.getItem("selectedFlag");
 

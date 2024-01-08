@@ -8,6 +8,8 @@ import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import { styles } from "../../styles/styles";
 import ShareModal from "../common/ShareModal";
 
@@ -19,9 +21,17 @@ const BoardControl = ({
 	autoFlip,
 	openSettingsModal,
 	pgn,
+	gameMode,
+	handleRematch,
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const movesBoxRef = useRef();
+
+	const handleResign = () => {
+		if (handleRematch) {
+			handleRematch();
+		}
+	};
 
 	const openShareModal = () => {
 		setShareModalOpen(true);
@@ -32,7 +42,6 @@ const BoardControl = ({
 	};
 
 	useEffect(() => {
-		// Scroll to the latest move when currentIndex changes
 		if (movesBoxRef.current) {
 			movesBoxRef.current.scrollTop = movesBoxRef.current.scrollHeight;
 		}
@@ -117,22 +126,42 @@ const BoardControl = ({
 				</Grid>
 			</Box>
 			<Box display="flex" justifyContent="flex-end" alignItems="flex-end">
-				<Tooltip title="Auto-Flip">
-					<IconButton
-						onClick={toggleAutoFlip}
-						sx={{ color: autoFlip ? "" : "grey" }}
-					>
-						<LoopRoundedIcon />
+				{gameMode !== "passandplay" && (
+					<Tooltip title="Auto-Flip" enterDelay={400}>
+						<IconButton
+							onClick={toggleAutoFlip}
+							sx={{ color: autoFlip ? "" : "grey" }}
+						>
+							<LoopRoundedIcon />
+						</IconButton>
+					</Tooltip>
+				)}
+
+				<Tooltip title="Resign" enterDelay={400}>
+					<IconButton onClick={handleResign}>
+						<FlagRoundedIcon />
 					</IconButton>
 				</Tooltip>
 
-				<IconButton onClick={openShareModal}>
-					<ShareRoundedIcon />
-				</IconButton>
+				{gameMode === "passandplay" && (
+					<Tooltip title="Offer Draw" enterDelay={400}>
+						<IconButton>
+							<HandshakeRoundedIcon />
+						</IconButton>
+					</Tooltip>
+				)}
 
-				<IconButton onClick={openSettingsModal}>
-					<SettingsIcon />
-				</IconButton>
+				<Tooltip title="Share" enterDelay={400}>
+					<IconButton onClick={openShareModal}>
+						<ShareRoundedIcon />
+					</IconButton>
+				</Tooltip>
+
+				<Tooltip title="Settings" enterDelay={400}>
+					<IconButton onClick={openSettingsModal}>
+						<SettingsIcon />
+					</IconButton>
+				</Tooltip>
 			</Box>
 			<ShareModal
 				isOpen={isShareModalOpen}
@@ -152,6 +181,8 @@ BoardControl.propTypes = {
 	openSettingsModal: PropTypes.func.isRequired,
 	openShareModal: PropTypes.func.isRequired,
 	pgn: PropTypes.string.isRequired,
+	gameMode: PropTypes.string.isRequired,
+	handleRematch: PropTypes.string.isRequired,
 };
 
 export default BoardControl;

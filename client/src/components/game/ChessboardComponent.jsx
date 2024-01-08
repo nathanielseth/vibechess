@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
+import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Howl } from "howler";
 import { Grid } from "@mui/material";
 import { toast } from "react-toastify";
-import { styles } from "../../styles/styles";
+import { styles, boardThemeColors } from "../../styles/styles";
 import "react-toastify/dist/ReactToastify.css";
 import BoardControl from "./BoardControl";
 import GameOverModal from "./GameOverModal";
@@ -43,7 +44,7 @@ const generatePGN = (history) => {
 	return pgn;
 };
 
-const ChessboardComponent = () => {
+const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
 	const [lastMove, setLastMove] = useState(null);
 	const [rightClickedSquares, setRightClickedSquares] = useState({});
@@ -65,46 +66,16 @@ const ChessboardComponent = () => {
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [gameEndReason, setGameEndReason] = useState(null);
 	const [selectedTheme, setSelectedTheme] = useState(
-		window.localStorage.getItem("selectedBoard") || "calmGrey"
+		window.localStorage.getItem("selectedBoard") || "grey"
 	);
 
-	const themeColors = {
-		grey: {
-			darkSquare: "#b6b6b6",
-			lightSquare: "#d8d8d8",
-		},
-		red: {
-			darkSquare: "#f24040",
-			lightSquare: "#eeeeee",
-		},
-		blue: {
-			darkSquare: "#3f72af",
-			lightSquare: "#dbe2ef",
-		},
-		mud: {
-			darkSquare: "#b0a392",
-			lightSquare: "#cfc8be",
-		},
-		orange: {
-			darkSquare: "#ff9a00",
-			lightSquare: "#f6f7d7",
-		},
-		green: {
-			darkSquare: "#769656",
-			lightSquare: "#eeeed2",
-		},
-		lavander: {
-			darkSquare: "#c0acb5",
-			lightSquare: "#e5d0cb",
-		},
-	};
-
 	const customDarkSquareColor =
-		themeColors[selectedTheme]?.darkSquare ||
-		themeColors["grey"].darkSquare;
+		boardThemeColors[selectedTheme]?.darkSquare ||
+		boardThemeColors.grey.darkSquare;
 	const customLightSquareColor =
-		themeColors[selectedTheme]?.lightSquare ||
-		themeColors["grey"].lightSquare;
+		boardThemeColors[selectedTheme]?.lightSquare ||
+		boardThemeColors.grey.lightSquare;
+	const yellowSquare = "rgba(252, 220, 77, 0.4)";
 
 	const handleRematch = () => {
 		setGame(new Chess());
@@ -164,14 +135,12 @@ const ChessboardComponent = () => {
 		let reason = null;
 
 		if (game.isCheckmate()) {
-			reason = `Checkmate! ${
-				game.turn() === "w" ? "Black" : "White"
-			} wins!`;
-		} else if (
-			game.isDraw() ||
-			game.isStalemate() ||
-			game.isThreefoldRepetition()
-		) {
+			const loserColor = game.turn() === "w" ? "Black" : "White";
+			const moves = history.length - 1;
+			reason = `${loserColor} got checkmated in ${moves} moves`;
+		} else if (game.isStalemate()) {
+			reason = "oops... that's a stalemate...";
+		} else if (game.isDraw() || game.isThreefoldRepetition()) {
 			reason = "nobody won this one..";
 		}
 		setGameEndReason(reason);
@@ -181,7 +150,7 @@ const ChessboardComponent = () => {
 				setIsGameOver(true);
 			}, 1000);
 		}
-	}, [game]);
+	}, [game, history]);
 
 	useEffect(() => {
 		checkGameOver();
@@ -223,7 +192,7 @@ const ChessboardComponent = () => {
 			});
 
 			newSquares[square] = {
-				background: "rgba(255, 255, 0, 0.4)",
+				background: yellowSquare,
 			};
 
 			setOptionSquares(newSquares);
@@ -251,8 +220,8 @@ const ChessboardComponent = () => {
 				{ fen: gameCopy.fen(), lastMove: move },
 			]);
 			setHighlightedSquares({
-				[sourceSquare]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
-				[targetSquare]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
+				[sourceSquare]: { backgroundColor: yellowSquare },
+				[targetSquare]: { backgroundColor: yellowSquare },
 			});
 			setKingInCheck(isKingInCheck(gameCopy));
 			getMoveOptions(targetSquare);
@@ -327,8 +296,8 @@ const ChessboardComponent = () => {
 					{ fen: gameCopy.fen(), lastMove: move },
 				]);
 				setHighlightedSquares({
-					[move.from]: { backgroundColor: "rgba(252, 220, 77, 0.4)" },
-					[move.to]: { backgroundColor: "rgba(252, 220, 77, 0.4)" },
+					[move.from]: { backgroundColor: yellowSquare },
+					[move.to]: { backgroundColor: yellowSquare },
 				});
 				setKingInCheck(isKingInCheck(gameCopy));
 				setCurrentIndex(history.length);
@@ -395,10 +364,10 @@ const ChessboardComponent = () => {
 			if (moveIndex === history.length - 1 && lastMove) {
 				setHighlightedSquares({
 					[lastMove.from]: {
-						backgroundColor: "rgba(255, 255, 0, 0.4)",
+						backgroundColor: yellowSquare,
 					},
 					[lastMove.to]: {
-						backgroundColor: "rgba(255, 255, 0, 0.4)",
+						backgroundColor: yellowSquare,
 					},
 				});
 			} else {
@@ -410,7 +379,7 @@ const ChessboardComponent = () => {
 
 	return (
 		<Grid container>
-			<Grid item xs={8}>
+			<Grid item xs={8} sx={{ zIndex: 1 }}>
 				<Chessboard
 					id="StyledBoard"
 					boardOrientation={
@@ -442,6 +411,7 @@ const ChessboardComponent = () => {
 					customLightSquareStyle={{
 						backgroundColor: customLightSquareColor,
 					}}
+					customArrowColor="rgb(244,159,10)"
 					customPieces={customPieces}
 					onPieceDragBegin={onPieceDragBegin}
 				/>
@@ -456,6 +426,7 @@ const ChessboardComponent = () => {
 					openSettingsModal={openSettingsModal}
 					openShareModal={openShareModal}
 					pgn={pgn}
+					handleRematch={handleRematch}
 				/>
 				<SettingsModal
 					isOpen={isSettingsModalOpen}
@@ -466,16 +437,23 @@ const ChessboardComponent = () => {
 					onClose={closeShareModal}
 					pgn={pgn}
 				/>
-				<GameOverModal
-					isOpen={isGameOver}
-					onClose={() => setIsGameOver(false)}
-					onRematch={handleRematch}
-					onNewGame={handleRematch}
-					endReason={gameEndReason}
-				/>
+				{gameMode !== "passandplay" && (
+					<GameOverModal
+						isOpen={isGameOver}
+						onClose={() => setIsGameOver(false)}
+						onRematch={handleRematch}
+						onNewGame={handleRematch}
+						endReason={gameEndReason}
+						gameMode={gameMode}
+					/>
+				)}
 			</Grid>
 		</Grid>
 	);
+};
+
+ChessboardComponent.propTypes = {
+	gameMode: PropTypes.string.isRequired,
 };
 
 export default ChessboardComponent;
