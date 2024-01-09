@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Howl } from "howler";
 import { Grid } from "@mui/material";
 import { toast } from "react-toastify";
 import { styles, boardThemeColors } from "../../styles/styles";
@@ -12,38 +11,13 @@ import GameOverModal from "./GameOverModal";
 import SettingsModal from "../common/SettingsModal";
 import ShareModal from "../common/ShareModal";
 import Engine from "./engine.js";
-
-const moveSound = new Howl({
-	src: ["/sound/move.mp3"],
-	volume: 0.6,
-});
-
-const captureSound = new Howl({
-	src: ["/sound/capture.mp3"],
-	volume: 0.6,
-});
-
-// the formatting of the notation could use some work
-const generatePGN = (history) => {
-	let pgn = `[Event "Pass & Play"]\n`;
-	pgn += `[Site "VibeChess"]\n`;
-	pgn += `[Date "${new Date().toLocaleDateString()}"]\n`;
-	pgn += `[White "${window.localStorage.getItem("username")}"]\n`;
-	pgn += `[Black "${window.localStorage.getItem("username")}"]\n\n`;
-
-	for (let i = 0; i < history.length; i += 2) {
-		const whiteMove = history[i].lastMove
-			? `${history[i].lastMove.san} `
-			: "";
-		const blackMove =
-			i + 1 < history.length && history[i + 1].lastMove
-				? `${history[i + 1].lastMove.san} `
-				: "";
-
-		pgn += `${whiteMove}${blackMove}\n`;
-	}
-	return pgn;
-};
+import {
+	isKingInCheck as checkKingInCheck,
+	findBestMove as findBestMoveUtil,
+	generatePGN,
+	moveSound,
+	captureSound,
+} from "./utils";
 
 const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
@@ -83,15 +57,18 @@ const ChessboardComponent = ({ gameMode }) => {
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
 
 	const findBestMove = useCallback(() => {
-		if (!analysisMode) return;
-		engine.evaluatePosition(game.fen(), 10);
-		engine.onMessage(({ bestMove }) => {
-			if (bestMove) {
-				setBestMove(bestMove);
-				setChessBoardPosition(game.fen());
-			}
-		});
-	}, [engine, game, analysisMode]);
+		findBestMoveUtil(
+			engine,
+			game,
+			analysisMode,
+			setBestMove,
+			setChessBoardPosition
+		);
+	}, [engine, game, analysisMode, setBestMove, setChessBoardPosition]);
+
+	const isKingInCheck = useCallback(() => {
+		return checkKingInCheck(game);
+	}, [game]);
 
 	useEffect(() => {
 		if ((!game.isGameOver() || game.isGameOver()) && analysisMode) {
@@ -99,7 +76,7 @@ const ChessboardComponent = ({ gameMode }) => {
 		}
 	}, [chessBoardPosition, findBestMove, game, analysisMode]);
 
-	const handleRematch = () => {
+	const resetGame = () => {
 		setGame(new Chess());
 		setLastMove(null);
 		setRightClickedSquares({});
@@ -110,10 +87,18 @@ const ChessboardComponent = ({ gameMode }) => {
 		setCurrentIndex(0);
 		setKingInCheck(null);
 		setAutoFlip(false);
-		setAnalysisMode;
+		setAnalysisMode(false);
 		setIsGameOver(false);
 		setGameEndReason(null);
 		setPgn("");
+		toastId.current = toast.info("The game has restarted", {
+			position: toast.POSITION.TOP_CENTER,
+			autoClose: 2000,
+		});
+	};
+
+	const handleRematch = () => {
+		resetGame();
 	};
 
 	const openShareModal = () => {
@@ -144,7 +129,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const toggleAutoFlip = () => {
 		if (!autoFlip) {
 			if (!toastId.current) {
-				toastId.current = toast.success("Auto-flip is enabled!", {
+				toastId.current = toast.info("Auto-flip is enabled!", {
 					position: toast.POSITION.TOP_CENTER,
 					autoClose: 2000,
 				});
@@ -157,7 +142,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const toggleAnalysisMode = () => {
 		if (!analysisMode) {
 			if (!toastId.current) {
-				toastId.current = toast.success("Stockfish analysis enabled!", {
+				toastId.current = toast.info("Stockfish evaluation enabled!", {
 					position: toast.POSITION.TOP_CENTER,
 					autoClose: 4000,
 				});
@@ -179,9 +164,15 @@ const ChessboardComponent = ({ gameMode }) => {
 		} else if (game.isDraw() || game.isThreefoldRepetition()) {
 			reason = "nobody won this one..";
 		}
+
 		setGameEndReason(reason);
 
 		if (reason) {
+			toastId.current = toast.info(reason, {
+				position: toast.POSITION.TOP_CENTER,
+				autoClose: 2000,
+			});
+
 			setTimeout(() => {
 				setIsGameOver(true);
 			}, 1000);
@@ -273,29 +264,6 @@ const ChessboardComponent = ({ gameMode }) => {
 		return move;
 	};
 
-	const isKingInCheck = useCallback(() => {
-		if (game.inCheck()) {
-			const pieces = game.board();
-			for (let i = 0; i < 8; i++) {
-				for (let j = 0; j < 8; j++) {
-					const piece = pieces[i][j];
-					if (
-						piece &&
-						piece.type === "k" &&
-						piece.color === game.turn()
-					) {
-						return String.fromCharCode(97 + j) + (8 - i);
-					}
-				}
-			}
-		}
-		return null;
-	}, [game]);
-
-	const onPieceDragBegin = (piece, sourceSquare) => {
-		getMoveOptions(sourceSquare);
-	};
-
 	const onSquareClick = (square) => {
 		setRightClickedSquares({});
 		setMoveFrom("");
@@ -357,6 +325,22 @@ const ChessboardComponent = ({ gameMode }) => {
 			setKingInCheck(isKingInCheck());
 		}
 	}, [lastMove, isKingInCheck]);
+
+	const onPieceDragBegin = (piece, sourceSquare) => {
+		getMoveOptions(sourceSquare);
+	};
+
+	const capturedPieces = history
+		.slice(1, currentIndex + 1)
+		.reduce((pieces, move) => {
+			if (move.lastMove && move.lastMove.captured) {
+				const capturedPiece = move.lastMove.captured.toLowerCase();
+				if (!pieces.includes(capturedPiece)) {
+					pieces.push(capturedPiece);
+				}
+			}
+			return pieces;
+		}, []);
 
 	const customPieces = useMemo(() => {
 		const pieces = [
@@ -476,6 +460,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					openShareModal={openShareModal}
 					pgn={pgn}
 					handleRematch={handleRematch}
+					capturedPieces={capturedPieces}
 				/>
 				<SettingsModal
 					isOpen={isSettingsModalOpen}

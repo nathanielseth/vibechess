@@ -287,6 +287,7 @@ function Menu() {
 					<Slide direction="up" in={true} mountOnEnter unmountOnExit>
 						<TextField
 							label="Room Code"
+							inputProps={{ style: { fontSize: 18 } }}
 							variant="outlined"
 							color="primary"
 							sx={{ width: "30vh", marginBottom: "10px" }}
@@ -353,7 +354,7 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<Tooltip title="FAQ's">
+					<Tooltip title="FAQs" arrow>
 						<IconButton
 							disableRipple
 							onClick={() => alert("Circle Button 1")}
@@ -371,7 +372,7 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<Tooltip title="GitHub">
+					<Tooltip title="GitHub" arrow>
 						<IconButton
 							disableRipple
 							onClick={() =>
@@ -396,7 +397,7 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<Tooltip title="Buy Me A Coffee">
+					<Tooltip title="Buy Me A Coffee" arrow>
 						<IconButton
 							disableRipple
 							onClick={() => alert("Circle Button 3")}
@@ -416,7 +417,7 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<Tooltip title="Toggle UI Mode">
+					<Tooltip title="Toggle UI Mode" arrow>
 						<IconButton
 							disableRipple
 							onClick={() => alert("Circle Button 4")}
@@ -434,7 +435,7 @@ function Menu() {
 					mountOnEnter
 					unmountOnExit
 				>
-					<Tooltip title="Toggle Music">
+					<Tooltip title="Toggle Music" arrow>
 						<IconButton
 							disableRipple
 							onClick={handleMusicToggle}

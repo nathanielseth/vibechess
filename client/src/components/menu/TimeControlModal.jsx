@@ -5,7 +5,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import WhatshotRoundedIcon from "@mui/icons-material/WhatshotRounded";
 import ElectricBoltRoundedIcon from "@mui/icons-material/ElectricBoltRounded";
 import TimerRoundedIcon from "@mui/icons-material/TimerRounded";
-import Lobby from "./Lobby"; // Import your Lobby component
+import Room from "./Room";
 import { useNavigate } from "react-router-dom";
 
 const TimeControlModal = ({ isOpen, onClose }) => {
@@ -15,7 +15,9 @@ const TimeControlModal = ({ isOpen, onClose }) => {
 	const handleTimeControlChange = (value) => {
 		setSelectedTimeControl(value);
 		onClose();
-		navigate("/play-with-friend");
+		navigate("/room", {
+			state: { selectedTimeControl: value },
+		});
 	};
 
 	return (
@@ -42,7 +44,6 @@ const TimeControlModal = ({ isOpen, onClose }) => {
 						Select Time Control (min)
 					</Typography>
 					<Grid
-						spacing={10}
 						sx={{
 							display: "grid",
 							gridTemplateColumns: "repeat(3, 1fr)",
@@ -95,10 +96,8 @@ const TimeControlModal = ({ isOpen, onClose }) => {
 					</Box>
 				</Box>
 			</Modal>
-
-			{/* Conditionally render Lobby based on selectedTimeControl */}
 			{selectedTimeControl !== null && (
-				<Lobby selectedTimeControl={selectedTimeControl} />
+				<Room selectedTimeControl={selectedTimeControl} />
 			)}
 		</>
 	);

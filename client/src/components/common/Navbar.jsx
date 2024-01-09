@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import { AppBar, IconButton, Toolbar, Typography } from "@mui/material";
-import { VibeChessLogo } from "../../styles/styles";
+import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 
 function Navbar({ onClick, title }) {
 	const navigate = useNavigate();
@@ -17,21 +17,24 @@ function Navbar({ onClick, title }) {
 			<Toolbar
 				style={{ display: "flex", justifyContent: "space-between" }}
 			>
-				<IconButton
-					title="Go back to main menu"
+				<Button
+					variant="outlined"
 					edge="start"
 					onClick={handleButtonClick}
-					sx={{ ml: 1, mt: 1 }}
+					sx={{
+						color: "rgba(255, 255, 255, 0.8)",
+						borderColor: "rgba(255, 255, 255, 0.8)",
+						"&:hover": {
+							backgroundColor: "rgba(255, 255, 255, 0.1)",
+							borderColor: "white",
+						},
+						ml: 1,
+						mt: 1,
+					}}
 				>
-					<img
-						src={VibeChessLogo}
-						alt="VibeChess Logo"
-						style={{
-							width: "45px",
-							height: "auto",
-						}}
-					/>
-				</IconButton>
+					<ArrowBackRoundedIcon sx={{ mr: 1 }} />
+					Go back to menu
+				</Button>
 				<Typography variant="h4">{title}</Typography>
 				<div style={{ width: 48 }} />{" "}
 			</Toolbar>

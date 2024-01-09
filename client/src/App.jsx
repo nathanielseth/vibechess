@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Loading from "./components/common/Loading";
 import Menu from "./components/menu/Menu";
 import PassAndPlay from "./components/menu/PassAndPlay";
-import Lobby from "./components/menu/Lobby";
+import Room from "./components/menu/Room";
 import { getTheme } from "./styles/styles";
 
 const WelcomeScreen = lazy(() => import("./components/splash/WelcomeScreen"));
@@ -62,7 +62,7 @@ const App = () => {
 						}
 					/>
 					<Route path="/pass-and-play" element={<PassAndPlay />} />
-					<Route path="/play-with-friend" element={<Lobby />} />
+					<Route path="/room" element={<Room />} />
 				</Routes>
 			</Router>
 			<ToastContainer transition={Slide} />
