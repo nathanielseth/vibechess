@@ -66,12 +66,6 @@ const BoardControl = ({
 
 	return (
 		<Box>
-			<Box
-				style={{
-					height: "30px",
-				}}
-			></Box>
-
 			<Box sx={styles.boardControlStyle}>
 				{/* Move Controls */}
 				<Box
@@ -79,9 +73,6 @@ const BoardControl = ({
 					justifyContent="center"
 					alignItems="center"
 					height={60}
-					style={{
-						width: "100%",
-					}}
 				>
 					<IconButton
 						disabled={currentIndex === 0}
@@ -170,18 +161,20 @@ const BoardControl = ({
 					alignItems="center"
 					style={{ width: "100%" }}
 				>
-					<Tooltip title="Evaluation Mode" enterDelay={400} arrow>
-						<IconButton
-							onClick={toggleAnalysisMode}
-							sx={{ color: analysisMode ? "" : "#989795" }}
-						>
-							<VisibilityRoundedIcon
-								sx={{ fontSize: "1.15rem" }}
-							/>
-						</IconButton>
-					</Tooltip>
+					{gameMode === "passandplay" && (
+						<Tooltip title="Evaluation Mode" enterDelay={400} arrow>
+							<IconButton
+								onClick={toggleAnalysisMode}
+								sx={{ color: analysisMode ? "" : "#989795" }}
+							>
+								<VisibilityRoundedIcon
+									sx={{ fontSize: "1.15rem" }}
+								/>
+							</IconButton>
+						</Tooltip>
+					)}
 
-					{gameMode !== "passandplay" && (
+					{gameMode === "passandplay" && (
 						<Tooltip title="Auto-Flip" enterDelay={400} arrow>
 							<IconButton
 								onClick={toggleAutoFlip}
@@ -200,7 +193,7 @@ const BoardControl = ({
 						</IconButton>
 					</Tooltip>
 
-					{gameMode === "passandplay" && (
+					{gameMode !== "passandplay" && (
 						<Tooltip title="Offer Draw" enterDelay={400} arrow>
 							<IconButton>
 								<HandshakeRoundedIcon

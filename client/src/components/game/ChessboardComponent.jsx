@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Grid, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import { toast } from "react-toastify";
 import { styles, boardThemeColors } from "../../styles/styles";
 import IconButton from "@mui/material/IconButton";
@@ -22,6 +22,7 @@ import {
 	moveSound,
 	captureSound,
 } from "../../data/utils.js";
+import { moveOptionsHandler, handleSquareRightClick } from "./chessboardUtils";
 
 const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
@@ -195,48 +196,13 @@ const ChessboardComponent = ({ gameMode }) => {
 		setPgn(generatePGN(history));
 	}, [game, checkGameOver, history]);
 
-	const getMoveOptions = useCallback(
-		(square) => {
-			const moves = game.moves({
-				square,
-				verbose: true,
-			});
-
-			if (moves.length === 0) {
-				setOptionSquares({});
-				return false;
-			}
-
-			if (currentIndex !== history.length - 1) {
-				setOptionSquares({});
-				setHighlightedSquares({});
-				return false;
-			}
-
-			const newSquares = {};
-			moves.forEach((move) => {
-				const isCapture = move.flags.includes("c");
-				newSquares[move.to] = isCapture
-					? styles.captureSquareStyle
-					: {
-							background:
-								game.get(move.to) &&
-								game.get(move.to).color !==
-									game.get(square).color
-									? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
-									: "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
-							borderRadius: "50%",
-					  };
-			});
-
-			newSquares[square] = {
-				background: yellowSquare,
-			};
-
-			setOptionSquares(newSquares);
-			return true;
-		},
-		[game, currentIndex, history.length]
+	const getMoveOptions = moveOptionsHandler(
+		game,
+		currentIndex,
+		history,
+		setOptionSquares,
+		setHighlightedSquares,
+		yellowSquare
 	);
 
 	const onDrop = (sourceSquare, targetSquare, piece) => {
@@ -327,25 +293,24 @@ const ChessboardComponent = ({ gameMode }) => {
 	};
 
 	useEffect(() => {
-		if (lastMove) {
+		if (lastMove && currentIndex > history.length - 2) {
 			moveSound.play();
 			if (lastMove.captured) {
 				captureSound.play();
 			}
 			setKingInCheck(isKingInCheck());
 		}
-	}, [lastMove, isKingInCheck]);
+	}, [lastMove, currentIndex, history, isKingInCheck]);
 
 	const onPieceDragBegin = (piece, sourceSquare) => {
 		getMoveOptions(sourceSquare);
 	};
-
 	const onSquareRightClick = (square) => {
-		const updatedRightClickedSquares = { ...rightClickedSquares };
-		updatedRightClickedSquares[square] = {
-			backgroundColor: "rgba(196, 144, 209, 0.5)",
-		};
-		setRightClickedSquares(updatedRightClickedSquares);
+		handleSquareRightClick(
+			square,
+			rightClickedSquares,
+			setRightClickedSquares
+		);
 	};
 
 	const customPieces = useMemo(() => {
@@ -402,9 +367,10 @@ const ChessboardComponent = ({ gameMode }) => {
 		},
 		[history, lastMove]
 	);
+
 	return (
-		<Grid container>
-			<Stack item xs={8} sx={{ zIndex: 1 }} direction="row">
+		<Stack container flexDirection="row">
+			<Stack item sx={{ zIndex: 1 }} direction="row">
 				<Chessboard
 					id="StyledBoard"
 					boardOrientation={
@@ -414,7 +380,7 @@ const ChessboardComponent = ({ gameMode }) => {
 								: "black"
 							: boardOrientation
 					}
-					boardWidth={680}
+					boardWidth={650}
 					position={game.fen()}
 					onPieceDrop={onDrop}
 					onSquareClick={onSquareClick}
@@ -454,7 +420,6 @@ const ChessboardComponent = ({ gameMode }) => {
 				/>
 				<Stack
 					item
-					xs={8}
 					sx={{ zIndex: 1 }}
 					direction="column"
 					onMouseEnter={() => setIsSettingsHovered(true)}
@@ -494,7 +459,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					)}
 				</Stack>
 			</Stack>
-			<Grid item xs={4}>
+			<Stack>
 				<BoardControl
 					currentIndex={currentIndex}
 					navigateMove={navigateMove}
@@ -507,6 +472,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					openShareModal={openShareModal}
 					pgn={pgn}
 					handleRematch={handleRematch}
+					gameMode={gameMode}
 				/>
 				<SettingsModal
 					isOpen={isSettingsModalOpen}
@@ -527,8 +493,8 @@ const ChessboardComponent = ({ gameMode }) => {
 						gameMode={gameMode}
 					/>
 				)}
-			</Grid>
-		</Grid>
+			</Stack>
+		</Stack>
 	);
 };
 

@@ -6,7 +6,8 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Loading from "./components/common/Loading";
 import Menu from "./components/menu/Menu";
-import PassAndPlay from "./components/menu/PassAndPlay";
+import PassAndPlay from "./components/game/PassAndPlay";
+import Multiplayer from "./components/game/Multiplayer";
 import Room from "./components/menu/Room";
 import { getTheme } from "./styles/styles";
 
@@ -62,6 +63,7 @@ const App = () => {
 						}
 					/>
 					<Route path="/pass-and-play" element={<PassAndPlay />} />
+					<Route path="/multiplayer" element={<Multiplayer />} />
 					<Route path="/room" element={<Room />} />
 				</Routes>
 			</Router>

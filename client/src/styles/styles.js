@@ -78,13 +78,6 @@ const styles = {
 		transition: "filter 0.3s",
 		"&:hover": { filter: "brightness(0)" },
 	},
-	passAndPlayContainerStyle: {
-		display: "flex",
-		justifyContent: "center",
-		alignItems: "center",
-		height: "100vh",
-		flexWrap: "wrap",
-	},
 	boardControlStyle: {
 		display: "flex",
 		flexDirection: "column",

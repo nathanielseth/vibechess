@@ -1,15 +1,12 @@
 import { Howl } from "howler";
 
-export const MOVE_SOUND_PATH = "/sound/move.mp3";
-export const CAPTURE_SOUND_PATH = "/sound/capture.mp3";
-
 export const moveSound = new Howl({
-	src: [MOVE_SOUND_PATH],
+	src: ["/sound/move.mp3"],
 	volume: 0.6,
 });
 
 export const captureSound = new Howl({
-	src: [CAPTURE_SOUND_PATH],
+	src: ["/sound/capture.mp3"],
 	volume: 0.6,
 });
 

@@ -35,7 +35,6 @@ function Navbar({ onClick, title }) {
 					Go back to menu
 				</Button>
 				<Typography variant="h4">{title}</Typography>
-				<div style={{ width: 48 }} />{" "}
 			</Toolbar>
 		</AppBar>
 	);

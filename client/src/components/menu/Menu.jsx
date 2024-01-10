@@ -140,6 +140,11 @@ function Menu() {
 		navigate("/pass-and-play");
 	};
 
+	const handleMatchmakeClick = () => {
+		clickSound.play();
+		navigate("/multiplayer");
+	};
+
 	const handlePlayWithFriendClick = () => {
 		clickSound.play();
 		setIsTimeControlModalOpen(true);
@@ -251,9 +256,7 @@ function Menu() {
 				/>
 
 				<ActionButton
-					onClick={() => {
-						clickSound.play();
-					}}
+					onClick={handleMatchmakeClick}
 					icon={MatchmakingIcon}
 					label="MATCHMAKING"
 					backgroundColor="secondary.main"
