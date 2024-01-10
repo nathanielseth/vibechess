@@ -96,7 +96,9 @@ const ShareModal = ({ isOpen, onClose, pgn }) => {
 							/>
 							<IconButton onClick={handleCopyLink}>
 								{showCheck ? (
-									<DoneIcon sx={{ color: "#87BCDE" }} />
+									<DoneIcon
+										sx={{ color: "secondary.main" }}
+									/>
 								) : (
 									<ContentCopyRoundedIcon />
 								)}

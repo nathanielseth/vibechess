@@ -25,8 +25,7 @@ function Navbar({ onClick, title }) {
 						color: "rgba(255, 255, 255, 0.8)",
 						borderColor: "rgba(255, 255, 255, 0.8)",
 						"&:hover": {
-							backgroundColor: "rgba(255, 255, 255, 0.1)",
-							borderColor: "white",
+							backgroundColor: "primary.main",
 						},
 						ml: 1,
 						mt: 1,

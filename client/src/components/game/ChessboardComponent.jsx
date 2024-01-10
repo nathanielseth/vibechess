@@ -87,7 +87,6 @@ const ChessboardComponent = ({ gameMode }) => {
 		setCurrentIndex(0);
 		setKingInCheck(null);
 		setAutoFlip(false);
-		setAnalysisMode(false);
 		setIsGameOver(false);
 		setGameEndReason(null);
 		setPgn("");

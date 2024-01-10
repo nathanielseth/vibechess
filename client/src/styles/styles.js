@@ -11,19 +11,19 @@ const getTheme = (mode) =>
 		palette: {
 			mode: mode,
 			primary: {
-				main: "#f24040",
+				main: "#f24040", // red
 			},
 			secondary: {
-				main: "#87BCDE",
+				main: "#87BCDE", // blue
 			},
 			error: {
-				main: "#c490d1",
+				main: "#c490d1", // purple
 			},
 			warning: {
-				main: "#f49f0a",
+				main: "#f49f0a", // orange
 			},
 			info: {
-				main: "#565676",
+				main: "#565676", // indigo
 			},
 			background: {
 				default: mode === "dark" ? "#101010" : "#fff",

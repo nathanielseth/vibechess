@@ -256,7 +256,7 @@ function Menu() {
 					}}
 					icon={MatchmakingIcon}
 					label="MATCHMAKING"
-					backgroundColor="#87BCDE"
+					backgroundColor="secondary.main"
 					description="Search for an opponent through random matchmaking."
 				/>
 
@@ -271,7 +271,7 @@ function Menu() {
 						onClick={handlePlayWithFriendClick}
 						icon={PlayWithFriendIcon}
 						label="PLAY WITH FRIEND"
-						backgroundColor="#f24040"
+						backgroundColor="primary.main"
 						description="Create a room and invite your friend for a multiplayer match."
 					/>
 
@@ -298,7 +298,7 @@ function Menu() {
 											sx={{
 												color: "#a6a6a6",
 												"&:hover, &:focus": {
-													color: "#f24040",
+													color: "primary.main",
 												},
 											}}
 											disabled={false}
@@ -384,7 +384,7 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							<GitHubIcon
-								sx={{ color: "#f24040", fontSize: 30 }}
+								sx={{ color: "primary.main", fontSize: 30 }}
 							/>
 						</IconButton>
 					</Tooltip>
