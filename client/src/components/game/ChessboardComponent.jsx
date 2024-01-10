@@ -2,13 +2,17 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Grid } from "@mui/material";
+import { Grid, Stack } from "@mui/material";
 import { toast } from "react-toastify";
 import { styles, boardThemeColors } from "../../styles/styles";
+import IconButton from "@mui/material/IconButton";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import "react-toastify/dist/ReactToastify.css";
 import BoardControl from "./BoardControl";
 import GameOverModal from "./GameOverModal";
 import SettingsModal from "../common/SettingsModal";
+import SettingsIcon from "@mui/icons-material/Settings";
 import ShareModal from "../common/ShareModal";
 import Engine from "../../data/engine.js";
 import {
@@ -39,6 +43,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [isGameOver, setIsGameOver] = useState(false);
 	const [pgn, setPgn] = useState("");
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+	const [isSettingsHovered, setIsSettingsHovered] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [analysisMode, setAnalysisMode] = useState(false);
@@ -47,7 +52,6 @@ const ChessboardComponent = ({ gameMode }) => {
 		window.localStorage.getItem("selectedBoard") || "grey"
 	);
 	const [bestMove, setBestMove] = useState(null);
-
 	const customDarkSquareColor =
 		boardThemeColors[selectedTheme]?.darkSquare ||
 		boardThemeColors.grey.darkSquare;
@@ -55,6 +59,14 @@ const ChessboardComponent = ({ gameMode }) => {
 		boardThemeColors[selectedTheme]?.lightSquare ||
 		boardThemeColors.grey.lightSquare;
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
+
+	const [boardOrientation, setBoardOrientation] = useState("white");
+
+	const toggleBoardOrientation = () => {
+		setBoardOrientation((prevOrientation) =>
+			prevOrientation === "white" ? "black" : "white"
+		);
+	};
 
 	const findBestMove = useCallback(() => {
 		findBestMoveUtil(
@@ -328,6 +340,14 @@ const ChessboardComponent = ({ gameMode }) => {
 		getMoveOptions(sourceSquare);
 	};
 
+	const onSquareRightClick = (square) => {
+		const updatedRightClickedSquares = { ...rightClickedSquares };
+		updatedRightClickedSquares[square] = {
+			backgroundColor: "rgba(196, 144, 209, 0.5)",
+		};
+		setRightClickedSquares(updatedRightClickedSquares);
+	};
+
 	const customPieces = useMemo(() => {
 		const pieces = [
 			"wP",
@@ -382,25 +402,24 @@ const ChessboardComponent = ({ gameMode }) => {
 		},
 		[history, lastMove]
 	);
-
 	return (
 		<Grid container>
-			<Grid item xs={8} sx={{ zIndex: 1 }}>
+			<Stack item xs={8} sx={{ zIndex: 1 }} direction="row">
 				<Chessboard
 					id="StyledBoard"
 					boardOrientation={
-						autoFlip && game.turn() === "w"
-							? "white"
-							: autoFlip && game.turn() === "b"
-							? "black"
-							: "white"
+						autoFlip
+							? game.turn() === "w"
+								? "white"
+								: "black"
+							: boardOrientation
 					}
 					boardWidth={680}
 					position={game.fen()}
 					onPieceDrop={onDrop}
 					onSquareClick={onSquareClick}
 					customBoardStyle={{
-						borderRadius: "4px",
+						borderRadius: "10px",
 						boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
 					}}
 					customSquareStyles={{
@@ -417,7 +436,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					customLightSquareStyle={{
 						backgroundColor: customLightSquareColor,
 					}}
-					customArrowColor="rgb(244,159,10)"
+					customArrowColor="#87BCDE"
 					customPieces={customPieces}
 					onPieceDragBegin={onPieceDragBegin}
 					customArrows={
@@ -431,8 +450,50 @@ const ChessboardComponent = ({ gameMode }) => {
 							  ]
 							: []
 					}
+					onSquareRightClick={onSquareRightClick}
 				/>
-			</Grid>
+				<Stack
+					item
+					xs={8}
+					sx={{ zIndex: 1 }}
+					direction="column"
+					onMouseEnter={() => setIsSettingsHovered(true)}
+					onMouseLeave={() => setIsSettingsHovered(false)}
+				>
+					<IconButton
+						aria-label="settings"
+						onClick={openSettingsModal}
+					>
+						<SettingsIcon
+							sx={{ fontSize: "1.35rem", color: "#989795" }}
+						/>
+					</IconButton>
+					{isSettingsHovered && (
+						<>
+							<IconButton
+								onClick={toggleBoardOrientation}
+								sx={{ fontSize: "1.20rem", color: "#989795" }}
+							>
+								<UndoRoundedIcon
+									sx={{
+										fontSize: "1.20rem",
+										color: "#989795",
+									}}
+								/>
+							</IconButton>
+
+							<IconButton onClick={openShareModal}>
+								<ShareRoundedIcon
+									sx={{
+										fontSize: "1.20rem",
+										color: "#989795",
+									}}
+								/>
+							</IconButton>
+						</>
+					)}
+				</Stack>
+			</Stack>
 			<Grid item xs={4}>
 				<BoardControl
 					currentIndex={currentIndex}

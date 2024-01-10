@@ -5,9 +5,7 @@ import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import LastPageRoundedIcon from "@mui/icons-material/LastPageRounded";
-import SettingsIcon from "@mui/icons-material/Settings";
 import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
@@ -22,7 +20,6 @@ const BoardControl = ({
 	autoFlip,
 	toggleAnalysisMode,
 	analysisMode,
-	openSettingsModal,
 	pgn,
 	gameMode,
 	handleRematch,
@@ -35,10 +32,6 @@ const BoardControl = ({
 		if (handleRematch) {
 			handleRematch();
 		}
-	};
-
-	const openShareModal = () => {
-		setShareModalOpen(true);
 	};
 
 	const closeShareModal = () => {
@@ -180,7 +173,7 @@ const BoardControl = ({
 					<Tooltip title="Evaluation Mode" enterDelay={400} arrow>
 						<IconButton
 							onClick={toggleAnalysisMode}
-							sx={{ color: analysisMode ? "" : "grey" }}
+							sx={{ color: analysisMode ? "" : "#989795" }}
 						>
 							<VisibilityRoundedIcon
 								sx={{ fontSize: "1.15rem" }}
@@ -192,7 +185,7 @@ const BoardControl = ({
 						<Tooltip title="Auto-Flip" enterDelay={400} arrow>
 							<IconButton
 								onClick={toggleAutoFlip}
-								sx={{ color: autoFlip ? "" : "grey" }}
+								sx={{ color: autoFlip ? "" : "#989795" }}
 							>
 								<LoopRoundedIcon sx={{ fontSize: "1.35rem" }} />
 							</IconButton>
@@ -201,7 +194,9 @@ const BoardControl = ({
 
 					<Tooltip title="Resign" enterDelay={400} arrow>
 						<IconButton onClick={handleResign}>
-							<FlagRoundedIcon sx={{ fontSize: "1.35rem" }} />
+							<FlagRoundedIcon
+								sx={{ fontSize: "1.35rem", color: "#989795" }}
+							/>
 						</IconButton>
 					</Tooltip>
 
@@ -209,23 +204,14 @@ const BoardControl = ({
 						<Tooltip title="Offer Draw" enterDelay={400} arrow>
 							<IconButton>
 								<HandshakeRoundedIcon
-									sx={{ fontSize: "1.35rem" }}
+									sx={{
+										fontSize: "1.35rem",
+										color: "#989795",
+									}}
 								/>
 							</IconButton>
 						</Tooltip>
 					)}
-
-					<Tooltip title="Share" enterDelay={400} arrow>
-						<IconButton onClick={openShareModal}>
-							<ShareRoundedIcon sx={{ fontSize: "1.35rem" }} />
-						</IconButton>
-					</Tooltip>
-
-					<Tooltip title="Settings" enterDelay={400} arrow>
-						<IconButton onClick={openSettingsModal}>
-							<SettingsIcon sx={{ fontSize: "1.35rem" }} />
-						</IconButton>
-					</Tooltip>
 				</Box>
 				<ShareModal
 					isOpen={isShareModalOpen}
@@ -245,7 +231,6 @@ BoardControl.propTypes = {
 	autoFlip: PropTypes.bool.isRequired,
 	toggleAnalysisMode: PropTypes.func.isRequired,
 	analysisMode: PropTypes.bool.isRequired,
-	openSettingsModal: PropTypes.func.isRequired,
 	openShareModal: PropTypes.func.isRequired,
 	pgn: PropTypes.string.isRequired,
 	gameMode: PropTypes.string,
