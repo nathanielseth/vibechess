@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import {
-	Box,
-	IconButton,
-	Button,
-	Grid,
-	Tooltip,
-	Typography,
-} from "@mui/material";
+import { Box, IconButton, Button, Grid, Tooltip } from "@mui/material";
 import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -33,7 +26,6 @@ const BoardControl = ({
 	pgn,
 	gameMode,
 	handleRematch,
-	capturedPieces,
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const movesBoxRef = useRef();
@@ -65,20 +57,6 @@ const BoardControl = ({
 		isUserNavigatingRef.current = false;
 	}, [currentIndex]);
 
-	const CapturedPieces = ({ capturedPieces }) => {
-		return (
-			<Grid container>
-				{capturedPieces.map((piece, index) => (
-					<Grid item key={index}>
-						<Typography variant="h6">
-							{pieceNotationToUnicode(piece.toUpperCase())}
-						</Typography>
-					</Grid>
-				))}
-			</Grid>
-		);
-	};
-
 	const pieceNotationToUnicode = (notation) => {
 		const pieceMap = {
 			P: "♙",
@@ -99,9 +77,7 @@ const BoardControl = ({
 				style={{
 					height: "30px",
 				}}
-			>
-				<CapturedPieces capturedPieces={capturedPieces} />
-			</Box>
+			></Box>
 
 			<Box sx={styles.boardControlStyle}>
 				{/* Move Controls */}
@@ -218,14 +194,14 @@ const BoardControl = ({
 								onClick={toggleAutoFlip}
 								sx={{ color: autoFlip ? "" : "grey" }}
 							>
-								<LoopRoundedIcon sx={{ fontSize: "1.15rem" }} />
+								<LoopRoundedIcon sx={{ fontSize: "1.35rem" }} />
 							</IconButton>
 						</Tooltip>
 					)}
 
 					<Tooltip title="Resign" enterDelay={400} arrow>
 						<IconButton onClick={handleResign}>
-							<FlagRoundedIcon sx={{ fontSize: "1.15rem" }} />
+							<FlagRoundedIcon sx={{ fontSize: "1.35rem" }} />
 						</IconButton>
 					</Tooltip>
 
@@ -233,7 +209,7 @@ const BoardControl = ({
 						<Tooltip title="Offer Draw" enterDelay={400} arrow>
 							<IconButton>
 								<HandshakeRoundedIcon
-									sx={{ fontSize: "1.15rem" }}
+									sx={{ fontSize: "1.35rem" }}
 								/>
 							</IconButton>
 						</Tooltip>
@@ -241,13 +217,13 @@ const BoardControl = ({
 
 					<Tooltip title="Share" enterDelay={400} arrow>
 						<IconButton onClick={openShareModal}>
-							<ShareRoundedIcon sx={{ fontSize: "1.15rem" }} />
+							<ShareRoundedIcon sx={{ fontSize: "1.35rem" }} />
 						</IconButton>
 					</Tooltip>
 
 					<Tooltip title="Settings" enterDelay={400} arrow>
 						<IconButton onClick={openSettingsModal}>
-							<SettingsIcon sx={{ fontSize: "1.15rem" }} />
+							<SettingsIcon sx={{ fontSize: "1.35rem" }} />
 						</IconButton>
 					</Tooltip>
 				</Box>
@@ -257,7 +233,6 @@ const BoardControl = ({
 					pgn={pgn}
 				/>
 			</Box>
-			<CapturedPieces capturedPieces={capturedPieces} />
 		</Box>
 	);
 };
@@ -275,7 +250,6 @@ BoardControl.propTypes = {
 	pgn: PropTypes.string.isRequired,
 	gameMode: PropTypes.string,
 	handleRematch: PropTypes.func.isRequired,
-	capturedPieces: PropTypes.array.isRequired,
 };
 
 export default BoardControl;

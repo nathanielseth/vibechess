@@ -259,7 +259,6 @@ const ChessboardComponent = ({ gameMode }) => {
 		setGame(gameCopy);
 		setOptionSquares({});
 		setCurrentIndex(history.length);
-		console.log(gameCopy.pgn());
 		setPgn(generatePGN(history));
 		return move;
 	};
@@ -329,18 +328,6 @@ const ChessboardComponent = ({ gameMode }) => {
 	const onPieceDragBegin = (piece, sourceSquare) => {
 		getMoveOptions(sourceSquare);
 	};
-
-	const capturedPieces = history
-		.slice(1, currentIndex + 1)
-		.reduce((pieces, move) => {
-			if (move.lastMove && move.lastMove.captured) {
-				const capturedPiece = move.lastMove.captured.toLowerCase();
-				if (!pieces.includes(capturedPiece)) {
-					pieces.push(capturedPiece);
-				}
-			}
-			return pieces;
-		}, []);
 
 	const customPieces = useMemo(() => {
 		const pieces = [
@@ -460,7 +447,6 @@ const ChessboardComponent = ({ gameMode }) => {
 					openShareModal={openShareModal}
 					pgn={pgn}
 					handleRematch={handleRematch}
-					capturedPieces={capturedPieces}
 				/>
 				<SettingsModal
 					isOpen={isSettingsModalOpen}
