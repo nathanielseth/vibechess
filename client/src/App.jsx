@@ -10,7 +10,7 @@ import PassAndPlay from "./components/menu/PassAndPlay";
 import Room from "./components/menu/Room";
 import { getTheme } from "./styles/styles";
 
-const WelcomeScreen = lazy(() => import("./components/splash/WelcomeScreen"));
+const WelcomeScreen = lazy(() => import("./components/menu/WelcomeScreen"));
 
 const App = () => {
 	const storedUsername = window.localStorage.getItem("username");

@@ -1,6 +1,6 @@
 {
 	"name": "@vibechess/server",
-	"main": "index.js",
+	"main": "server.js",
 	"type": "module",
 	"scripts": {
 		"dev": "vite"

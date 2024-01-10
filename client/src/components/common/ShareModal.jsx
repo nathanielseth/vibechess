@@ -24,7 +24,7 @@ const ShareModal = ({ isOpen, onClose, pgn }) => {
 
 					setTimeout(() => {
 						setShowCheck(false);
-					}, 5000);
+					}, 3000);
 				},
 				(err) => {
 					console.error(
@@ -96,7 +96,7 @@ const ShareModal = ({ isOpen, onClose, pgn }) => {
 							/>
 							<IconButton onClick={handleCopyLink}>
 								{showCheck ? (
-									<DoneIcon sx={{ color: "green" }} />
+									<DoneIcon sx={{ color: "#87BCDE" }} />
 								) : (
 									<ContentCopyRoundedIcon />
 								)}

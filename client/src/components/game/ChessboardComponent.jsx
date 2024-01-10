@@ -10,14 +10,14 @@ import BoardControl from "./BoardControl";
 import GameOverModal from "./GameOverModal";
 import SettingsModal from "../common/SettingsModal";
 import ShareModal from "../common/ShareModal";
-import Engine from "./engine.js";
+import Engine from "../../data/engine.js";
 import {
 	isKingInCheck as checkKingInCheck,
 	findBestMove as findBestMoveUtil,
 	generatePGN,
 	moveSound,
 	captureSound,
-} from "./utils";
+} from "../../data/utils.js";
 
 const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
