@@ -1,12 +1,20 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Button, IconButton } from "@mui/material";
+import {
+	AppBar,
+	Toolbar,
+	Typography,
+	Button,
+	IconButton,
+	useMediaQuery,
+} from "@mui/material";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { VibeChessLogo } from "../../styles/styles";
 
 function Navbar({ onClick, title, gameMode }) {
 	const navigate = useNavigate();
+	const isXs = useMediaQuery((theme) => theme.breakpoints.down("xs"));
 
 	const handleButtonClick = onClick || (() => navigate("/"));
 
@@ -25,25 +33,45 @@ function Navbar({ onClick, title, gameMode }) {
 							justifyContent: "space-between",
 						}}
 					>
-						<IconButton
-							title="Go back to main menu"
-							edge="start"
-							onClick={handleButtonClick}
-							sx={{ ml: 1, mt: 1 }}
-						>
-							<img
-								src={VibeChessLogo}
-								alt="VibeChess Logo"
-								style={{
-									width: "38px",
-									height: "auto",
-								}}
-							/>
-						</IconButton>
+						{isXs ? (
+							<IconButton
+								title="Go back to main menu"
+								edge="start"
+								onClick={handleButtonClick}
+								sx={{ ml: 1, mt: 1 }}
+							>
+								<img
+									src={VibeChessLogo}
+									alt="VibeChess Logo"
+									style={{
+										width: "38px",
+										height: "auto",
+									}}
+								/>
+							</IconButton>
+						) : (
+							<>
+								<IconButton
+									title="Go back to main menu"
+									edge="start"
+									onClick={handleButtonClick}
+									sx={{ ml: 1, mt: 1 }}
+								>
+									<img
+										src={VibeChessLogo}
+										alt="VibeChess Logo"
+										style={{
+											width: "38px",
+											height: "auto",
+										}}
+									/>
+								</IconButton>
+								<div style={{ width: 48 }} />{" "}
+							</>
+						)}
 						<Typography variant="h4" style={{ color: "gray" }}>
 							{title}
 						</Typography>
-						<div style={{ width: 48 }} />{" "}
 					</Toolbar>
 				) : (
 					<Button
@@ -56,8 +84,8 @@ function Navbar({ onClick, title, gameMode }) {
 							"&:hover": {
 								backgroundColor: "primary.main",
 							},
-							ml: 1,
-							mt: 1,
+							ml: isXs ? 1 : 0,
+							mt: isXs ? 1 : 0,
 						}}
 					>
 						<ArrowBackRoundedIcon sx={{ mr: 1 }} />

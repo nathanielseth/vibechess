@@ -19,6 +19,8 @@ import {
 	SettingsIcon,
 	VibeChessLogo,
 	styles,
+	rotatingImageStyle,
+	rotatingImageRotate,
 } from "../../styles/styles";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
@@ -32,82 +34,100 @@ import SettingsModal from "../common/SettingsModal";
 import TimeControlModal from "./TimeControlModal";
 import { useNavigate } from "react-router-dom";
 import { Howl } from "howler";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const ActionButton = React.memo(
-	({ onClick, icon, label, backgroundColor, description }) => (
-		<Slide direction="up" in={true} mountOnEnter unmountOnExit>
-			<Button
-				onClick={onClick}
-				variant="contained"
-				sx={{
-					...styles.commonButtonStyles,
-					backgroundColor,
-					position: "relative",
-					overflow: "hidden",
-					"&:hover": {
-						"& img": { filter: "brightness(0%)" },
-						"& .description": {
-							position: "relative",
-							visibility: "visible",
-							transform: "translateY(-10px)",
-							transition:
-								"transform 0.5s ease, opacity 0.5s ease",
-							opacity: 1,
-						},
-						"& .buttonContent": {
-							transform: "translateY(-20px)",
-							transition: "transform 0.5s ease",
-						},
-					},
-					"&.MuiButton-root:hover": {
-						bgcolor: "white",
-						color: "black",
-					},
-				}}
-			>
-				<Box
-					className="buttonContent"
+	({ onClick, icon, label, backgroundColor, description }) => {
+		const theme = useTheme();
+		const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+		return (
+			<Slide direction="up" in={true} mountOnEnter unmountOnExit>
+				<Button
+					onClick={onClick}
+					variant="contained"
 					sx={{
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-						transition: "transform 0.5s ease",
+						...styles.commonButtonStyles,
+						backgroundColor,
+						position: "relative",
+						overflow: "hidden",
+						"&:hover": {
+							"& img": { filter: "brightness(0%)" },
+							"& .description": {
+								position: "relative",
+								visibility: "visible",
+								transform: "translateY(-10px)",
+								transition:
+									"transform 0.5s ease, opacity 0.5s ease",
+								opacity: 1,
+							},
+							"& .buttonContent": {
+								transform: "translateY(-20px)",
+								transition: "transform 0.5s ease",
+							},
+						},
+						"&.MuiButton-root:hover": {
+							bgcolor: "white",
+							color: "black",
+						},
 					}}
 				>
-					<Typography
-						variant="body2"
-						className="empty-space"
+					<Box
+						className="buttonContent"
 						sx={{
-							visibility: "hidden",
+							display: "flex",
+							flexDirection: isMobile ? "row" : "column",
+							alignItems: "center",
+							justifyContent: "center",
+							transition: "transform 0.5s ease",
 						}}
 					>
-						{description}
-					</Typography>
-					<img src={icon} alt="Icon" style={styles.iconStyles} />
-					<Typography variant="h5" sx={styles.buttonTextStyles}>
-						{label}
-					</Typography>
-					<Typography
-						variant="body2"
-						className="description"
-						sx={{
-							top: "100%",
-							left: "0",
-							width: "100%",
-							fontSize: 12,
-							visibility: "hidden",
-							transform: "translateY(0)",
-							mt: "15px",
-							opacity: 0,
-						}}
-					>
-						{description}
-					</Typography>
-				</Box>
-			</Button>
-		</Slide>
-	)
+						{!isMobile && (
+							<Typography
+								variant="body2"
+								className="empty-space"
+								sx={{
+									visibility: "hidden",
+								}}
+							>
+								{description}
+							</Typography>
+						)}
+						{!isMobile && (
+							<img
+								src={icon}
+								alt="Icon"
+								style={styles.iconStyles}
+							/>
+						)}
+						<Typography variant="h5" sx={styles.buttonTextStyles}>
+							{label}
+						</Typography>
+						{!isMobile && (
+							<Typography
+								variant="body2"
+								className="description"
+								sx={{
+									top: "100%",
+									left: "0",
+									width: "100%",
+									fontSize: 12,
+									visibility: "hidden",
+									transform: "translateY(0)",
+									mt: "15px",
+									opacity: 0,
+								}}
+							>
+								{description}
+							</Typography>
+						)}
+					</Box>
+				</Button>
+			</Slide>
+		);
+	}
 );
+
 ActionButton.displayName = "ActionButton";
 
 ActionButton.propTypes = {
@@ -119,12 +139,21 @@ ActionButton.propTypes = {
 };
 
 function Menu() {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const navigate = useNavigate();
 	const [isMusicMuted, setIsMusicMuted] = useState(() => {
 		return localStorage.getItem("isMusicMuted") === "true" || false;
 	});
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
+	const [isRotating, setIsRotating] = useState(false);
+
+	const handleImageClick = () => {
+		setIsRotating((prevIsRotating) => !prevIsRotating);
+	};
+
+	const rotationStyle = isRotating ? rotatingImageRotate : {};
 
 	const handleSettingsClick = () => {
 		clickSound.play();
@@ -221,10 +250,10 @@ function Menu() {
 						src={VibeChessLogo}
 						alt="VibeChess Logo"
 						style={{
-							width: "120px",
-							height: "auto",
-							marginBottom: "10px",
+							...rotatingImageStyle,
+							...rotationStyle,
 						}}
+						onClick={handleImageClick}
 					/>
 				</Zoom>
 				<Zoom in={true}>
@@ -237,7 +266,7 @@ function Menu() {
 			<Box
 				sx={{
 					display: "flex",
-					flexDirection: "row",
+					flexDirection: isMobile ? "column" : "row",
 					alignItems: "center",
 					marginTop: "5px",
 					"&.MuiButton-root:hover": {
@@ -293,7 +322,15 @@ function Menu() {
 							inputProps={{ style: { fontSize: 18 } }}
 							variant="outlined"
 							color="primary"
-							sx={{ width: "30vh", marginBottom: "10px" }}
+							sx={{
+								width: "30vh",
+								marginBottom: "10px",
+								[theme.breakpoints.down("sm")]: {
+									height: "9vh",
+									width: "50vh",
+									marginBottom: "-10px",
+								},
+							}}
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
@@ -363,7 +400,9 @@ function Menu() {
 							onClick={() => alert("Circle Button 1")}
 							style={styles.circleButtonStyle}
 						>
-							<QuizIcon sx={{ color: "#2176ff", fontSize: 30 }} />
+							<QuizIcon
+								sx={{ color: "#2176ff", fontSize: "20%rem" }}
+							/>
 						</IconButton>
 					</Tooltip>
 				</Slide>

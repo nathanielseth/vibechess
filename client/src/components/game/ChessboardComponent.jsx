@@ -54,6 +54,12 @@ const ChessboardComponent = ({ gameMode }) => {
 		window.localStorage.getItem("selectedBoard") || "grey"
 	);
 	const [bestMove, setBestMove] = useState(null);
+	const [boardOrientation, setBoardOrientation] = useState("white");
+	const [boardWidth, setBoardWidth] = useState(480);
+	const [whiteTime, setWhiteTime] = useState(5 * 60);
+	const [blackTime, setBlackTime] = useState(5 * 60);
+	const [currentPlayer, setCurrentPlayer] = useState("white");
+
 	const customDarkSquareColor =
 		boardThemeColors[selectedTheme]?.darkSquare ||
 		boardThemeColors.grey.darkSquare;
@@ -61,11 +67,6 @@ const ChessboardComponent = ({ gameMode }) => {
 		boardThemeColors[selectedTheme]?.lightSquare ||
 		boardThemeColors.grey.lightSquare;
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
-	const [boardOrientation, setBoardOrientation] = useState("white");
-	const [boardWidth, setBoardWidth] = useState(480);
-	const [whiteTime, setWhiteTime] = useState(5 * 60); // Example: 5 minutes in seconds
-	const [blackTime, setBlackTime] = useState(5 * 60);
-	const [currentPlayer, setCurrentPlayer] = useState("white");
 
 	useEffect(() => {
 		const timer = setInterval(() => {
@@ -80,15 +81,13 @@ const ChessboardComponent = ({ gameMode }) => {
 	}, [currentPlayer]);
 
 	const handleResize = () => {
-		if (window.innerWidth >= 1920) {
-			setBoardWidth(700);
-		} else if (window.innerWidth >= 1536) {
-			setBoardWidth(650);
-		} else if (window.innerWidth >= 768) {
-			setBoardWidth(600);
-		} else {
-			setBoardWidth(550);
-		}
+		let newBoardWidth;
+		const maxWidth = 700;
+		const minWidth = 420;
+		const availableWidth = Math.min(window.innerWidth - 100, maxWidth);
+
+		newBoardWidth = Math.max(availableWidth, minWidth);
+		setBoardWidth(newBoardWidth);
 	};
 
 	useEffect(() => {
@@ -408,7 +407,14 @@ const ChessboardComponent = ({ gameMode }) => {
 	);
 
 	return (
-		<Stack container flexDirection={{ xs: "column", md: "row" }}>
+		<Stack
+			container
+			flexDirection={{ xs: "column", md: "row" }}
+			sx={{
+				mt: { xs: "150px", sm: 0 },
+				zIndex: 1,
+			}}
+		>
 			<Stack flexDirection="row">
 				<Stack flexDirection="column">
 					{/*          */}
@@ -430,20 +436,27 @@ const ChessboardComponent = ({ gameMode }) => {
 
 							<Stack
 								sx={{
-									backgroundColor: "white",
+									backgroundColor:
+										currentPlayer === "black"
+											? "white"
+											: "#1f2123",
 									borderRadius: "10px",
 									margin: 1,
 									alignItems: "center",
 									gap: 1,
 									direction: { xs: "column", md: "row" },
 									px: 1,
-									border: "1px solid #ccc",
 								}}
 							>
 								<Box>
 									<Typography
 										variant="h4"
-										sx={{ color: "black" }}
+										sx={{
+											color:
+												currentPlayer === "black"
+													? "black"
+													: "grey",
+										}}
 									>
 										{`${Math.floor(blackTime / 60)}:${(
 											"0" +
@@ -487,7 +500,7 @@ const ChessboardComponent = ({ gameMode }) => {
 							customLightSquareStyle={{
 								backgroundColor: customLightSquareColor,
 							}}
-							customArrowColor="#87BCDE"
+							customArrowColor="#f24040"
 							customPieces={customPieces}
 							onPieceDragBegin={onPieceDragBegin}
 							customArrows={
@@ -522,20 +535,27 @@ const ChessboardComponent = ({ gameMode }) => {
 
 							<Stack
 								sx={{
-									backgroundColor: "white",
+									backgroundColor:
+										currentPlayer === "white"
+											? "white"
+											: "black",
 									borderRadius: "10px",
 									margin: 1,
 									alignItems: "center",
 									gap: 1,
 									direction: { xs: "column", md: "row" },
 									px: 1,
-									border: "1px solid #ccc",
 								}}
 							>
 								<Box>
 									<Typography
 										variant="h4"
-										sx={{ color: "black" }}
+										sx={{
+											color:
+												currentPlayer === "white"
+													? "black"
+													: "grey",
+										}}
 									>
 										{`${Math.floor(whiteTime / 60)}:${(
 											"0" +

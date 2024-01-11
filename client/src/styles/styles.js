@@ -6,6 +6,8 @@ import SettingsIcon from "../icons/cog.svg";
 import VibeChessLogo from "../icons/vibechess.svg";
 import { createTheme } from "@mui/material/styles";
 
+const theme = createTheme();
+
 const getTheme = (mode) =>
 	createTheme({
 		palette: {
@@ -56,15 +58,19 @@ const styles = {
 	circleButtonStyle: {
 		backgroundColor: "#fff",
 		color: "#000",
-		width: "2.8vw",
-		height: "2.8vw",
+		width: "50px",
+		height: "50px",
 		margin: "8px",
 	},
 	commonButtonStyles: {
 		width: "30vh",
-		height: "30.5vh",
+		height: "75%",
 		margin: "10px",
 		"&:hover": { bgcolor: "white", color: "black" },
+		[theme.breakpoints.down("sm")]: {
+			height: "9vh",
+			width: "50vh",
+		},
 	},
 	buttonTextStyles: {
 		fontSize: "1.6rem",
@@ -77,6 +83,8 @@ const styles = {
 		marginBottom: "25px",
 		transition: "filter 0.3s",
 		"&:hover": { filter: "brightness(0)" },
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	boardControlStyle: {
 		display: "flex",
@@ -132,6 +140,18 @@ const boardThemeColors = {
 		darkSquare: "#c0acb5",
 		lightSquare: "#e5d0cb",
 	},
+};
+
+export const rotatingImageStyle = {
+	width: "110px",
+	height: "auto",
+	marginBottom: "10px",
+	transition: "transform 0.6s ease-in-out",
+	cursor: "pointer",
+};
+
+export const rotatingImageRotate = {
+	transform: "rotate(360deg)",
 };
 
 export {
