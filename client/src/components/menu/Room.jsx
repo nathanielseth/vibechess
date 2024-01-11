@@ -130,7 +130,7 @@ const Room = () => {
 
 							const timeout = setTimeout(() => {
 								setCopied(false);
-							}, 8000);
+							}, 5000);
 
 							return () => clearTimeout(timeout);
 						}}

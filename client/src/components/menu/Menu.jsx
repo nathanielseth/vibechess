@@ -23,7 +23,7 @@ import {
 import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
 import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
-import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
 import QuizIcon from "@mui/icons-material/Quiz";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
@@ -426,7 +426,9 @@ function Menu() {
 							onClick={() => alert("Circle Button 4")}
 							style={styles.circleButtonStyle}
 						>
-							<LightModeIcon sx={{ fontSize: 30 }} />
+							<DarkModeIcon
+								sx={{ color: "#1f2123", fontSize: 30 }}
+							/>
 						</IconButton>
 					</Tooltip>
 				</Slide>
@@ -445,9 +447,13 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							{isMusicMuted ? (
-								<MusicOffRoundedIcon sx={{ fontSize: 30 }} />
+								<MusicOffRoundedIcon
+									sx={{ color: "#1f2123", fontSize: 30 }}
+								/>
 							) : (
-								<MusicNoteRoundedIcon sx={{ fontSize: 30 }} />
+								<MusicNoteRoundedIcon
+									sx={{ color: "#1f2123", fontSize: 30 }}
+								/>
 							)}
 						</IconButton>
 					</Tooltip>

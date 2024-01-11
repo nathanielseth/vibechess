@@ -2,9 +2,10 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Stack } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { toast } from "react-toastify";
 import { styles, boardThemeColors } from "../../styles/styles";
+import { CircleFlag } from "react-circle-flags";
 import IconButton from "@mui/material/IconButton";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
@@ -62,6 +63,28 @@ const ChessboardComponent = ({ gameMode }) => {
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
 
 	const [boardOrientation, setBoardOrientation] = useState("white");
+	const [boardWidth, setBoardWidth] = useState(480);
+
+	const handleResize = () => {
+		if (window.innerWidth >= 1920) {
+			setBoardWidth(700);
+		} else if (window.innerWidth >= 1536) {
+			setBoardWidth(650);
+		} else if (window.innerWidth >= 768) {
+			setBoardWidth(600);
+		} else {
+			setBoardWidth(550);
+		}
+	};
+
+	useEffect(() => {
+		handleResize();
+		window.addEventListener("resize", handleResize);
+
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	}, []);
 
 	const toggleBoardOrientation = () => {
 		setBoardOrientation((prevOrientation) =>
@@ -369,55 +392,85 @@ const ChessboardComponent = ({ gameMode }) => {
 	);
 
 	return (
-		<Stack container flexDirection="row">
-			<Stack item sx={{ zIndex: 1 }} direction="row">
-				<Chessboard
-					id="StyledBoard"
-					boardOrientation={
-						autoFlip
-							? game.turn() === "w"
-								? "white"
-								: "black"
-							: boardOrientation
-					}
-					boardWidth={650}
-					position={game.fen()}
-					onPieceDrop={onDrop}
-					onSquareClick={onSquareClick}
-					customBoardStyle={{
-						borderRadius: "10px",
-						boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-					}}
-					customSquareStyles={{
-						...highlightedSquares,
-						...rightClickedSquares,
-						...optionSquares,
-						...(kingInCheck
-							? { [kingInCheck]: styles.kingInCheckStyle }
-							: {}),
-					}}
-					customDarkSquareStyle={{
-						backgroundColor: customDarkSquareColor,
-					}}
-					customLightSquareStyle={{
-						backgroundColor: customLightSquareColor,
-					}}
-					customArrowColor="#87BCDE"
-					customPieces={customPieces}
-					onPieceDragBegin={onPieceDragBegin}
-					customArrows={
-						analysisMode && bestMove
-							? [
-									[
-										bestMove.substring(0, 2),
-										bestMove.substring(2, 4),
-										"rgb(196, 144, 209)",
-									],
-							  ]
-							: []
-					}
-					onSquareRightClick={onSquareRightClick}
-				/>
+		<Stack container flexDirection={{ xs: "column", md: "row" }}>
+			<Stack flexDirection="row">
+				<Stack flexDirection="column">
+					{/*     */}
+					{gameMode === "multiplayer" && (
+						<Stack
+							sx={{ margin: 1 }}
+							alignItems="center"
+							gap={1}
+							direction={{ xs: "column", md: "row" }}
+						>
+							<CircleFlag countryCode={"es"} height="30" />
+							<Typography variant="h5">opponent</Typography>
+						</Stack>
+					)}
+					{/*     */}
+					<Stack item sx={{ zIndex: 1 }} direction="row">
+						<Chessboard
+							id="StyledBoard"
+							boardOrientation={
+								autoFlip
+									? game.turn() === "w"
+										? "white"
+										: "black"
+									: boardOrientation
+							}
+							boardWidth={boardWidth}
+							position={game.fen()}
+							onPieceDrop={onDrop}
+							onSquareClick={onSquareClick}
+							customBoardStyle={{
+								borderRadius: "10px",
+								boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+							}}
+							customSquareStyles={{
+								...highlightedSquares,
+								...rightClickedSquares,
+								...optionSquares,
+								...(kingInCheck
+									? { [kingInCheck]: styles.kingInCheckStyle }
+									: {}),
+							}}
+							customDarkSquareStyle={{
+								backgroundColor: customDarkSquareColor,
+							}}
+							customLightSquareStyle={{
+								backgroundColor: customLightSquareColor,
+							}}
+							customArrowColor="#87BCDE"
+							customPieces={customPieces}
+							onPieceDragBegin={onPieceDragBegin}
+							customArrows={
+								analysisMode && bestMove
+									? [
+											[
+												bestMove.substring(0, 2),
+												bestMove.substring(2, 4),
+												"rgb(196, 144, 209)",
+											],
+									  ]
+									: []
+							}
+							onSquareRightClick={onSquareRightClick}
+						/>
+					</Stack>
+					{/*     */}
+					{gameMode === "multiplayer" && (
+						<Stack
+							sx={{ margin: 1 }}
+							alignItems="center"
+							gap={1}
+							direction={{ xs: "column", md: "row" }}
+						>
+							<CircleFlag countryCode={"es"} height="30" />
+							<Typography variant="h5">player</Typography>
+						</Stack>
+					)}
+				</Stack>
+				{/*     */}
 				<Stack
 					item
 					sx={{ zIndex: 1 }}
@@ -458,6 +511,7 @@ const ChessboardComponent = ({ gameMode }) => {
 						</>
 					)}
 				</Stack>
+				{/*     */}
 			</Stack>
 			<Stack>
 				<BoardControl
