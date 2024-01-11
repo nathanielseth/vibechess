@@ -143,8 +143,9 @@ const boardThemeColors = {
 };
 
 export const rotatingImageStyle = {
-	width: "110px",
+	maxWidth: "100%",
 	height: "auto",
+	width: "110px",
 	marginBottom: "10px",
 	transition: "transform 0.6s ease-in-out",
 	cursor: "pointer",

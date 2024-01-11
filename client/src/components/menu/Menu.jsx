@@ -242,7 +242,8 @@ function Menu() {
 					display: "flex",
 					alignItems: "center",
 					flexDirection: "column",
-					marginBottom: "20px",
+					marginBottom: isMobile ? "0" : "20px",
+					marginTop: isMobile ? "30px" : "0px",
 				}}
 			>
 				<Zoom in={true}>
@@ -257,7 +258,12 @@ function Menu() {
 					/>
 				</Zoom>
 				<Zoom in={true}>
-					<Typography variant="h2" color="white" textAlign="center">
+					<Typography
+						variant="h2"
+						color="white"
+						textAlign="center"
+						style={{ textAlign: "center", fontSize: "3.5rem" }}
+					>
 						<span style={{ color: "#f24040" }}>Vibe</span>Chess
 					</Typography>
 				</Zoom>
@@ -383,7 +389,7 @@ function Menu() {
 					display: "flex",
 					flexDirection: "row",
 					alignItems: "center",
-					marginTop: "25px",
+					marginTop: isMobile ? "0" : "25px",
 				}}
 			>
 				{/* Icon Buttons */}
