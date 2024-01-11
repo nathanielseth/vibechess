@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Stack, Typography } from "@mui/material";
+import { Stack, Typography, Box } from "@mui/material";
 import { toast } from "react-toastify";
 import { styles, boardThemeColors } from "../../styles/styles";
 import { CircleFlag } from "react-circle-flags";
@@ -61,9 +61,23 @@ const ChessboardComponent = ({ gameMode }) => {
 		boardThemeColors[selectedTheme]?.lightSquare ||
 		boardThemeColors.grey.lightSquare;
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
-
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [boardWidth, setBoardWidth] = useState(480);
+	const [whiteTime, setWhiteTime] = useState(5 * 60); // Example: 5 minutes in seconds
+	const [blackTime, setBlackTime] = useState(5 * 60);
+	const [currentPlayer, setCurrentPlayer] = useState("white");
+
+	useEffect(() => {
+		const timer = setInterval(() => {
+			if (currentPlayer === "white") {
+				setWhiteTime((prevTime) => prevTime - 1);
+			} else {
+				setBlackTime((prevTime) => prevTime - 1);
+			}
+		}, 1000);
+
+		return () => clearInterval(timer);
+	}, [currentPlayer]);
 
 	const handleResize = () => {
 		if (window.innerWidth >= 1920) {
@@ -241,6 +255,7 @@ const ChessboardComponent = ({ gameMode }) => {
 		}
 
 		if (move) {
+			setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
 			setLastMove(move);
 			setHistory((prevHistory) => [
 				...prevHistory,
@@ -293,6 +308,7 @@ const ChessboardComponent = ({ gameMode }) => {
 			});
 
 			if (move) {
+				setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
 				setLastMove(move);
 				setHistory([
 					...history,
@@ -395,16 +411,47 @@ const ChessboardComponent = ({ gameMode }) => {
 		<Stack container flexDirection={{ xs: "column", md: "row" }}>
 			<Stack flexDirection="row">
 				<Stack flexDirection="column">
-					{/*     */}
+					{/*          */}
 					{gameMode === "multiplayer" && (
 						<Stack
-							sx={{ margin: 1 }}
-							alignItems="center"
-							gap={1}
-							direction={{ xs: "column", md: "row" }}
+							flexDirection="row"
+							justifyContent="space-between"
 						>
-							<CircleFlag countryCode={"es"} height="30" />
-							<Typography variant="h5">opponent</Typography>
+							{/*     */}
+							<Stack
+								sx={{ margin: 1 }}
+								alignItems="center"
+								gap={1}
+								direction={{ xs: "column", md: "row" }}
+							>
+								<CircleFlag countryCode={"es"} height="35" />
+								<Typography variant="h4">opponent</Typography>
+							</Stack>
+
+							<Stack
+								sx={{
+									backgroundColor: "white",
+									borderRadius: "10px",
+									margin: 1,
+									alignItems: "center",
+									gap: 1,
+									direction: { xs: "column", md: "row" },
+									px: 1,
+									border: "1px solid #ccc",
+								}}
+							>
+								<Box>
+									<Typography
+										variant="h4"
+										sx={{ color: "black" }}
+									>
+										{`${Math.floor(blackTime / 60)}:${(
+											"0" +
+											(blackTime % 60)
+										).slice(-2)}`}
+									</Typography>
+								</Box>
+							</Stack>
 						</Stack>
 					)}
 					{/*     */}
@@ -460,13 +507,43 @@ const ChessboardComponent = ({ gameMode }) => {
 					{/*     */}
 					{gameMode === "multiplayer" && (
 						<Stack
-							sx={{ margin: 1 }}
-							alignItems="center"
-							gap={1}
-							direction={{ xs: "column", md: "row" }}
+							flexDirection="row"
+							justifyContent="space-between"
 						>
-							<CircleFlag countryCode={"es"} height="30" />
-							<Typography variant="h5">player</Typography>
+							<Stack
+								sx={{ margin: 1 }}
+								alignItems="center"
+								gap={1}
+								direction={{ xs: "column", md: "row" }}
+							>
+								<CircleFlag countryCode={"es"} height="35" />
+								<Typography variant="h4">player</Typography>
+							</Stack>
+
+							<Stack
+								sx={{
+									backgroundColor: "white",
+									borderRadius: "10px",
+									margin: 1,
+									alignItems: "center",
+									gap: 1,
+									direction: { xs: "column", md: "row" },
+									px: 1,
+									border: "1px solid #ccc",
+								}}
+							>
+								<Box>
+									<Typography
+										variant="h4"
+										sx={{ color: "black" }}
+									>
+										{`${Math.floor(whiteTime / 60)}:${(
+											"0" +
+											(whiteTime % 60)
+										).slice(-2)}`}
+									</Typography>
+								</Box>
+							</Stack>
 						</Stack>
 					)}
 				</Stack>
