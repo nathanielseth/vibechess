@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { Box, IconButton, Button, Grid, Tooltip } from "@mui/material";
+import { Box, IconButton, Button, Grid, Tooltip, Stack } from "@mui/material";
 import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -67,8 +67,8 @@ const BoardControl = ({
 	};
 
 	return (
-		<Box>
-			<Box sx={styles.boardControlStyle}>
+		<Stack>
+			<Stack sx={styles.boardControlStyle}>
 				{/* Move Controls */}
 				<Box
 					display="flex"
@@ -223,8 +223,8 @@ const BoardControl = ({
 					onClose={closeShareModal}
 					pgn={pgn}
 				/>
-			</Box>
-		</Box>
+			</Stack>
+		</Stack>
 	);
 };
 
