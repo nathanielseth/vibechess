@@ -61,7 +61,7 @@ function Navbar({ onClick, title, gameMode }) {
 										src={VibeChessLogo}
 										alt="VibeChess Logo"
 										style={{
-											width: "38px",
+											width: "40px",
 											height: "auto",
 										}}
 									/>

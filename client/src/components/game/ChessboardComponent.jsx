@@ -8,7 +8,7 @@ import { styles, boardThemeColors } from "../../styles/styles";
 import { CircleFlag } from "react-circle-flags";
 import IconButton from "@mui/material/IconButton";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
+import ReplayIcon from "@mui/icons-material/Replay";
 import "react-toastify/dist/ReactToastify.css";
 import BoardControl from "./BoardControl";
 import GameOverModal from "./GameOverModal";
@@ -56,8 +56,8 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [bestMove, setBestMove] = useState(null);
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [boardWidth, setBoardWidth] = useState(480);
-	const [whiteTime, setWhiteTime] = useState(5 * 60);
-	const [blackTime, setBlackTime] = useState(5 * 60);
+	const [whiteTime, setWhiteTime] = useState(10 * 60);
+	const [blackTime, setBlackTime] = useState(10 * 60);
 	const [currentPlayer, setCurrentPlayer] = useState("white");
 
 	const customDarkSquareColor =
@@ -103,6 +103,25 @@ const ChessboardComponent = ({ gameMode }) => {
 		setBoardOrientation((prevOrientation) =>
 			prevOrientation === "white" ? "black" : "white"
 		);
+	};
+
+	const handleUndoMove = () => {
+		if (currentIndex > 0) {
+			const newHistory = history.slice(0, -1);
+			const newGame = new Chess(newHistory[newHistory.length - 1].fen);
+
+			setGame(newGame);
+			setHistory(newHistory);
+			setCurrentIndex(currentIndex - 1);
+			setLastMove(null);
+			setHighlightedSquares({});
+			setRightClickedSquares({});
+			setOptionSquares({});
+			setMoveFrom("");
+			setKingInCheck(null);
+			setPgn(generatePGN(newHistory));
+			setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
+		}
 	};
 
 	const findBestMove = useCallback(() => {
@@ -408,7 +427,6 @@ const ChessboardComponent = ({ gameMode }) => {
 
 	return (
 		<Stack
-			container
 			flexDirection={{ xs: "column", md: "row" }}
 			sx={{
 				mt: { xs: "150px", sm: 0 },
@@ -468,7 +486,7 @@ const ChessboardComponent = ({ gameMode }) => {
 						</Stack>
 					)}
 					{/*     */}
-					<Stack item sx={{ zIndex: 1 }} direction="row">
+					<Stack sx={{ zIndex: 1 }} direction="row">
 						<Chessboard
 							id="StyledBoard"
 							boardOrientation={
@@ -569,7 +587,6 @@ const ChessboardComponent = ({ gameMode }) => {
 				</Stack>
 				{/*     */}
 				<Stack
-					item
 					sx={{ zIndex: 1 }}
 					direction="column"
 					onMouseEnter={() => setIsSettingsHovered(true)}
@@ -589,7 +606,7 @@ const ChessboardComponent = ({ gameMode }) => {
 								onClick={toggleBoardOrientation}
 								sx={{ fontSize: "1.20rem", color: "#989795" }}
 							>
-								<UndoRoundedIcon
+								<ReplayIcon
 									sx={{
 										fontSize: "1.20rem",
 										color: "#989795",
@@ -624,6 +641,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					pgn={pgn}
 					handleRematch={handleRematch}
 					gameMode={gameMode}
+					handleUndoMove={handleUndoMove}
 				/>
 				<SettingsModal
 					isOpen={isSettingsModalOpen}

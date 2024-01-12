@@ -9,6 +9,7 @@ import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import UndoIcon from "@mui/icons-material/Undo";
 import { styles } from "../../styles/styles";
 import ShareModal from "../common/ShareModal";
 
@@ -23,6 +24,7 @@ const BoardControl = ({
 	pgn,
 	gameMode,
 	handleRematch,
+	handleUndoMove,
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const movesBoxRef = useRef();
@@ -161,6 +163,16 @@ const BoardControl = ({
 					alignItems="center"
 					style={{ width: "100%" }}
 				>
+					<Tooltip title="Undo Move" enterDelay={400} arrow>
+						<IconButton
+							sx={{
+								color: currentIndex === 0 ? "grey" : "#989795",
+							}}
+							onClick={handleUndoMove}
+						>
+							<UndoIcon sx={{ fontSize: "1.35rem" }} />
+						</IconButton>
+					</Tooltip>
 					{gameMode === "passandplay" && (
 						<Tooltip title="Evaluation Mode" enterDelay={400} arrow>
 							<IconButton
@@ -228,6 +240,7 @@ BoardControl.propTypes = {
 	pgn: PropTypes.string.isRequired,
 	gameMode: PropTypes.string,
 	handleRematch: PropTypes.func.isRequired,
+	handleUndoMove: PropTypes.func.isRequired,
 };
 
 export default BoardControl;

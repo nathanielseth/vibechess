@@ -113,7 +113,7 @@ GameOverModal.propTypes = {
 	onClose: PropTypes.func.isRequired,
 	onRematch: PropTypes.func.isRequired,
 	onNewGame: PropTypes.func.isRequired,
-	endReason: PropTypes.string.isRequired,
+	endReason: PropTypes.string,
 	winner: PropTypes.string,
 	gameMode: PropTypes.string.isRequired,
 };
