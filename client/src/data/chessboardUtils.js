@@ -1,4 +1,4 @@
-import { styles } from "../../styles/styles";
+import { styles } from "../styles/styles";
 
 export const moveOptionsHandler =
 	(

@@ -9,9 +9,9 @@ import LoopRoundedIcon from "@mui/icons-material/LoopRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import UndoIcon from "@mui/icons-material/Undo";
+import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { styles } from "../../styles/styles";
-import ShareModal from "../common/ShareModal";
+import ShareModal from "./ShareModal";
 
 const BoardControl = ({
 	currentIndex,
@@ -170,7 +170,7 @@ const BoardControl = ({
 							}}
 							onClick={handleUndoMove}
 						>
-							<UndoIcon sx={{ fontSize: "1.35rem" }} />
+							<UndoRoundedIcon sx={{ fontSize: "1.35rem" }} />
 						</IconButton>
 					</Tooltip>
 					{gameMode === "passandplay" && (

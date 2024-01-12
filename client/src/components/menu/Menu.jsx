@@ -231,10 +231,11 @@ function Menu() {
 				flexDirection: "column",
 				alignItems: "center",
 				justifyContent: "center",
-				height: "100vh",
+				height: "100dvh",
 				margin: 0,
 				padding: 0,
-				overflow: "hidden",
+				overflowY: { xs: "auto", sm: "auto", md: "hidden" },
+				overflowX: { xs: "auto", sm: "auto", md: "hidden" },
 			}}
 		>
 			<Container

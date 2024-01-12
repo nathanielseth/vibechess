@@ -11,7 +11,7 @@ const PassAndPlay = () => {
 			minHeight="100vh"
 			justifyContent="center"
 			alignItems="center"
-			height="100vh"
+			height="100dvh"
 			spacing={-10}
 		>
 			<Navbar title="" />

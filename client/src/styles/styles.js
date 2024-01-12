@@ -54,7 +54,7 @@ const getTheme = (mode) =>
 		},
 	});
 
-const styles = {
+export const styles = {
 	circleButtonStyle: {
 		backgroundColor: "#fff",
 		color: "#000",
@@ -111,7 +111,7 @@ const styles = {
 	},
 };
 
-const boardThemeColors = {
+export const boardThemeColors = {
 	grey: {
 		darkSquare: "#b6b6b6",
 		lightSquare: "#d8d8d8",
@@ -162,7 +162,5 @@ export {
 	VersusBotIcon,
 	SettingsIcon,
 	VibeChessLogo,
-	styles,
-	boardThemeColors,
 	getTheme,
 };

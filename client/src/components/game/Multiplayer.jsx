@@ -11,10 +11,10 @@ const Multiplayer = () => {
 		<Stack>
 			<Navbar gameMode={gameMode} />
 			<Stack
-				minHeight="100vh"
+				minHeight="100dvh"
 				justifyContent="center"
 				alignItems="center"
-				height="100vh"
+				height={{ xs: "100dvh", md: "300dvh" }}
 			>
 				<Stack flexGrow={1}>
 					<Stack>

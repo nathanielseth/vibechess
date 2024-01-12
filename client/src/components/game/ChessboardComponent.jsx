@@ -10,7 +10,8 @@ import IconButton from "@mui/material/IconButton";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import ReplayIcon from "@mui/icons-material/Replay";
 import "react-toastify/dist/ReactToastify.css";
-import BoardControl from "./BoardControl";
+import BoardControl from "../common/BoardControl";
+import Chatbox from "../common/Chatbox";
 import GameOverModal from "./GameOverModal";
 import SettingsModal from "../common/SettingsModal";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -23,7 +24,10 @@ import {
 	moveSound,
 	captureSound,
 } from "../../data/utils.js";
-import { moveOptionsHandler, handleSquareRightClick } from "./chessboardUtils";
+import {
+	moveOptionsHandler,
+	handleSquareRightClick,
+} from "../../data/chessboardUtils.js";
 
 const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
@@ -83,10 +87,15 @@ const ChessboardComponent = ({ gameMode }) => {
 	const handleResize = () => {
 		let newBoardWidth;
 		const maxWidth = 700;
-		const minWidth = 420;
+		const minWidth = 310;
 		const availableWidth = Math.min(window.innerWidth - 100, maxWidth);
 
-		newBoardWidth = Math.max(availableWidth, minWidth);
+		const availableHeight = window.innerHeight;
+
+		newBoardWidth = Math.max(
+			Math.min(availableWidth, availableHeight * 0.75), // Adjust the factor as needed
+			minWidth
+		);
 		setBoardWidth(newBoardWidth);
 	};
 
@@ -105,20 +114,26 @@ const ChessboardComponent = ({ gameMode }) => {
 		);
 	};
 
+	// known bug: in later stages of a match, may result in inability to make subsequent moves.
 	const handleUndoMove = () => {
 		if (currentIndex > 0) {
 			const newHistory = history.slice(0, -1);
-			const newGame = new Chess(newHistory[newHistory.length - 1].fen);
+			const newIndex = currentIndex - 1;
+
+			const newGame = new Chess();
+			for (let i = 1; i <= newIndex; i++) {
+				newGame.move(history[i].lastMove);
+			}
 
 			setGame(newGame);
 			setHistory(newHistory);
-			setCurrentIndex(currentIndex - 1);
+			setCurrentIndex(newIndex);
 			setLastMove(null);
 			setHighlightedSquares({});
 			setRightClickedSquares({});
 			setOptionSquares({});
 			setMoveFrom("");
-			setKingInCheck(null);
+			setKingInCheck(isKingInCheck(newGame));
 			setPgn(generatePGN(newHistory));
 			setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
 		}
@@ -429,9 +444,13 @@ const ChessboardComponent = ({ gameMode }) => {
 		<Stack
 			flexDirection={{ xs: "column", md: "row" }}
 			sx={{
-				mt: { xs: "150px", sm: 0 },
+				mt: { xs: "30px", sm: 0 },
 				zIndex: 1,
+				overflowY: { xs: "auto", sm: "auto", md: "hidden" },
+				overflowX: { xs: "auto", sm: "auto", md: "hidden" },
+				maxHeight: "100dvh",
 			}}
+			alignItems="center"
 		>
 			<Stack flexDirection="row">
 				<Stack flexDirection="column">
@@ -643,6 +662,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					gameMode={gameMode}
 					handleUndoMove={handleUndoMove}
 				/>
+				{gameMode === "multiplayer" && <Chatbox />}
 				<SettingsModal
 					isOpen={isSettingsModalOpen}
 					onClose={closeSettingsModal}
