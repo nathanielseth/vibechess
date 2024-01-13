@@ -11,7 +11,7 @@ import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { styles } from "../../styles/styles";
-import ShareModal from "./ShareModal";
+import ShareModal from "./modal/ShareModal";
 
 const BoardControl = ({
 	currentIndex,

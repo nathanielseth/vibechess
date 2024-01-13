@@ -13,8 +13,8 @@ import {
 	TextField,
 } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
-import FlagSelectorModal from "../common/FlagSelectorModal";
-import { generateRandomUsername } from "../../data/randomName";
+import FlagSelectorModal from "./FlagSelectorModal";
+import { generateRandomUsername } from "../../../data/randomName";
 
 function SettingsModal({ isOpen, onClose }) {
 	const [selectedBoard, setSelectedBoard] = useState(

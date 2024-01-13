@@ -1,4 +1,4 @@
-import { styles } from "../styles/styles";
+import { styles } from "../../../styles/styles";
 
 export const moveOptionsHandler =
 	(
@@ -59,4 +59,16 @@ export const handleSquareRightClick = (
 		backgroundColor: "rgba(196, 144, 209, 0.5)",
 	};
 	setRightClickedSquares(updatedRightClickedSquares);
+};
+
+export const formatTime = (time) => {
+	let minutes = Math.floor(time / 60);
+	let seconds = Math.floor(time % 60);
+	let tenths = "";
+	if (time <= 10) {
+		tenths = Math.floor((time - Math.floor(time)) * 10);
+	}
+	return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}${
+		tenths ? "." + tenths : ""
+	}`;
 };

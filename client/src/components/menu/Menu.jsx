@@ -30,7 +30,7 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
 import PropTypes from "prop-types";
-import SettingsModal from "../common/SettingsModal";
+import SettingsModal from "../common/modal/SettingsModal";
 import TimeControlModal from "./TimeControlModal";
 import { useNavigate } from "react-router-dom";
 import { Howl } from "howler";
@@ -333,8 +333,8 @@ function Menu() {
 								width: "30vh",
 								marginBottom: "10px",
 								[theme.breakpoints.down("sm")]: {
-									height: "8vh",
-									width: "40vh",
+									height: "9vh",
+									width: "45vh",
 									marginBottom: "-5px",
 								},
 							}}

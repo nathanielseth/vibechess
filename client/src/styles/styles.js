@@ -68,8 +68,8 @@ export const styles = {
 		margin: "10px",
 		"&:hover": { bgcolor: "white", color: "black" },
 		[theme.breakpoints.down("sm")]: {
-			height: "8vh",
-			width: "40vh",
+			height: "9vh",
+			width: "45vh",
 		},
 	},
 	buttonTextStyles: {

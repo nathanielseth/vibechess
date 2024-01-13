@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { CircleFlag } from "react-circle-flags";
 import { generateRandomUsername } from "../../data/randomName";
 import VibeChessLogo from "../../icons/vibechess.svg";
-import FlagSelectorModal from "../common/FlagSelectorModal";
+import FlagSelectorModal from "../common/modal/FlagSelectorModal";
 
 const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 	const [username, setUsername] = useState("");

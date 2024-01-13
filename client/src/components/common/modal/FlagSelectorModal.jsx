@@ -10,8 +10,8 @@ import {
 	Tooltip,
 } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
-import flagData from "../../data/flags";
-import "../../styles/scrollbar.css";
+import flagData from "../../../data/flags";
+import "../../../styles/scrollbar.css";
 
 const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 	const [searchTerm, setSearchTerm] = useState("");

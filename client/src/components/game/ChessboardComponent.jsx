@@ -13,21 +13,23 @@ import "react-toastify/dist/ReactToastify.css";
 import BoardControl from "../common/BoardControl";
 import Chatbox from "../common/Chatbox";
 import GameOverModal from "./GameOverModal";
-import SettingsModal from "../common/SettingsModal";
+import SettingsModal from "../common/modal/SettingsModal.jsx";
 import SettingsIcon from "@mui/icons-material/Settings";
-import ShareModal from "../common/ShareModal";
-import Engine from "../../data/engine.js";
+import ShareModal from "../common/modal/ShareModal.jsx";
+import Engine from "./utils/engine.js";
 import {
 	isKingInCheck as checkKingInCheck,
 	findBestMove as findBestMoveUtil,
 	generatePGN,
 	moveSound,
 	captureSound,
+	tenSecondsSound,
 } from "../../data/utils.js";
 import {
 	moveOptionsHandler,
 	handleSquareRightClick,
-} from "../../data/chessboardUtils.js";
+	formatTime,
+} from "./utils/chessboardUtils.js";
 
 const ChessboardComponent = ({ gameMode }) => {
 	const [game, setGame] = useState(() => new Chess());
@@ -60,9 +62,10 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [bestMove, setBestMove] = useState(null);
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [boardWidth, setBoardWidth] = useState(480);
-	const [whiteTime, setWhiteTime] = useState(10 * 60);
-	const [blackTime, setBlackTime] = useState(10 * 60);
+	const [whiteTime, setWhiteTime] = useState(0.2 * 60);
+	const [blackTime, setBlackTime] = useState(0.2 * 60);
 	const [currentPlayer, setCurrentPlayer] = useState("white");
+	const [hasPlayed, setHasPlayed] = useState({ white: false, black: false });
 
 	const customDarkSquareColor =
 		boardThemeColors[selectedTheme]?.darkSquare ||
@@ -74,17 +77,69 @@ const ChessboardComponent = ({ gameMode }) => {
 
 	useEffect(() => {
 		const timer = setInterval(() => {
-			if (currentPlayer === "white") {
-				setWhiteTime((prevTime) => prevTime - 1);
-			} else {
-				setBlackTime((prevTime) => prevTime - 1);
+			if (!isGameOver) {
+				if (currentPlayer === "white") {
+					setWhiteTime((prevTime) =>
+						prevTime > 0 ? prevTime - 0.1 : 0
+					);
+				} else {
+					setBlackTime((prevTime) =>
+						prevTime > 0 ? prevTime - 0.1 : 0
+					);
+				}
+
+				if (
+					(currentPlayer === "white" &&
+						whiteTime <= 11 &&
+						!hasPlayed.white) ||
+					(currentPlayer === "black" &&
+						blackTime <= 11 &&
+						!hasPlayed.black)
+				) {
+					tenSecondsSound.play();
+					if (currentPlayer === "white") {
+						setHasPlayed((prevState) => ({
+							...prevState,
+							white: true,
+						}));
+					} else {
+						setHasPlayed((prevState) => ({
+							...prevState,
+							black: true,
+						}));
+					}
+				}
 			}
-		}, 1000);
+		}, 100);
 
 		return () => clearInterval(timer);
-	}, [currentPlayer]);
+	}, [currentPlayer, isGameOver, whiteTime, blackTime, hasPlayed]);
+	useEffect(() => {
+		handleResize();
+		window.addEventListener("resize", handleResize);
 
-	const handleResize = () => {
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	});
+
+	const findBestMove = useCallback(() => {
+		findBestMoveUtil(
+			engine,
+			game,
+			analysisMode,
+			setBestMove,
+			setChessBoardPosition
+		);
+	}, [engine, game, analysisMode, setBestMove, setChessBoardPosition]);
+
+	useEffect(() => {
+		if ((!game.isGameOver() || game.isGameOver()) && analysisMode) {
+			setTimeout(findBestMove, 300);
+		}
+	}, [chessBoardPosition, findBestMove, game, analysisMode]);
+
+	const handleResize = useCallback(() => {
 		let newBoardWidth;
 		const maxWidth = 700;
 		const minWidth = 310;
@@ -93,19 +148,10 @@ const ChessboardComponent = ({ gameMode }) => {
 		const availableHeight = window.innerHeight;
 
 		newBoardWidth = Math.max(
-			Math.min(availableWidth, availableHeight * 0.75), // Adjust the factor as needed
+			Math.min(availableWidth, availableHeight * 0.75),
 			minWidth
 		);
 		setBoardWidth(newBoardWidth);
-	};
-
-	useEffect(() => {
-		handleResize();
-		window.addEventListener("resize", handleResize);
-
-		return () => {
-			window.removeEventListener("resize", handleResize);
-		};
 	}, []);
 
 	const toggleBoardOrientation = () => {
@@ -139,25 +185,9 @@ const ChessboardComponent = ({ gameMode }) => {
 		}
 	};
 
-	const findBestMove = useCallback(() => {
-		findBestMoveUtil(
-			engine,
-			game,
-			analysisMode,
-			setBestMove,
-			setChessBoardPosition
-		);
-	}, [engine, game, analysisMode, setBestMove, setChessBoardPosition]);
-
 	const isKingInCheck = useCallback(() => {
 		return checkKingInCheck(game);
 	}, [game]);
-
-	useEffect(() => {
-		if ((!game.isGameOver() || game.isGameOver()) && analysisMode) {
-			setTimeout(findBestMove, 300);
-		}
-	}, [chessBoardPosition, findBestMove, game, analysisMode]);
 
 	const resetGame = () => {
 		setGame(new Chess());
@@ -206,8 +236,8 @@ const ChessboardComponent = ({ gameMode }) => {
 		);
 	};
 
+	// move this to passandplay
 	const toastId = React.useRef(null);
-
 	const toggleAutoFlip = () => {
 		if (!autoFlip) {
 			if (!toastId.current) {
@@ -247,24 +277,30 @@ const ChessboardComponent = ({ gameMode }) => {
 			reason = "nobody won this one..";
 		}
 
+		// Check for time out
+		if (!reason) {
+			if (currentPlayer === "white" && whiteTime <= 0) {
+				reason = "White ran out of time!";
+			} else if (currentPlayer === "black" && blackTime <= 0) {
+				reason = "Black ran out of time!";
+			}
+		}
+
 		setGameEndReason(reason);
 
 		if (reason) {
-			toastId.current = toast.info(reason, {
-				position: toast.POSITION.TOP_CENTER,
-				autoClose: 2000,
-			});
+			if (gameMode === "passandplay") {
+				toastId.current = toast.info(reason, {
+					position: toast.POSITION.TOP_CENTER,
+					autoClose: 2000,
+				});
+			}
 
 			setTimeout(() => {
 				setIsGameOver(true);
 			}, 1000);
 		}
-	}, [game, history]);
-
-	useEffect(() => {
-		checkGameOver();
-		setPgn(generatePGN(history));
-	}, [game, checkGameOver, history]);
+	}, [game, history, gameMode, currentPlayer, whiteTime, blackTime]);
 
 	const getMoveOptions = moveOptionsHandler(
 		game,
@@ -373,6 +409,11 @@ const ChessboardComponent = ({ gameMode }) => {
 			setKingInCheck(isKingInCheck());
 		}
 	}, [lastMove, currentIndex, history, isKingInCheck]);
+
+	useEffect(() => {
+		checkGameOver();
+		setPgn(generatePGN(history));
+	}, [game, checkGameOver, history, currentPlayer, whiteTime, blackTime]);
 
 	const onPieceDragBegin = (piece, sourceSquare) => {
 		getMoveOptions(sourceSquare);
@@ -495,10 +536,7 @@ const ChessboardComponent = ({ gameMode }) => {
 													: "grey",
 										}}
 									>
-										{`${Math.floor(blackTime / 60)}:${(
-											"0" +
-											(blackTime % 60)
-										).slice(-2)}`}
+										{formatTime(blackTime)}
 									</Typography>
 								</Box>
 							</Stack>
@@ -598,10 +636,7 @@ const ChessboardComponent = ({ gameMode }) => {
 													: "grey",
 										}}
 									>
-										{`${Math.floor(whiteTime / 60)}:${(
-											"0" +
-											(whiteTime % 60)
-										).slice(-2)}`}
+										{formatTime(whiteTime)}
 									</Typography>
 								</Box>
 							</Stack>
