@@ -64,12 +64,12 @@ export const styles = {
 	},
 	commonButtonStyles: {
 		width: "30vh",
-		height: "75%",
+		height: "30vh",
 		margin: "10px",
 		"&:hover": { bgcolor: "white", color: "black" },
 		[theme.breakpoints.down("sm")]: {
-			height: "9vh",
-			width: "50vh",
+			height: "8vh",
+			width: "40vh",
 		},
 	},
 	buttonTextStyles: {

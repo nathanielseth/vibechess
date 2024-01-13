@@ -444,11 +444,11 @@ const ChessboardComponent = ({ gameMode }) => {
 		<Stack
 			flexDirection={{ xs: "column", md: "row" }}
 			sx={{
-				mt: { xs: "30px", sm: 0 },
 				zIndex: 1,
-				overflowY: { xs: "auto", sm: "auto", md: "hidden" },
-				overflowX: { xs: "auto", sm: "auto", md: "hidden" },
 				maxHeight: "100dvh",
+				...(gameMode !== "multiplayer"
+					? { mt: { xs: "90px", sm: "90px", md: 0 } }
+					: {}),
 			}}
 			alignItems="center"
 		>
@@ -552,6 +552,10 @@ const ChessboardComponent = ({ gameMode }) => {
 									: []
 							}
 							onSquareRightClick={onSquareRightClick}
+							// TODO: work on on premove
+							// arePremovesAllowed={
+							// 	gameMode === "multiplayer" ? "true" : "false"
+							// }
 						/>
 					</Stack>
 					{/*     */}

@@ -113,7 +113,7 @@ const BoardControl = ({
 						paddingLeft: "15px",
 						paddingRight: "15px",
 						width: "100%",
-						maxHeight: "30vh",
+						height: "30vh",
 					}}
 					ref={movesBoxRef}
 				>

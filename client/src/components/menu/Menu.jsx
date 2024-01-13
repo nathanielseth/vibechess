@@ -333,9 +333,9 @@ function Menu() {
 								width: "30vh",
 								marginBottom: "10px",
 								[theme.breakpoints.down("sm")]: {
-									height: "9vh",
-									width: "50vh",
-									marginBottom: "-10px",
+									height: "8vh",
+									width: "40vh",
+									marginBottom: "-5px",
 								},
 							}}
 							InputProps={{

@@ -50,7 +50,9 @@ const Chatbox = ({ messages: initialMessages }) => {
 					width: "100%",
 				}}
 			>
-				<Typography variant="subtitle1">Chat</Typography>
+				<Typography variant="subtitle1" color="#dbd4d4">
+					Chat
+				</Typography>
 				<IconButton onClick={() => setIsMuted(!isMuted)}>
 					{isMuted ? (
 						<NotificationsOffRoundedIcon

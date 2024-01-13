@@ -15,6 +15,12 @@ const Multiplayer = () => {
 				justifyContent="center"
 				alignItems="center"
 				height={{ xs: "100dvh", md: "300dvh" }}
+				sx={{
+					zIndex: 1,
+					overflowY: { xs: "auto", sm: "auto", md: "hidden" },
+					overflowX: { xs: "auto", sm: "auto", md: "hidden" },
+					maxHeight: "100dvh",
+				}}
 			>
 				<Stack flexGrow={1}>
 					<Stack>

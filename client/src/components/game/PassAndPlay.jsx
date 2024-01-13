@@ -13,6 +13,12 @@ const PassAndPlay = () => {
 			alignItems="center"
 			height="100dvh"
 			spacing={-10}
+			sx={{
+				zIndex: 1,
+				overflowY: { xs: "auto", sm: "auto", md: "hidden" },
+				overflowX: { xs: "auto", sm: "auto", md: "hidden" },
+				maxHeight: "100dvh",
+			}}
 		>
 			<Navbar title="" />
 			<Stack flexGrow={1} alignItems="center" justifyContent="center">
