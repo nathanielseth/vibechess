@@ -24,6 +24,7 @@ import {
 	moveSound,
 	captureSound,
 	tenSecondsSound,
+	notifySound,
 } from "../../data/utils.js";
 import {
 	moveOptionsHandler,
@@ -62,8 +63,8 @@ const ChessboardComponent = ({ gameMode }) => {
 	const [bestMove, setBestMove] = useState(null);
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [boardWidth, setBoardWidth] = useState(480);
-	const [whiteTime, setWhiteTime] = useState(0.2 * 60);
-	const [blackTime, setBlackTime] = useState(0.2 * 60);
+	const [whiteTime, setWhiteTime] = useState(10 * 60);
+	const [blackTime, setBlackTime] = useState(10 * 60);
 	const [currentPlayer, setCurrentPlayer] = useState("white");
 	const [hasPlayed, setHasPlayed] = useState({ white: false, black: false });
 
@@ -76,44 +77,56 @@ const ChessboardComponent = ({ gameMode }) => {
 	const yellowSquare = "rgba(252, 220, 77, 0.4)";
 
 	useEffect(() => {
-		const timer = setInterval(() => {
-			if (!isGameOver) {
-				if (currentPlayer === "white") {
-					setWhiteTime((prevTime) =>
-						prevTime > 0 ? prevTime - 0.1 : 0
-					);
-				} else {
-					setBlackTime((prevTime) =>
-						prevTime > 0 ? prevTime - 0.1 : 0
-					);
-				}
-
-				if (
-					(currentPlayer === "white" &&
-						whiteTime <= 11 &&
-						!hasPlayed.white) ||
-					(currentPlayer === "black" &&
-						blackTime <= 11 &&
-						!hasPlayed.black)
-				) {
-					tenSecondsSound.play();
+		if (gameMode === "multiplayer") {
+			const timer = setInterval(() => {
+				if (!isGameOver) {
 					if (currentPlayer === "white") {
-						setHasPlayed((prevState) => ({
-							...prevState,
-							white: true,
-						}));
+						setWhiteTime((prevTime) =>
+							prevTime > 0 ? prevTime - 0.1 : 0
+						);
 					} else {
-						setHasPlayed((prevState) => ({
-							...prevState,
-							black: true,
-						}));
+						setBlackTime((prevTime) =>
+							prevTime > 0 ? prevTime - 0.1 : 0
+						);
+					}
+
+					if (
+						(currentPlayer === "white" &&
+							whiteTime <= 10 &&
+							!hasPlayed.white) ||
+						(currentPlayer === "black" &&
+							blackTime <= 10 &&
+							!hasPlayed.black)
+					) {
+						tenSecondsSound.play();
+						if (currentPlayer === "white") {
+							setHasPlayed((prevState) => ({
+								...prevState,
+								white: true,
+							}));
+						} else {
+							setHasPlayed((prevState) => ({
+								...prevState,
+								black: true,
+							}));
+						}
 					}
 				}
-			}
-		}, 100);
+			}, 100);
 
-		return () => clearInterval(timer);
-	}, [currentPlayer, isGameOver, whiteTime, blackTime, hasPlayed]);
+			return () => clearInterval(timer);
+		}
+	}, [
+		currentPlayer,
+		isGameOver,
+		whiteTime,
+		blackTime,
+		hasPlayed,
+		setWhiteTime,
+		setBlackTime,
+		gameMode,
+	]);
+
 	useEffect(() => {
 		handleResize();
 		window.addEventListener("resize", handleResize);
@@ -141,7 +154,7 @@ const ChessboardComponent = ({ gameMode }) => {
 
 	const handleResize = useCallback(() => {
 		let newBoardWidth;
-		const maxWidth = 700;
+		const maxWidth = 690;
 		const minWidth = 310;
 		const availableWidth = Math.min(window.innerWidth - 100, maxWidth);
 
@@ -301,6 +314,12 @@ const ChessboardComponent = ({ gameMode }) => {
 			}, 1000);
 		}
 	}, [game, history, gameMode, currentPlayer, whiteTime, blackTime]);
+
+	useEffect(() => {
+		if (isGameOver) {
+			notifySound.play();
+		}
+	}, [isGameOver]);
 
 	const getMoveOptions = moveOptionsHandler(
 		game,

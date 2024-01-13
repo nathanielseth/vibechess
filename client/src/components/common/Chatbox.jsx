@@ -174,7 +174,9 @@ const MessageBubble = ({ isUser, text }) => {
 						: "20px 20px 20px 5px",
 				}}
 			>
-				<Typography variant="body2">{text}</Typography>
+				<Typography variant="body2" color="black">
+					{text}
+				</Typography>
 			</Box>
 		</Box>
 	);

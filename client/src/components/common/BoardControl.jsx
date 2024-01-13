@@ -12,6 +12,7 @@ import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { styles } from "../../styles/styles";
 import ShareModal from "./modal/ShareModal";
+import ConfirmationModal from "../common/modal/ConfirmationModal";
 
 const BoardControl = ({
 	currentIndex,
@@ -27,13 +28,27 @@ const BoardControl = ({
 	handleUndoMove,
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
+	const [isConfirmationModalOpen, setConfirmationModalOpen] = useState(false);
+	const [confirmationMessage, setConfirmationMessage] = useState("");
 	const movesBoxRef = useRef();
 	const isUserNavigatingRef = useRef(false);
 
 	const handleResign = () => {
+		setConfirmationMessage("Resign the game?");
+		setConfirmationModalOpen(true);
+	};
+
+	const handleDraw = () => {
+		setConfirmationMessage("Offer a draw?");
+		setConfirmationModalOpen(true);
+	};
+
+	const handleConfirmation = () => {
 		if (handleRematch) {
 			handleRematch();
 		}
+
+		setConfirmationModalOpen(false);
 	};
 
 	const closeShareModal = () => {
@@ -207,7 +222,7 @@ const BoardControl = ({
 
 					{gameMode !== "passandplay" && (
 						<Tooltip title="Offer Draw" enterDelay={400} arrow>
-							<IconButton>
+							<IconButton onClick={handleDraw}>
 								<HandshakeRoundedIcon
 									sx={{
 										fontSize: "1.35rem",
@@ -222,6 +237,12 @@ const BoardControl = ({
 					isOpen={isShareModalOpen}
 					onClose={closeShareModal}
 					pgn={pgn}
+				/>
+				<ConfirmationModal
+					isOpen={isConfirmationModalOpen}
+					onClose={() => setConfirmationModalOpen(false)}
+					onConfirm={handleConfirmation}
+					message={confirmationMessage}
 				/>
 			</Stack>
 		</Stack>

@@ -15,6 +15,11 @@ export const tenSecondsSound = new Howl({
 	volume: 1.0,
 });
 
+export const notifySound = new Howl({
+	src: ["/sound/notify.mp3"],
+	volume: 0.2,
+});
+
 export const generatePGN = (history) => {
 	let pgn = `[Event "Pass & Play"]\n`;
 	pgn += `[Site "VibeChess"]\n`;

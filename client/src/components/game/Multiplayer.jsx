@@ -1,11 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../common/Navbar";
 import { Stack } from "@mui/material";
 import "react-toastify/dist/ReactToastify.css";
 import ChessboardComponent from "./ChessboardComponent";
+import { notifySound } from "../../data/utils";
 
 const Multiplayer = () => {
 	const [gameMode] = useState("multiplayer");
+
+	useEffect(() => {
+		notifySound.play();
+
+		return () => notifySound.stop();
+	}, []);
 
 	return (
 		<Stack>

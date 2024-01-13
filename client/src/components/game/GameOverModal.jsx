@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 import { Modal, Box, Typography, Grid, Button, Fade } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
 import ReplayIcon from "@mui/icons-material/Replay";
@@ -8,12 +9,14 @@ const GameOverModal = ({
 	isOpen,
 	onClose,
 	onRematch,
-	onNewGame,
 	endReason,
 	winner,
-	gameMode,
+	//gameMode,
 }) => {
+	const navigate = useNavigate();
 	const selectedFlag = window.localStorage.getItem("selectedFlag");
+
+	const handleMenu = () => navigate("/");
 
 	const handleRematch = () => {
 		onRematch();
@@ -79,6 +82,17 @@ const GameOverModal = ({
 						<Grid item xs={6}>
 							<Button
 								variant="contained"
+								color="primary"
+								fullWidth
+								onClick={handleMenu}
+								sx={{ height: "50px" }}
+							>
+								Back to Menu
+							</Button>
+						</Grid>
+						<Grid item xs={6}>
+							<Button
+								variant="contained"
 								color="secondary"
 								fullWidth
 								startIcon={<ReplayIcon />}
@@ -86,19 +100,6 @@ const GameOverModal = ({
 								sx={{ height: "50px" }}
 							>
 								Rematch
-							</Button>
-						</Grid>
-						<Grid item xs={6}>
-							<Button
-								variant="contained"
-								color="primary"
-								fullWidth
-								onClick={onNewGame}
-								sx={{ height: "50px" }}
-							>
-								{gameMode === "passandplay"
-									? "Back to Menu"
-									: "New Game"}
 							</Button>
 						</Grid>
 					</Grid>
