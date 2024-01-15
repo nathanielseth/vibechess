@@ -1,13 +1,12 @@
-# <div style="text-align: center;"><img src="client/src/icons/VibeChess.svg" width="27"/>ibeChess</div>
+# <h1 align="center"><img src="client/src/icons/vibechess.svg" width="27"/>ibeChess</h1>
 
-<div style="text-align: center;">
-    <img src="assets/home.png" alt="VibeChess Banner" style="max-width: 100%; height: auto;">
-    <p style="margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto;">
-        <a href="no link yet">
-           VibeChess
-        </a> is a free real-time online chess web app focused on quick and casual chess.
-    </p>
-</div>
+<p align="center">
+  <img alt="VibeChess Banner" src="assets/home.png">
+</p>
+
+<p align="center">
+  <a href="https://github.com/nathanielseth/VibeChess" target="_blank">VibeChess</a> is a free real-time online chess web app focused on quick and casual chess.
+</p>
 
   <p align="center">
     <a href=""><img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=white"></a>
@@ -26,7 +25,7 @@
 
 -   **Real-Time Games:** Play in real-time matches with friends or be paired with a random opponent through matchmaking.
 
--   **Full Chess Experience:** Complete chess logic like en passant, pawn promotions, and smart handling of draws.
+-   **Play Against Computer:** Test your skills against Stockfish, a powerful computer chess engine.
 
 -   **Mini-Game:** Prior to a match, decide the playing color with a rock, paper, scissors mini-game.
 
@@ -48,8 +47,6 @@ To start the React app, run the following command:
 ```bash
 npm run dev
 ```
-
-Visit http://localhost:3000 in your browser.
 
 ## Contributing
 
