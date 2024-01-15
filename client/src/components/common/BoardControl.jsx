@@ -13,6 +13,7 @@ import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { styles } from "../../styles/styles";
 import ShareModal from "./modal/ShareModal";
 import ConfirmationModal from "../common/modal/ConfirmationModal";
+import GameOverModal from "../common/modal/GameOverModal";
 
 const BoardControl = ({
 	currentIndex,
@@ -24,30 +25,39 @@ const BoardControl = ({
 	analysisMode,
 	pgn,
 	gameMode,
-	handleRematch,
 	handleUndoMove,
+	setIsGameOver,
 }) => {
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const [isConfirmationModalOpen, setConfirmationModalOpen] = useState(false);
+	const [isGameOverModalOpen, setGameOverModalOpen] = useState(false);
 	const [confirmationMessage, setConfirmationMessage] = useState("");
+	const [resignationReason, setResignationReason] = useState("");
+	const [isResignation, setIsResignation] = useState(false);
+
 	const movesBoxRef = useRef();
 	const isUserNavigatingRef = useRef(false);
 
 	const handleResign = () => {
 		setConfirmationMessage("Resign the game?");
+		setResignationReason("Resigned");
+		setIsResignation(true); // Add this line
 		setConfirmationModalOpen(true);
 	};
 
 	const handleDraw = () => {
 		setConfirmationMessage("Offer a draw?");
+		setIsResignation(false); // Add this line
 		setConfirmationModalOpen(true);
 	};
 
 	const handleConfirmation = () => {
-		if (handleRematch) {
-			handleRematch();
+		if (resignationReason === "Resigned") {
+			setGameOverModalOpen(true);
+			// You may need to pass the appropriate information to GameOverModal
+		} else {
+			// Handle other confirmation actions
 		}
-
 		setConfirmationModalOpen(false);
 	};
 
@@ -243,7 +253,16 @@ const BoardControl = ({
 					onClose={() => setConfirmationModalOpen(false)}
 					onConfirm={handleConfirmation}
 					message={confirmationMessage}
+					isResignation={isResignation}
+					setIsGameOver={setIsGameOver}
 				/>
+				{gameMode !== "passandplay" && (
+					<GameOverModal
+						isOpen={isGameOverModalOpen}
+						onClose={() => setGameOverModalOpen(false)}
+						endReason={resignationReason}
+					/>
+				)}
 			</Stack>
 		</Stack>
 	);
@@ -262,6 +281,8 @@ BoardControl.propTypes = {
 	gameMode: PropTypes.string,
 	handleRematch: PropTypes.func.isRequired,
 	handleUndoMove: PropTypes.func.isRequired,
+	isResignation: PropTypes.func.isRequired,
+	setIsGameOver: PropTypes.func.isRequired,
 };
 
 export default BoardControl;

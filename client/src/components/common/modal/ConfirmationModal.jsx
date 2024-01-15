@@ -2,7 +2,21 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Modal, Box, Typography, Button } from "@mui/material";
 
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, message }) => {
+const ConfirmationModal = ({
+	isOpen,
+	onClose,
+	onConfirm,
+	message,
+	isResignation,
+	setIsGameOver,
+}) => {
+	const handleConfirm = () => {
+		onConfirm();
+		onClose();
+		if (isResignation) {
+			setIsGameOver(true);
+		}
+	};
 	return (
 		<Modal open={isOpen} onClose={onClose}>
 			<Box
@@ -34,7 +48,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message }) => {
 					NO
 				</Button>
 				<Button
-					onClick={onConfirm}
+					onClick={isResignation ? handleConfirm : onConfirm}
 					variant="contained"
 					color="secondary"
 				>
@@ -50,6 +64,8 @@ ConfirmationModal.propTypes = {
 	onClose: PropTypes.func.isRequired,
 	onConfirm: PropTypes.func.isRequired,
 	message: PropTypes.string.isRequired,
+	isResignation: PropTypes.bool.isRequired,
+	setIsGameOver: PropTypes.bool.isRequired,
 };
 
 export default ConfirmationModal;

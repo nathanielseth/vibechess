@@ -12,7 +12,7 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import "react-toastify/dist/ReactToastify.css";
 import BoardControl from "../common/BoardControl";
 import Chatbox from "../common/Chatbox";
-import GameOverModal from "./GameOverModal";
+import GameOverModal from "../common/modal/GameOverModal.jsx";
 import SettingsModal from "../common/modal/SettingsModal.jsx";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShareModal from "../common/modal/ShareModal.jsx";
@@ -719,6 +719,7 @@ const ChessboardComponent = ({ gameMode }) => {
 					handleRematch={handleRematch}
 					gameMode={gameMode}
 					handleUndoMove={handleUndoMove}
+					setIsGameOver={setIsGameOver}
 				/>
 				{gameMode === "multiplayer" && <Chatbox />}
 				<SettingsModal
