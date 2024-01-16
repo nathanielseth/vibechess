@@ -17,5 +17,8 @@
 		"eslint-plugin-react-refresh": "^0.4.5",
 		"vite": "^5.0.8",
 		"vite-plugin-eslint": "^1.8.1"
+	},
+	"dependencies": {
+		"@loadable/component": "^5.16.3"
 	}
 }

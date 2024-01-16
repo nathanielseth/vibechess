@@ -41,13 +41,13 @@ const BoardControl = ({
 	const handleResign = () => {
 		setConfirmationMessage("Resign the game?");
 		setResignationReason("Resigned");
-		setIsResignation(true); // Add this line
+		setIsResignation(true);
 		setConfirmationModalOpen(true);
 	};
 
 	const handleDraw = () => {
 		setConfirmationMessage("Offer a draw?");
-		setIsResignation(false); // Add this line
+		setIsResignation(false);
 		setConfirmationModalOpen(true);
 	};
 
