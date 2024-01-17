@@ -281,7 +281,7 @@ BoardControl.propTypes = {
 	gameMode: PropTypes.string,
 	handleRematch: PropTypes.func.isRequired,
 	handleUndoMove: PropTypes.func.isRequired,
-	isResignation: PropTypes.func.isRequired,
+	isResignation: PropTypes.func,
 	setIsGameOver: PropTypes.func.isRequired,
 };
 

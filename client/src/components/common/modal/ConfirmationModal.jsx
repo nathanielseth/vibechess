@@ -64,7 +64,7 @@ ConfirmationModal.propTypes = {
 	onConfirm: PropTypes.func.isRequired,
 	message: PropTypes.string.isRequired,
 	isResignation: PropTypes.bool.isRequired,
-	setIsGameOver: PropTypes.bool.isRequired,
+	setIsGameOver: PropTypes.func.isRequired,
 };
 
 export default ConfirmationModal;

@@ -102,7 +102,7 @@ function Navbar({ onClick, title, gameMode }) {
 Navbar.propTypes = {
 	onClick: PropTypes.func,
 	title: PropTypes.string,
-	gameMode: PropTypes.string.isRequired,
+	gameMode: PropTypes.string,
 };
 
 export default Navbar;

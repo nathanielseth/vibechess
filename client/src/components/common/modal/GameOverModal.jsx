@@ -112,11 +112,11 @@ const GameOverModal = ({
 GameOverModal.propTypes = {
 	isOpen: PropTypes.bool.isRequired,
 	onClose: PropTypes.func.isRequired,
-	onRematch: PropTypes.func.isRequired,
-	onNewGame: PropTypes.func.isRequired,
+	onRematch: PropTypes.func,
+	onNewGame: PropTypes.func,
 	endReason: PropTypes.string,
 	winner: PropTypes.string,
-	gameMode: PropTypes.string.isRequired,
+	gameMode: PropTypes.string,
 };
 
 export default GameOverModal;
