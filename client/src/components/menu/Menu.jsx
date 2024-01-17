@@ -37,6 +37,9 @@ import { Howl } from "howler";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
+import io from "socket.io-client";
+const socket = io("http://localhost:5000");
+
 const ActionButton = React.memo(
 	({ onClick, icon, label, backgroundColor, description }) => {
 		const theme = useTheme();
@@ -148,6 +151,7 @@ function Menu() {
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
 	const [isRotating, setIsRotating] = useState(false);
+	const [enteredRoomCode, setEnteredRoomCode] = useState("");
 
 	const handleImageClick = () => {
 		setIsRotating((prevIsRotating) => !prevIsRotating);
@@ -222,6 +226,10 @@ function Menu() {
 
 		return () => music.stop();
 	}, [isMusicMuted, music]);
+
+	const handleJoinRoom = () => {
+		socket.emit("join", enteredRoomCode);
+	};
 
 	return (
 		<Box
@@ -338,6 +346,8 @@ function Menu() {
 									marginBottom: "-5px",
 								},
 							}}
+							value={enteredRoomCode}
+							onChange={(e) => setEnteredRoomCode(e.target.value)}
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
@@ -349,7 +359,7 @@ function Menu() {
 												},
 											}}
 											disabled={false}
-											onClick={null}
+											onClick={handleJoinRoom}
 											edge="end"
 										>
 											<ArrowIcon />
