@@ -1,7 +1,7 @@
-# <h1 align="center"><img src="client/src/icons/vibechess.svg" width="27"/>ibeChess</h1>
+# <h1 align="center"><img src="assets/alt.png" width="27"/>ibeChess</h1>
 
 <p align="center">
-  <img alt="VibeChess Banner" src="assets/home.png">
+  <img alt="VibeChess Banner" src="assets/demo.png">
 </p>
 
 <p align="center">
@@ -9,23 +9,30 @@
 </p>
 
   <p align="center">
-    <a href=""><img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=white"></a>
-    </a>
     <a href=""><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
+    </a>
     </a>
     <a href=""><img src="https://img.shields.io/badge/Vite-646cff?style=for-the-badge&logo=vite&logoColor=61DAFB"
     ></a>
-    <a href=""><img src="https://img.shields.io/badge/Express.js-404D59?style=for-the-badge"
+    <a href=""><img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white"
     ></a>
     <a href=""><img src="https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101">
     <a href=""><img src="https://img.shields.io/badge/Material--UI-0081CB?style=for-the-badge&logo=material-ui&logoColor=white"></a>
+    <a href=""><img src="https://img.shields.io/badge/Express.js-404D59?style=for-the-badge"
+    ></a>
 </p>
 
-### Features
+## Chess Dependencies
+
+-   [chess.js](https://github.com/jhlywa/chess.js)
+-   [react-chessboard](https://github.com/Clariity/react-chessboard)
+-   [stockfish.js](https://github.com/nmrugg/stockfish.js)
+
+# Features
 
 -   **Real-Time Games:** Play in real-time matches with friends or be paired with a random opponent through matchmaking.
 
--   **Play Against Computer:** Test your skills against Stockfish, a powerful computer chess engine.
+-   **Play Against Computer:** Test your skills against Stockfish, the powerful computer chess engine.
 
 -   **Mini-Game:** Prior to a match, decide the playing color with a rock, paper, scissors mini-game.
 
@@ -33,19 +40,36 @@
 
 -   **More Features In Progress...**
 
-## Setup
+# Setup
 
-Ensure you have installed:
+> Ensure you have installed [Node.js](https://nodejs.org/)
 
--   [Node.js](https://nodejs.org/)
--   [NPM](https://www.npmjs.com/)
+## Client
 
-### Running the App
+Install the dependencies:
 
-To start the React app, run the following command:
+```bash
+npm install
+```
+
+Start the client (available at http://localhost:3000):
 
 ```bash
 npm run dev
+```
+
+## Server
+
+Navigate to the server directory:
+
+```bash
+cd server
+```
+
+Run the server (available at http://localhost:5000):
+
+```bash
+node server.js
 ```
 
 ## Contributing
