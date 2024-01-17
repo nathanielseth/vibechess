@@ -449,7 +449,12 @@ function Menu() {
 					<Tooltip title="Buy Me A Coffee" arrow>
 						<IconButton
 							disableRipple
-							onClick={() => alert("Circle Button 3")}
+							onClick={() =>
+								window.open(
+									"https://www.buymeacoffee.com/nathanielseth",
+									"_blank"
+								)
+							}
 							style={styles.circleButtonStyle}
 						>
 							<FreeBreakfastIcon

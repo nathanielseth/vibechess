@@ -11,7 +11,6 @@ const ConfirmationModal = ({
 	setIsGameOver,
 }) => {
 	const handleConfirm = () => {
-		onConfirm();
 		onClose();
 		if (isResignation) {
 			setIsGameOver(true);

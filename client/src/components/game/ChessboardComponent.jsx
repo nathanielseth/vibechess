@@ -204,6 +204,7 @@ const ChessboardComponent = ({ gameMode }) => {
 
 	const resetGame = () => {
 		setGame(new Chess());
+
 		setLastMove(null);
 		setRightClickedSquares({});
 		setHighlightedSquares({});
@@ -216,6 +217,10 @@ const ChessboardComponent = ({ gameMode }) => {
 		setIsGameOver(false);
 		setGameEndReason(null);
 		setPgn("");
+		setWhiteTime(10 * 60);
+		setBlackTime(10 * 60);
+		setHasPlayed({ white: false, black: false });
+		setCurrentPlayer("white");
 		toastId.current = toast.info("The game has restarted", {
 			position: toast.POSITION.TOP_CENTER,
 			autoClose: 2000,
