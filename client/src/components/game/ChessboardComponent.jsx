@@ -232,7 +232,7 @@ const ChessboardComponent = ({ gameMode }) => {
 	};
 
 	const openShareModal = () => {
-		setPgn(generatePGN(history));
+		setPgn(generatePGN(history, gameMode));
 		setShareModalOpen(true);
 	};
 
@@ -367,7 +367,7 @@ const ChessboardComponent = ({ gameMode }) => {
 		setGame(gameCopy);
 		setOptionSquares({});
 		setCurrentIndex(history.length);
-		setPgn(generatePGN(history));
+		setPgn(generatePGN(history, gameMode));
 		return move;
 	};
 
@@ -417,7 +417,7 @@ const ChessboardComponent = ({ gameMode }) => {
 			setOptionSquares({});
 			setMoveFrom("");
 			setGame(gameCopy);
-			setPgn(generatePGN(history));
+			setPgn(generatePGN(history, gameMode));
 		} else {
 			setMoveFrom(square);
 			getMoveOptions(square);
@@ -436,8 +436,16 @@ const ChessboardComponent = ({ gameMode }) => {
 
 	useEffect(() => {
 		checkGameOver();
-		setPgn(generatePGN(history));
-	}, [game, checkGameOver, history, currentPlayer, whiteTime, blackTime]);
+		setPgn(generatePGN(history, gameMode));
+	}, [
+		game,
+		gameMode,
+		checkGameOver,
+		history,
+		currentPlayer,
+		whiteTime,
+		blackTime,
+	]);
 
 	const onPieceDragBegin = (piece, sourceSquare) => {
 		getMoveOptions(sourceSquare);

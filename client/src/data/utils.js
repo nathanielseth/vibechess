@@ -20,8 +20,22 @@ export const notifySound = new Howl({
 	volume: 0.2,
 });
 
-export const generatePGN = (history) => {
-	let pgn = `[Event "Pass & Play"]\n`;
+export const generatePGN = (history, gameMode) => {
+	const formatGameMode = (mode) => {
+		if (mode === "multiplayer") {
+			return "Multiplayer";
+		} else if (mode === "passandplay") {
+			return "Pass And Play";
+		} else if (mode === "bot") {
+			return "Versus Bot";
+		} else {
+			return mode;
+		}
+	};
+
+	const formattedGameMode = formatGameMode(gameMode);
+
+	let pgn = `[Event "${formattedGameMode}"]\n`;
 	pgn += `[Site "VibeChess"]\n`;
 	pgn += `[Date "${new Date().toLocaleDateString()}"]\n`;
 	pgn += `[White "${window.localStorage.getItem("username")}"]\n`;
@@ -38,6 +52,7 @@ export const generatePGN = (history) => {
 
 		pgn += `${whiteMove}${blackMove}\n`;
 	}
+
 	return pgn;
 };
 
