@@ -9,14 +9,13 @@
 </p>
 
   <p align="center">
-    <a href=""><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
-    </a>
-    </a>
+    <a href=""><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"
+    ></a>
     <a href=""><img src="https://img.shields.io/badge/Vite-646cff?style=for-the-badge&logo=vite&logoColor=61DAFB"
     ></a>
     <a href=""><img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white"
     ></a>
-    <a href=""><img src="https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101">
+    <a href=""><img src="https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101"></a>
     <a href=""><img src="https://img.shields.io/badge/Material--UI-0081CB?style=for-the-badge&logo=material-ui&logoColor=white"></a>
     <a href=""><img src="https://img.shields.io/badge/Express.js-404D59?style=for-the-badge"
     ></a>
