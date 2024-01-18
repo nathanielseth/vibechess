@@ -5,9 +5,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DoneIcon from "@mui/icons-material/Done";
 import Navbar from "../common/Navbar";
 import { useLocation } from "react-router-dom";
-
-import io from "socket.io-client";
-const socket = io("http://localhost:5000");
+// import socket from "../../data/socket";
 
 const generateRoomCode = () => {
 	const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -35,6 +33,13 @@ const Room = () => {
 	const [incrementFiveOpacity, setIncrementFiveOpacity] = useState(0.3);
 	const [incrementTenOpacity, setIncrementTenOpacity] = useState(0.3);
 	const [selectedIncrement, setSelectedIncrement] = useState(null);
+
+	useEffect(() => {
+		if (!roomCode) {
+			const generatedCode = generateRoomCode();
+			setRoomCode(generatedCode);
+		}
+	}, [roomCode]);
 
 	const handleWhiteSelect = () => {
 		setWhiteBoxOpacity(1.0);
@@ -73,14 +78,6 @@ const Room = () => {
 				break;
 		}
 	};
-
-	useEffect(() => {
-		if (!roomCode) {
-			const generatedCode = generateRoomCode();
-			setRoomCode(generatedCode);
-			socket.emit("join", generatedCode);
-		}
-	}, [roomCode]);
 
 	return (
 		<Stack

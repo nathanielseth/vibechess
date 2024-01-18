@@ -36,9 +36,7 @@ import { useNavigate } from "react-router-dom";
 import { Howl } from "howler";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-
-import io from "socket.io-client";
-const socket = io("http://localhost:5000");
+// import socket from "../../data/socket";
 
 const ActionButton = React.memo(
 	({ onClick, icon, label, backgroundColor, description }) => {
@@ -228,7 +226,7 @@ function Menu() {
 	}, [isMusicMuted, music]);
 
 	const handleJoinRoom = () => {
-		socket.emit("join", enteredRoomCode);
+		// socket.emit("joinRoom", enteredRoomCode);
 	};
 
 	return (

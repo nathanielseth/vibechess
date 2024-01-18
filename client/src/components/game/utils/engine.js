@@ -44,8 +44,8 @@ class Engine {
 		});
 	}
 
-	evaluatePosition(fen, depth = 18) {
-		if (depth > 24) depth = 24;
+	evaluatePosition(fen, depth = 24) {
+		if (depth > 30) depth = 30;
 
 		this.stockfish.postMessage(`position fen ${fen}`);
 		this.stockfish.postMessage(`go depth ${depth}`);
