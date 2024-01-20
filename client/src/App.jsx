@@ -1,11 +1,10 @@
 import React, { Suspense, useState } from "react";
 import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { getTheme } from "./styles/styles";
 import { lazy } from "@loadable/component";
+import { ThemeContextProvider } from "./theme/ThemeContextProvider";
 
 const WelcomeScreen = lazy(() => import("./components/menu/WelcomeScreen"));
 const Menu = lazy(() => import("./components/menu/Menu"));
@@ -38,10 +37,8 @@ const App = () => {
 		setUsernameSubmitted(true);
 	};
 
-	const darkTheme = getTheme("dark");
-
 	return (
-		<ThemeProvider theme={darkTheme}>
+		<ThemeContextProvider>
 			<CssBaseline />
 			<Router>
 				<Suspense fallback={<Loading />}>
@@ -74,7 +71,7 @@ const App = () => {
 				</Suspense>
 			</Router>
 			<ToastContainer transition={Slide} />
-		</ThemeProvider>
+		</ThemeContextProvider>
 	);
 };
 

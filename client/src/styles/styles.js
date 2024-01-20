@@ -4,6 +4,7 @@ import PlayWithFriendIcon from "../icons/friend.svg";
 import VersusBotIcon from "../icons/bot.svg";
 import SettingsIcon from "../icons/cog.svg";
 import VibeChessLogo from "../icons/vibechess.svg";
+import VibeChessLogoBlack from "../icons/vibechessblack.svg";
 import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme();
@@ -163,5 +164,6 @@ export {
 	VersusBotIcon,
 	SettingsIcon,
 	VibeChessLogo,
+	VibeChessLogoBlack,
 	getTheme,
 };

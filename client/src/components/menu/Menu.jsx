@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useContext } from "react";
 import {
 	Box,
 	Button,
@@ -18,6 +18,7 @@ import {
 	VersusBotIcon,
 	SettingsIcon,
 	VibeChessLogo,
+	VibeChessLogoBlack,
 	styles,
 	rotatingImageStyle,
 	rotatingImageRotate,
@@ -26,6 +27,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
 import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 import QuizIcon from "@mui/icons-material/Quiz";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
@@ -36,6 +38,7 @@ import { useNavigate } from "react-router-dom";
 import { Howl } from "howler";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { ThemeContext } from "../../theme/ThemeContextProvider";
 // import socket from "../../data/socket";
 
 const ActionButton = React.memo(
@@ -141,6 +144,14 @@ ActionButton.propTypes = {
 
 function Menu() {
 	const theme = useTheme();
+	const Icon = theme.palette.mode === "dark" ? LightModeIcon : DarkModeIcon;
+	const { switchColorMode } = useContext(ThemeContext);
+	console.log("Current Mode: ", theme.palette.mode);
+
+	// Inside your dark mode switch button click event
+	console.log("Before Switch - Current Mode: ", theme.palette.mode);
+	switchColorMode();
+	console.log("After Switch - Current Mode: ", theme.palette.mode);
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const navigate = useNavigate();
 	const [isMusicMuted, setIsMusicMuted] = useState(() => {
@@ -232,7 +243,6 @@ function Menu() {
 	return (
 		<Box
 			sx={{
-				backgroundColor: "#101010",
 				display: "flex",
 				flexDirection: "column",
 				alignItems: "center",
@@ -255,7 +265,11 @@ function Menu() {
 			>
 				<Zoom in={true}>
 					<img
-						src={VibeChessLogo}
+						src={
+							theme.palette.mode === "dark"
+								? VibeChessLogo
+								: VibeChessLogoBlack
+						}
 						alt="VibeChess Logo"
 						style={{
 							...rotatingImageStyle,
@@ -267,7 +281,9 @@ function Menu() {
 				<Zoom in={true}>
 					<Typography
 						variant="h2"
-						color="white"
+						color={
+							theme.palette.mode === "dark" ? "white" : "#f24040"
+						}
 						textAlign="center"
 						style={{ textAlign: "center", fontSize: "3.5rem" }}
 					>
@@ -482,12 +498,10 @@ function Menu() {
 					<Tooltip title="Toggle UI Mode" arrow>
 						<IconButton
 							disableRipple
-							onClick={() => alert("Circle Button 4")}
+							onClick={switchColorMode}
 							style={styles.circleButtonStyle}
 						>
-							<DarkModeIcon
-								sx={{ color: "#1f2123", fontSize: 30 }}
-							/>
+							<Icon sx={{ color: "#1f2123", fontSize: 30 }} />
 						</IconButton>
 					</Tooltip>
 				</Slide>
