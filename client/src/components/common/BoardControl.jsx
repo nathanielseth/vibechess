@@ -14,6 +14,7 @@ import { styles } from "../../styles/styles";
 import ShareModal from "./modal/ShareModal";
 import ConfirmationModal from "../common/modal/ConfirmationModal";
 import GameOverModal from "../common/modal/GameOverModal";
+import { useTheme } from "@mui/material/styles";
 
 const BoardControl = ({
 	currentIndex,
@@ -28,6 +29,7 @@ const BoardControl = ({
 	handleUndoMove,
 	setIsGameOver,
 }) => {
+	const theme = useTheme();
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const [isConfirmationModalOpen, setConfirmationModalOpen] = useState(false);
 	const [isGameOverModalOpen, setGameOverModalOpen] = useState(false);
@@ -54,7 +56,6 @@ const BoardControl = ({
 	const handleConfirmation = () => {
 		if (resignationReason === "Resigned") {
 			setGameOverModalOpen(true);
-			// You may need to pass the appropriate information to GameOverModal
 		} else {
 			// Handle other confirmation actions
 		}
@@ -93,7 +94,13 @@ const BoardControl = ({
 
 	return (
 		<Stack>
-			<Stack sx={styles.boardControlStyle}>
+			<Stack
+				sx={{
+					...styles.boardControlStyle,
+					backgroundColor:
+						theme.palette.mode === "light" ? "#fff" : "#1f2123",
+				}}
+			>
 				{/* Move Controls */}
 				<Box
 					display="flex"
@@ -146,6 +153,7 @@ const BoardControl = ({
 						{history.slice(1).map((state, index) => {
 							const moveNumber = Math.floor(index / 2) + 1;
 							const isWhiteMove = index % 2 === 0;
+							const isCurrentMove = currentIndex === index + 1;
 							return (
 								<Grid item key={index} xs={6}>
 									<Button
@@ -157,11 +165,14 @@ const BoardControl = ({
 										sx={{
 											width: "100%",
 											borderColor: "#000",
-											backgroundColor:
-												currentIndex === index + 1
-													? "#000"
-													: "inherit",
-											color: "#fff",
+											backgroundColor: isCurrentMove
+												? "#000"
+												: "inherit",
+											color: isCurrentMove
+												? "#fff"
+												: theme.palette.mode === "light"
+												? "black"
+												: "inherit", // Set color conditionally
 										}}
 									>
 										{isWhiteMove && (

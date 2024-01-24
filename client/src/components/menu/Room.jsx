@@ -197,9 +197,9 @@ const Room = () => {
 					</Box>
 				</Box>
 
-				<Box display="flex" alignItems="center" color="white">
+				<Box display="flex" alignItems="center">
 					<AccessTimeIcon />
-					<Typography ml={1}>
+					<Typography>
 						Increment for {selectedTimeControl} min
 					</Typography>
 				</Box>
@@ -224,7 +224,6 @@ const Room = () => {
 										bgcolor: "error.main",
 										opacity: 1,
 									},
-									color: "white",
 									backgroundSize: "cover",
 									width: "50px",
 									height: "50px",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import {
 	Modal,
@@ -15,8 +15,13 @@ import {
 import { CircleFlag } from "react-circle-flags";
 import FlagSelectorModal from "./FlagSelectorModal";
 import { generateRandomUsername } from "../../../data/randomName";
+import { useTheme } from "@mui/material/styles";
+import { ThemeContext } from "../../../theme/ThemeContextProvider";
 
 function SettingsModal({ isOpen, onClose }) {
+	const theme = useTheme();
+	const { switchColorMode } = useContext(ThemeContext);
+
 	const [selectedBoard, setSelectedBoard] = useState(
 		window.localStorage.getItem("selectedBoard") || "grey"
 	);
@@ -25,9 +30,6 @@ function SettingsModal({ isOpen, onClose }) {
 	);
 	const [premoves, setPremove] = useState(
 		window.localStorage.getItem("premoves") === "true" || true
-	);
-	const [selectedUITheme, setSelectedUITheme] = useState(
-		window.localStorage.getItem("selectedUITheme") || "dark"
 	);
 	const [sounds, setSounds] = useState(
 		window.localStorage.getItem("sounds") === "true" || true
@@ -63,7 +65,6 @@ function SettingsModal({ isOpen, onClose }) {
 		window.localStorage.setItem("selectedBoard", selectedBoard);
 		window.localStorage.setItem("selectedPieces", selectedPieces);
 		window.localStorage.setItem("premoves", premoves);
-		window.localStorage.setItem("selectedUITheme", selectedUITheme);
 		window.localStorage.setItem("sounds", sounds);
 		window.localStorage.setItem("enableChatFilter", enableChatFilter);
 
@@ -74,17 +75,14 @@ function SettingsModal({ isOpen, onClose }) {
 		window.localStorage.setItem("selectedBoard", selectedBoard);
 		window.localStorage.setItem("selectedPieces", selectedPieces);
 		window.localStorage.setItem("premoves", premoves);
-		window.localStorage.setItem("selectedUITheme", selectedUITheme);
 		window.localStorage.setItem("sounds", sounds);
 		window.localStorage.setItem("enableChatFilter", enableChatFilter);
-	}, [
-		selectedBoard,
-		selectedPieces,
-		premoves,
-		selectedUITheme,
-		sounds,
-		enableChatFilter,
-	]);
+	}, [selectedBoard, selectedPieces, premoves, sounds, enableChatFilter]);
+
+	const handleUIThemeChange = (newUITheme) => {
+		window.localStorage.setItem("selectedUITheme", newUITheme);
+		switchColorMode();
+	};
 
 	return (
 		<Modal open={isOpen} onClose={onClose}>
@@ -96,7 +94,10 @@ function SettingsModal({ isOpen, onClose }) {
 						left: "50%",
 						transform: "translate(-50%, -50%)",
 						width: 440,
-						bgcolor: "#1f2123",
+						bgcolor:
+							theme.palette.mode === "dark"
+								? "#1f2123"
+								: "#fff8f0",
 						boxShadow: 24,
 						p: 4,
 						borderRadius: 3,
@@ -198,15 +199,11 @@ function SettingsModal({ isOpen, onClose }) {
 							mb: 2,
 						}}
 					>
-						<Typography sx={{ fontSize: 16 }}>UI Theme</Typography>
-						<Select
-							value={selectedUITheme}
-							onChange={(e) => setSelectedUITheme(e.target.value)}
-							style={{ maxHeight: 38, width: 210 }}
-						>
-							<MenuItem value="dark">Dark</MenuItem>
-							<MenuItem value="light">Light</MenuItem>
-						</Select>
+						<Typography sx={{ fontSize: 16 }}>Dark Mode</Typography>
+						<Switch
+							checked={theme.palette.mode === "dark"}
+							onChange={handleUIThemeChange}
+						/>
 					</Box>
 
 					<Box

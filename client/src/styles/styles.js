@@ -9,52 +9,6 @@ import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme();
 
-const getTheme = (mode) =>
-	createTheme({
-		palette: {
-			mode: mode,
-			primary: {
-				main: "#f24040", // red
-			},
-			secondary: {
-				main: "#87BCDE", // blue
-			},
-			error: {
-				main: "#c490d1", // purple
-			},
-			warning: {
-				main: "#f49f0a", // orange
-			},
-			info: {
-				main: "#565676", // indigo
-			},
-			background: {
-				default: mode === "dark" ? "#101010" : "#fff",
-			},
-		},
-		typography: {
-			fontFamily: "'IBM Plex Mono', monospace",
-			h1: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h2: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h3: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h4: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h5: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-			h6: {
-				fontFamily: "'Bebas Neue', cursive",
-			},
-		},
-	});
-
 export const styles = {
 	circleButtonStyle: {
 		backgroundColor: "#fff",
@@ -92,9 +46,6 @@ export const styles = {
 		flexDirection: "column",
 		flexWrap: "wrap",
 		alignItems: "center",
-		backgroundColor: "black",
-		bgcolor: "#1f2123",
-		border: "2px solid #000",
 		height: 320,
 		width: 400,
 		overflowY: "auto",
@@ -165,5 +116,4 @@ export {
 	SettingsIcon,
 	VibeChessLogo,
 	VibeChessLogoBlack,
-	getTheme,
 };

@@ -146,12 +146,7 @@ function Menu() {
 	const theme = useTheme();
 	const Icon = theme.palette.mode === "dark" ? LightModeIcon : DarkModeIcon;
 	const { switchColorMode } = useContext(ThemeContext);
-	console.log("Current Mode: ", theme.palette.mode);
-
-	// Inside your dark mode switch button click event
-	console.log("Before Switch - Current Mode: ", theme.palette.mode);
 	switchColorMode();
-	console.log("After Switch - Current Mode: ", theme.palette.mode);
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const navigate = useNavigate();
 	const [isMusicMuted, setIsMusicMuted] = useState(() => {
@@ -282,12 +277,26 @@ function Menu() {
 					<Typography
 						variant="h2"
 						color={
-							theme.palette.mode === "dark" ? "white" : "#f24040"
+							theme.palette.mode === "dark"
+								? "white"
+								: theme.palette.mode === "light"
+								? "black"
+								: "#f24040"
 						}
 						textAlign="center"
 						style={{ textAlign: "center", fontSize: "3.5rem" }}
 					>
-						<span style={{ color: "#f24040" }}>Vibe</span>Chess
+						<span
+							style={{
+								color:
+									theme.palette.mode === "dark"
+										? "#f24040"
+										: "black",
+							}}
+						>
+							Vibe
+						</span>
+						Chess
 					</Typography>
 				</Zoom>
 			</Container>

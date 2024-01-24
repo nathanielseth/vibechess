@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { lazy } from "@loadable/component";
 import { ThemeContextProvider } from "./theme/ThemeContextProvider";
+import { useTheme } from "@mui/material/styles";
 
 const WelcomeScreen = lazy(() => import("./components/menu/WelcomeScreen"));
 const Menu = lazy(() => import("./components/menu/Menu"));
@@ -14,6 +15,7 @@ const Room = lazy(() => import("./components/menu/Room"));
 const Loading = lazy(() => import("./components/common/Loading"));
 
 const App = () => {
+	const theme = useTheme();
 	const storedUsername = window.localStorage.getItem("username");
 	const storedFlag = window.localStorage.getItem("selectedFlag");
 
@@ -38,7 +40,7 @@ const App = () => {
 	};
 
 	return (
-		<ThemeContextProvider>
+		<ThemeContextProvider value={theme}>
 			<CssBaseline />
 			<Router>
 				<Suspense fallback={<Loading />}>

@@ -12,8 +12,10 @@ import ArrowIcon from "@mui/icons-material/Send";
 import NotificationsRoundedIcon from "@mui/icons-material/Notifications";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import { styles } from "../../styles/styles";
+import { useTheme } from "@mui/material/styles";
 
 const Chatbox = ({ messages: initialMessages }) => {
+	const theme = useTheme();
 	const [messages, setMessages] = useState(initialMessages || []);
 	const [input, setInput] = useState("");
 	const [isMuted, setIsMuted] = useState(false);
@@ -36,6 +38,8 @@ const Chatbox = ({ messages: initialMessages }) => {
 				flexDirection: "column",
 				height: "100%",
 				...styles.boardControlStyle,
+				backgroundColor:
+					theme.palette.mode === "light" ? "#fff" : "#1f2123", // Set background color conditionally
 			}}
 		>
 			<Box

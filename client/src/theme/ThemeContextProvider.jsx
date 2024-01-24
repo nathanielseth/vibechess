@@ -14,7 +14,9 @@ export function ThemeContextProvider({ children }) {
 	const [mode, setMode] = useState("dark");
 
 	const switchColorMode = () => {
-		setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+		setTimeout(() => {
+			setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+		});
 	};
 
 	const theme = useMemo(
@@ -38,7 +40,7 @@ export function ThemeContextProvider({ children }) {
 						main: "#565676", // indigo
 					},
 					background: {
-						default: mode === "dark" ? "#101010" : "#fff",
+						default: mode === "dark" ? "#101010" : "#fff8f0",
 					},
 				},
 				typography: {

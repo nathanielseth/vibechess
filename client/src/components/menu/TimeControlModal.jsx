@@ -7,9 +7,11 @@ import ElectricBoltRoundedIcon from "@mui/icons-material/ElectricBoltRounded";
 import TimerRoundedIcon from "@mui/icons-material/TimerRounded";
 import Room from "./Room";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
 
 const TimeControlModal = ({ isOpen, onClose }) => {
 	const navigate = useNavigate();
+	const theme = useTheme();
 	const [selectedTimeControl, setSelectedTimeControl] = useState(null);
 
 	const handleTimeControlChange = (value) => {
@@ -30,7 +32,10 @@ const TimeControlModal = ({ isOpen, onClose }) => {
 						left: "50%",
 						transform: "translate(-50%, -50%)",
 						width: 380,
-						bgcolor: "#1f2123",
+						bgcolor:
+							theme.palette.mode === "light"
+								? "#fff8f0"
+								: "#1f2123",
 						boxShadow: 24,
 						p: 4,
 						borderRadius: 3,
