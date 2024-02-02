@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
 import flagData from "../../../data/flags";
-import "../../../styles/scrollbar.css";
+import { styles } from "../../../styles/styles";
 
 const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -64,6 +64,7 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						border: "2px solid #000",
 						boxShadow: 24,
 						p: 4,
+						...styles.scrollbarStyles,
 					}}
 				>
 					<Typography variant="h4" mb={2}>

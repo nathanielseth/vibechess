@@ -62,6 +62,26 @@ export const styles = {
 			"radial-gradient(circle, transparent 60%, rgba(0,0,0,.1) 1%)",
 		borderRadius: "50%",
 	},
+	scrollbarStyles: {
+		/* Firefox */
+		"*": {
+			"scrollbar-width": "auto",
+			"scrollbar-color": "#a6a6a6 #101010",
+		},
+		/* Chrome, Edge, and Safari */
+		"*::-webkit-scrollbar": {
+			width: "6px",
+		},
+
+		"*::-webkit-scrollbar-track": {
+			background: "#101010",
+		},
+
+		"*::-webkit-scrollbar-thumb": {
+			"background-color": "#a6a6a6",
+			"border-radius": "10px",
+		},
+	},
 };
 
 export const boardThemeColors = {
