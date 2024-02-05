@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useContext } from "react";
 import {
 	Box,
-	Button,
 	Container,
 	IconButton,
 	Typography,
@@ -31,7 +30,6 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import QuizIcon from "@mui/icons-material/Quiz";
 import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
-import PropTypes from "prop-types";
 import SettingsModal from "../common/modal/SettingsModal";
 import TimeControlModal from "./TimeControlModal";
 import { useNavigate } from "react-router-dom";
@@ -39,108 +37,8 @@ import { Howl } from "howler";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ThemeContext } from "../../theme/ThemeContextProvider";
-// import socket from "../../data/socket";
-
-const ActionButton = React.memo(
-	({ onClick, icon, label, backgroundColor, description }) => {
-		const theme = useTheme();
-		const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-		return (
-			<Slide direction="up" in={true} mountOnEnter unmountOnExit>
-				<Button
-					onClick={onClick}
-					variant="contained"
-					sx={{
-						...styles.commonButtonStyles,
-						backgroundColor,
-						position: "relative",
-						overflow: "hidden",
-						"&:hover": {
-							"& img": { filter: "brightness(0%)" },
-							"& .description": {
-								position: "relative",
-								visibility: "visible",
-								transform: "translateY(-10px)",
-								transition:
-									"transform 0.5s ease, opacity 0.5s ease",
-								opacity: 1,
-							},
-							"& .buttonContent": {
-								transform: "translateY(-20px)",
-								transition: "transform 0.5s ease",
-							},
-						},
-						"&.MuiButton-root:hover": {
-							bgcolor: "white",
-							color: "black",
-						},
-					}}
-				>
-					<Box
-						className="buttonContent"
-						sx={{
-							display: "flex",
-							flexDirection: isMobile ? "row" : "column",
-							alignItems: "center",
-							justifyContent: "center",
-							transition: "transform 0.5s ease",
-						}}
-					>
-						{!isMobile && (
-							<Typography
-								variant="body2"
-								className="empty-space"
-								sx={{
-									visibility: "hidden",
-								}}
-							>
-								{description}
-							</Typography>
-						)}
-						{!isMobile && (
-							<img
-								src={icon}
-								alt="Icon"
-								style={styles.iconStyles}
-							/>
-						)}
-						<Typography variant="h5" sx={styles.buttonTextStyles}>
-							{label}
-						</Typography>
-						{!isMobile && (
-							<Typography
-								variant="body2"
-								className="description"
-								sx={{
-									top: "100%",
-									left: "0",
-									width: "100%",
-									fontSize: 12,
-									visibility: "hidden",
-									transform: "translateY(0)",
-									mt: "15px",
-									opacity: 0,
-								}}
-							>
-								{description}
-							</Typography>
-						)}
-					</Box>
-				</Button>
-			</Slide>
-		);
-	}
-);
-
-ActionButton.displayName = "ActionButton";
-
-ActionButton.propTypes = {
-	onClick: PropTypes.func.isRequired,
-	icon: PropTypes.string.isRequired,
-	label: PropTypes.string.isRequired,
-	backgroundColor: PropTypes.string.isRequired,
-	description: PropTypes.string.isRequired,
-};
+import socket from "../../data/socket";
+import MenuButton from "./MenuButton";
 
 function Menu() {
 	const theme = useTheme();
@@ -232,7 +130,9 @@ function Menu() {
 	}, [isMusicMuted, music]);
 
 	const handleJoinRoom = () => {
-		// socket.emit("joinRoom", enteredRoomCode);
+		if (socket) {
+			socket.emit("joinRoom", enteredRoomCode);
+		}
 	};
 
 	return (
@@ -314,7 +214,7 @@ function Menu() {
 				}}
 			>
 				{/* Main Buttons */}
-				<ActionButton
+				<MenuButton
 					onClick={handlePassAndPlayClick}
 					icon={PassNPlayIcon}
 					label="PASS AND PLAY"
@@ -322,7 +222,7 @@ function Menu() {
 					description="Practice locally in a solo game or pass-and-play with a friend."
 				/>
 
-				<ActionButton
+				<MenuButton
 					onClick={handleMatchmakeClick}
 					icon={MatchmakingIcon}
 					label="MATCHMAKING"
@@ -337,7 +237,7 @@ function Menu() {
 						alignItems: "center",
 					}}
 				>
-					<ActionButton
+					<MenuButton
 						onClick={handlePlayWithFriendClick}
 						icon={PlayWithFriendIcon}
 						label="PLAY WITH FRIEND"
@@ -370,7 +270,14 @@ function Menu() {
 								},
 							}}
 							value={enteredRoomCode}
-							onChange={(e) => setEnteredRoomCode(e.target.value)}
+							onChange={(e) =>
+								setEnteredRoomCode(e.target.value.toUpperCase())
+							}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									handleJoinRoom(); // Call your join room function here
+								}
+							}}
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
@@ -394,7 +301,7 @@ function Menu() {
 					</Slide>
 				</Box>
 
-				<ActionButton
+				<MenuButton
 					onClick={() => {
 						clickSound.play();
 					}}
@@ -404,7 +311,7 @@ function Menu() {
 					description="Test your skills against an AI opponent."
 				/>
 
-				<ActionButton
+				<MenuButton
 					onClick={handleSettingsClick}
 					icon={SettingsIcon}
 					label="OPTIONS"
