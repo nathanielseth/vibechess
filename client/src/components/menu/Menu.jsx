@@ -10,6 +10,16 @@ import {
 	Zoom,
 	Tooltip,
 } from "@mui/material";
+import { Howl } from "howler";
+import { useTheme } from "@mui/material/styles";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
+import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import QuizIcon from "@mui/icons-material/Quiz";
+import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
 import {
 	PassNPlayIcon,
 	MatchmakingIcon,
@@ -22,23 +32,13 @@ import {
 	rotatingImageStyle,
 	rotatingImageRotate,
 } from "../../styles/styles";
-import GitHubIcon from "@mui/icons-material/GitHub";
-import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
-import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import QuizIcon from "@mui/icons-material/Quiz";
-import ArrowIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import MusicOffRoundedIcon from "@mui/icons-material/MusicOffRounded";
-import SettingsModal from "../common/modal/SettingsModal";
-import TimeControlModal from "./TimeControlModal";
 import { useNavigate } from "react-router-dom";
-import { Howl } from "howler";
-import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ThemeContext } from "../../theme/ThemeContextProvider";
 import socket from "../../data/socket";
 import MenuButton from "./MenuButton";
+import SettingsModal from "../common/modal/SettingsModal";
+import TimeControlModal from "./TimeControlModal";
 
 function Menu() {
 	const theme = useTheme();
@@ -55,11 +55,15 @@ function Menu() {
 	const [isRotating, setIsRotating] = useState(false);
 	const [enteredRoomCode, setEnteredRoomCode] = useState("");
 
-	const handleImageClick = () => {
-		setIsRotating((prevIsRotating) => !prevIsRotating);
+	const handlePlayWithFriendClick = () => {
+		clickSound.play();
+		setIsTimeControlModalOpen(true);
 	};
 
-	const rotationStyle = isRotating ? rotatingImageRotate : {};
+	const handleTimeControlClose = () => {
+		clickSound.play();
+		setIsTimeControlModalOpen(false);
+	};
 
 	const handleSettingsClick = () => {
 		clickSound.play();
@@ -67,8 +71,15 @@ function Menu() {
 	};
 
 	const handleCloseSettingsModal = () => {
+		clickSound.play();
 		setIsSettingsModalOpen(false);
 	};
+
+	const handleImageClick = () => {
+		setIsRotating((prevIsRotating) => !prevIsRotating);
+	};
+
+	const rotationStyle = isRotating ? rotatingImageRotate : {};
 
 	const handlePassAndPlayClick = () => {
 		clickSound.play();
@@ -78,15 +89,6 @@ function Menu() {
 	const handleMatchmakeClick = () => {
 		clickSound.play();
 		navigate("/multiplayer");
-	};
-
-	const handlePlayWithFriendClick = () => {
-		clickSound.play();
-		setIsTimeControlModalOpen(true);
-	};
-
-	const handleTimeControlClose = () => {
-		setIsTimeControlModalOpen(false);
 	};
 
 	const music = useMemo(
@@ -275,7 +277,7 @@ function Menu() {
 							}
 							onKeyDown={(e) => {
 								if (e.key === "Enter") {
-									handleJoinRoom(); // Call your join room function here
+									handleJoinRoom();
 								}
 							}}
 							InputProps={{
