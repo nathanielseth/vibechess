@@ -59,7 +59,9 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						left: "50%",
 						transform: "translate(-50%, -50%)",
 						borderRadius: 3,
-						width: 800,
+						width: "90%",
+						maxWidth: 800,
+						maxHeigh: 500,
 						bgcolor: "#1f2123",
 						border: "2px solid #000",
 						boxShadow: 24,
@@ -82,15 +84,15 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 
 					<Box
 						sx={{
-							maxHeight: "380px",
+							height: "380px",
 							overflowY: "auto",
 							mb: 4,
 							mt: 3,
 							display: "flex",
 							flexDirection: "row",
 							flexWrap: "wrap",
-							justifyContent: "center",
-							alignItems: "center",
+							justifyContent: "flex-start",
+							alignItems: "flex-start",
 							gap: "10px 5px",
 						}}
 					>
