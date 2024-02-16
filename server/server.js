@@ -2,42 +2,70 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import { joinRoom } from "./utils.js";
+class SocketManager {
+	constructor(io) {
+		this.io = io;
+		this.rooms = {};
+		this.matchmakingQueues = [];
+		this.characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	}
+	
+	init() {
+		const app = express();
+		const httpServer = createServer(app);
+		this.io = new Server(httpServer, {
+			cors: {
+				origin: "http://localhost:3000",
+				methods: ["GET", "POST"],
+			},
+		});
 
-const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-	cors: {
-		origin: "http://localhost:3000",
-		methods: ["GET", "POST"],
-	},
-});
+		app.use(cors());
 
-app.use(cors());
+		this.setupEventListeners();
+		httpServer.listen(5000, () => {
+			console.log("Server listening on port 5000");
+		});
+	}
 
-const rooms = {};
+	setupEventListeners() {
+		this.io.on("connection", (socket) => {
+			try {
+				const { username } = socket.handshake.query;
+				console.log(`${username} (${socket.id}) connected`);
 
-io.on("connection", (socket) => {
-	console.log("A user connected");
+				socket.on("createRoom", ({ roomCode, timeControl }) =>
+					this.setupRoom(socket, roomCode, username, timeControl)
+				);
 
-	socket.on("join", (roomCode) => {
-		if (!rooms[roomCode]) {
-			rooms[roomCode] = [];
-		}
-		rooms[roomCode].push(socket);
-		console.log(`User joined room ${roomCode}`);
-	});
+				socket.on("joinRoom", (roomCode) =>
+					joinRoom(this.io, socket, this.rooms, roomCode, username)
+				);
 
-	socket.on("disconnect", () => {
-		for (let roomCode in rooms) {
-			const index = rooms[roomCode].indexOf(socket);
-			if (index !== -1) {
-				rooms[roomCode].splice(index, 1);
-				console.log(`User left room ${roomCode}`);
+				socket.on("disconnect", () => {
+					const { roomCode } = socket;
+					if (roomCode) {
+						this.io.in(roomCode).emit("playerHasLeft");
+						if (this.rooms[roomCode]) {
+							this.rooms[roomCode].activePlayers--;
+							if (this.rooms[roomCode].activePlayers <= 0) {
+								this.rooms[roomCode] = null;
+							}
+						}
+					}
+					console.log(`${username} (${socket.id}) disconnected`);
+				});
+			} catch (err) {
+				console.log(`ERROR: ${err}`);
+				this.io
+					.in(socket.roomCode)
+					.to(socket.id)
+					.emit("errorOccurred", err);
 			}
-		}
-	});
-});
+		});
+	}
+}
 
-httpServer.listen(5000, () => {
-	console.log("Server listening on port 5000");
-});
+const socketManager = new SocketManager(new Server());
+socketManager.init();
