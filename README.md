@@ -68,7 +68,7 @@ cd server
 Run the server (available at http://localhost:5000):
 
 ```bash
-node server.js
+npm start
 ```
 
 ## Contributing
