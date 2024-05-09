@@ -41,24 +41,6 @@ const Room = () => {
 		}
 	}, [roomCode]);
 
-	// useEffect(() => {
-	// 	if (roomCode) {
-	// 		socket.emit("joinRoom", roomCode);
-	// 	} else {
-	// 		socket.emit("createRoom", {
-	// 			roomCode: generateRoomCode(),
-	// 			timeControl: "defaultTimeControl",
-	// 		});
-	// 	}
-	// }, [roomCode]);
-
-	// useEffect(() => {
-	// 	socket.on("init-game", () => {});
-	// 	socket.on("invalid-room-name", () => {
-	// 		// setInvalidRoomName(true);
-	// 	});
-	// }, []);
-
 	const handleWhiteSelect = () => {
 		setWhiteBoxOpacity(1.0);
 		setBlackBoxOpacity(0.3);

@@ -132,9 +132,15 @@ function Menu() {
 	}, [isMusicMuted, music]);
 
 	const handleJoinRoom = () => {
-		if (socket) {
-			socket.emit("joinRoom", enteredRoomCode);
-		}
+		socket.emit("joinRoom", { roomCode: enteredRoomCode });
+
+		socket.on("roomJoined", () => {
+			history.push("/multiplayer");
+		});
+
+		socket.on("roomNotFound", () => {
+			console.log("room not found");
+		});
 	};
 
 	return (
