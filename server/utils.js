@@ -49,6 +49,7 @@ const joinRoom = (io, socket, roomData, roomCode, username) => {
 		socket.join(roomCode);
 		console.log(`${username} entered room - ${roomCode}`);
 		socket.roomCode = roomCode;
+		io.to(socket.id).emit("roomJoined");
 
 		startGame(io, roomData, roomCode);
 	} else {
