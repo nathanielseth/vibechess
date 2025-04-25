@@ -27,13 +27,11 @@
 -   [react-chessboard](https://github.com/Clariity/react-chessboard)
 -   [stockfish.js](https://github.com/nmrugg/stockfish.js)
 
-# Features
+# WIP Features
 
 -   **Real-Time Games:** Play in real-time matches with friends or be paired with a random opponent through matchmaking.
 
 -   **Play Against Computer:** Test your skills against Stockfish, the powerful computer chess engine.
-
--   **Mini-Game:** Prior to a match, decide the playing color with a rock, paper, scissors mini-game.
 
 -   **Live Chat:** Communicate with fellow users during games.
 
