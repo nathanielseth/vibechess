@@ -8,10 +8,10 @@
 	"dependencies": {
 		"cors": "^2.8.5",
 		"express": "^4.21.2",
-		"socket.io": "^4.7.3"
+		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
-		"vite": "^4.5.14",
+		"vite": "^6.3.5",
 		"vite-plugin-node": "^3.1.0"
 	}
 }
