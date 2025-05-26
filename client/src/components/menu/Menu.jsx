@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect, useContext } from "react";
+import React, {
+	useState,
+	useMemo,
+	useEffect,
+	useContext,
+	useCallback,
+} from "react";
 import {
 	Box,
 	Container,
@@ -44,9 +50,9 @@ function Menu() {
 	const theme = useTheme();
 	const Icon = theme.palette.mode === "dark" ? LightModeIcon : DarkModeIcon;
 	const { switchColorMode } = useContext(ThemeContext);
-	switchColorMode();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const navigate = useNavigate();
+
 	const [isMusicMuted, setIsMusicMuted] = useState(() => {
 		return localStorage.getItem("isMusicMuted") === "true" || false;
 	});
@@ -54,42 +60,6 @@ function Menu() {
 	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
 	const [isRotating, setIsRotating] = useState(false);
 	const [enteredRoomCode, setEnteredRoomCode] = useState("");
-
-	const handlePlayWithFriendClick = () => {
-		clickSound.play();
-		setIsTimeControlModalOpen(true);
-	};
-
-	const handleTimeControlClose = () => {
-		clickSound.play();
-		setIsTimeControlModalOpen(false);
-	};
-
-	const handleSettingsClick = () => {
-		clickSound.play();
-		setIsSettingsModalOpen(true);
-	};
-
-	const handleCloseSettingsModal = () => {
-		clickSound.play();
-		setIsSettingsModalOpen(false);
-	};
-
-	const handleImageClick = () => {
-		setIsRotating((prevIsRotating) => !prevIsRotating);
-	};
-
-	const rotationStyle = isRotating ? rotatingImageRotate : {};
-
-	const handlePassAndPlayClick = () => {
-		clickSound.play();
-		navigate("/pass-and-play");
-	};
-
-	const handleMatchmakeClick = () => {
-		clickSound.play();
-		navigate("/multiplayer");
-	};
 
 	const music = useMemo(
 		() =>
@@ -110,6 +80,45 @@ function Menu() {
 		[]
 	);
 
+	const handlePlayWithFriendClick = useCallback(() => {
+		clickSound.play();
+		setIsTimeControlModalOpen(true);
+	}, [clickSound]);
+
+	const handleTimeControlClose = useCallback(() => {
+		clickSound.play();
+		setIsTimeControlModalOpen(false);
+	}, [clickSound]);
+
+	const handleSettingsClick = useCallback(() => {
+		clickSound.play();
+		setIsSettingsModalOpen(true);
+	}, [clickSound]);
+
+	const handleCloseSettingsModal = useCallback(() => {
+		clickSound.play();
+		setIsSettingsModalOpen(false);
+	}, [clickSound]);
+
+	const handleImageClick = useCallback(() => {
+		setIsRotating((prevIsRotating) => !prevIsRotating);
+	}, []);
+
+	const handlePassAndPlayClick = useCallback(() => {
+		clickSound.play();
+		navigate("/pass-and-play");
+	}, [clickSound, navigate]);
+
+	const handleMatchmakeClick = useCallback(() => {
+		clickSound.play();
+		navigate("/multiplayer");
+	}, [clickSound, navigate]);
+
+	const handleVersusBotClick = useCallback(() => {
+		clickSound.play();
+		// Add bot navigation when implemented
+	}, [clickSound]);
+
 	const handleMusicToggle = () => {
 		if (isMusicMuted) {
 			music.play();
@@ -118,6 +127,27 @@ function Menu() {
 		}
 		setIsMusicMuted(!isMusicMuted);
 	};
+
+	const handleJoinRoom = useCallback(() => {
+		if (!enteredRoomCode.trim()) return;
+
+		socket.emit("joinRoom", { roomCode: enteredRoomCode });
+
+		const handleRoomJoined = () => {
+			navigate("/multiplayer");
+			socket.off("roomJoined", handleRoomJoined);
+			socket.off("roomNotFound", handleRoomNotFound);
+		};
+
+		const handleRoomNotFound = () => {
+			console.log("room not found");
+			socket.off("roomJoined", handleRoomJoined);
+			socket.off("roomNotFound", handleRoomNotFound);
+		};
+
+		socket.on("roomJoined", handleRoomJoined);
+		socket.on("roomNotFound", handleRoomNotFound);
+	}, [enteredRoomCode, navigate]);
 
 	useEffect(() => {
 		if (!isMusicMuted) {
@@ -131,17 +161,7 @@ function Menu() {
 		return () => music.stop();
 	}, [isMusicMuted, music]);
 
-	const handleJoinRoom = () => {
-		socket.emit("joinRoom", { roomCode: enteredRoomCode });
-
-		socket.on("roomJoined", () => {
-			history.push("/multiplayer");
-		});
-
-		socket.on("roomNotFound", () => {
-			console.log("room not found");
-		});
-	};
+	const rotationStyle = isRotating ? rotatingImageRotate : {};
 
 	return (
 		<Box
@@ -215,6 +235,11 @@ function Menu() {
 					flexDirection: isMobile ? "column" : "row",
 					alignItems: "center",
 					marginTop: "5px",
+					flexWrap: "nowrap",
+					overflowX: isMobile ? "visible" : "auto",
+					overflowY: "visible",
+					width: "100%",
+					justifyContent: "center",
 					"&.MuiButton-root:hover": {
 						bgcolor: "white",
 						color: "black",
@@ -251,15 +276,6 @@ function Menu() {
 						label="PLAY WITH FRIEND"
 						backgroundColor="primary.main"
 						description="Create a room and invite your friend for a multiplayer match."
-					/>
-
-					<TimeControlModal
-						isOpen={isTimeControlModalOpen}
-						onClose={handleTimeControlClose}
-						onSelectTimeControl={(timeControl) => {
-							console.log("Selected Time Control:", timeControl);
-							handleTimeControlClose();
-						}}
 					/>
 
 					<Slide direction="up" in={true} mountOnEnter unmountOnExit>
@@ -310,9 +326,7 @@ function Menu() {
 				</Box>
 
 				<MenuButton
-					onClick={() => {
-						clickSound.play();
-					}}
+					onClick={handleVersusBotClick}
 					icon={VersusBotIcon}
 					label="VERSUS BOT"
 					backgroundColor="#F49F0A"
@@ -325,11 +339,6 @@ function Menu() {
 					label="OPTIONS"
 					backgroundColor="#565676"
 					description="Adjust board theme, sound settings, and chat preferences."
-				/>
-
-				<SettingsModal
-					isOpen={isSettingsModalOpen}
-					onClose={handleCloseSettingsModal}
 				/>
 			</Box>
 
@@ -456,6 +465,20 @@ function Menu() {
 					</Tooltip>
 				</Slide>
 			</Box>
+
+			<TimeControlModal
+				isOpen={isTimeControlModalOpen}
+				onClose={handleTimeControlClose}
+				onSelectTimeControl={(timeControl) => {
+					console.log("Selected Time Control:", timeControl);
+					handleTimeControlClose();
+				}}
+			/>
+
+			<SettingsModal
+				isOpen={isSettingsModalOpen}
+				onClose={handleCloseSettingsModal}
+			/>
 		</Box>
 	);
 }

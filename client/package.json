@@ -20,7 +20,7 @@
 		"howler": "^2.2.4",
 		"prop-types": "^15.8.1",
 		"react": "^18.2.0",
-		"react-chessboard": "^4.7.0",
+		"react-chessboard": "4.7.0",
 		"react-circle-flags": "^0.0.20",
 		"react-dom": "^18.2.0",
 		"react-router-dom": "^6.21.1",
