@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { Howl } from "howler";
 import { useTheme } from "@mui/material/styles";
+import { toast } from "react-toastify";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
 import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
@@ -40,7 +41,7 @@ import {
 } from "../../styles/styles";
 import { useNavigate } from "react-router-dom";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { ThemeContext } from "../../theme/ThemeContextProvider";
+import { ThemeContext } from "../../theme/ThemeContext";
 import socket from "../../data/socket";
 import MenuButton from "./MenuButton";
 import SettingsModal from "../common/modal/SettingsModal";
@@ -60,6 +61,8 @@ function Menu() {
 	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
 	const [isRotating, setIsRotating] = useState(false);
 	const [enteredRoomCode, setEnteredRoomCode] = useState("");
+	const [isSearching, setIsSearching] = useState(false);
+	const [searchTimeoutId, setSearchTimeoutId] = useState(null);
 
 	const music = useMemo(
 		() =>
@@ -110,9 +113,49 @@ function Menu() {
 	}, [clickSound, navigate]);
 
 	const handleMatchmakeClick = useCallback(() => {
+		if (isSearching || searchTimeoutId) return;
+
 		clickSound.play();
-		navigate("/multiplayer");
-	}, [clickSound, navigate]);
+		setIsSearching(true);
+
+		const toastId = toast.info("Searching for opponent...", {
+			position: "top-right",
+			autoClose: false,
+			hideProgressBar: false,
+			closeOnClick: false,
+			pauseOnHover: true,
+			draggable: false,
+			closeButton: true,
+			onClose: () => {
+				if (searchTimeoutId) {
+					clearTimeout(searchTimeoutId);
+					setSearchTimeoutId(null);
+				}
+				setIsSearching(false);
+			},
+		});
+
+		const timeoutId = setTimeout(() => {
+			toast.dismiss(toastId);
+
+			toast.success("Opponent found!", {
+				position: "top-right",
+				autoClose: 2000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+			});
+
+			setTimeout(() => {
+				setIsSearching(false);
+				setSearchTimeoutId(null);
+				navigate("/multiplayer");
+			}, 1000);
+		}, 5000);
+
+		setSearchTimeoutId(timeoutId);
+	}, [clickSound, navigate, isSearching, searchTimeoutId]);
 
 	const handleVersusBotClick = useCallback(() => {
 		clickSound.play();
@@ -162,6 +205,7 @@ function Menu() {
 	}, [isMusicMuted, music]);
 
 	const rotationStyle = isRotating ? rotatingImageRotate : {};
+	const iconSize = isMobile ? 24 : 26;
 
 	return (
 		<Box
@@ -287,10 +331,12 @@ function Menu() {
 							sx={{
 								width: "30vh",
 								marginBottom: "10px",
-								[theme.breakpoints.down("sm")]: {
+								[theme.breakpoints.down("md")]: {
 									height: "9vh",
+								},
+								[theme.breakpoints.down("sm")]: {
+									height: "7.2vh",
 									width: "45vh",
-									marginBottom: "-5px",
 								},
 							}}
 							value={enteredRoomCode}
@@ -365,7 +411,7 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							<QuizIcon
-								sx={{ color: "#2176ff", fontSize: "20%rem" }}
+								sx={{ color: "#2176ff", fontSize: iconSize }}
 							/>
 						</IconButton>
 					</Tooltip>
@@ -390,7 +436,10 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							<GitHubIcon
-								sx={{ color: "primary.main", fontSize: 30 }}
+								sx={{
+									color: "primary.main",
+									fontSize: iconSize,
+								}}
 							/>
 						</IconButton>
 					</Tooltip>
@@ -415,7 +464,7 @@ function Menu() {
 							style={styles.circleButtonStyle}
 						>
 							<FreeBreakfastIcon
-								sx={{ color: "#F49F0A", fontSize: 30 }}
+								sx={{ color: "#F49F0A", fontSize: iconSize }}
 							/>
 						</IconButton>
 					</Tooltip>
@@ -434,7 +483,9 @@ function Menu() {
 							onClick={switchColorMode}
 							style={styles.circleButtonStyle}
 						>
-							<Icon sx={{ color: "#1f2123", fontSize: 30 }} />
+							<Icon
+								sx={{ color: "#1f2123", fontSize: iconSize }}
+							/>
 						</IconButton>
 					</Tooltip>
 				</Slide>
@@ -454,11 +505,17 @@ function Menu() {
 						>
 							{isMusicMuted ? (
 								<MusicOffRoundedIcon
-									sx={{ color: "#1f2123", fontSize: 30 }}
+									sx={{
+										color: "#1f2123",
+										fontSize: iconSize,
+									}}
 								/>
 							) : (
 								<MusicNoteRoundedIcon
-									sx={{ color: "#1f2123", fontSize: 30 }}
+									sx={{
+										color: "#1f2123",
+										fontSize: iconSize,
+									}}
 								/>
 							)}
 						</IconButton>

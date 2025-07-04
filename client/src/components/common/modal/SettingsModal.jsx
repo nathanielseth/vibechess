@@ -16,7 +16,7 @@ import { CircleFlag } from "react-circle-flags";
 import FlagSelectorModal from "./FlagSelectorModal";
 import { generateRandomUsername } from "../../../data/randomName";
 import { useTheme } from "@mui/material/styles";
-import { ThemeContext } from "../../../theme/ThemeContextProvider";
+import { ThemeContext } from "../../../theme/ThemeContext";
 
 function SettingsModal({ isOpen, onClose }) {
 	const theme = useTheme();
