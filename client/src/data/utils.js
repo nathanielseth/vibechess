@@ -74,20 +74,25 @@ export const findBestMove = (
 };
 
 export const isKingInCheck = (game) => {
-	if (game.inCheck()) {
-		const pieces = game.board();
-		for (let i = 0; i < 8; i++) {
-			for (let j = 0; j < 8; j++) {
-				const piece = pieces[i][j];
-				if (
-					piece &&
-					piece.type === "k" &&
-					piece.color === game.turn()
-				) {
-					return String.fromCharCode(97 + j) + (8 - i);
-				}
+	if (!game.inCheck()) return null;
+
+	const board = game.board();
+	const currentPlayerColor = game.turn();
+
+	for (let row = 0; row < 8; row++) {
+		for (let col = 0; col < 8; col++) {
+			const piece = board[row][col];
+			if (
+				piece &&
+				piece.type === "k" &&
+				piece.color === currentPlayerColor
+			) {
+				const file = String.fromCharCode(97 + col);
+				const rank = 8 - row;
+				return file + rank;
 			}
 		}
 	}
+
 	return null;
 };

@@ -5,7 +5,6 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DoneIcon from "@mui/icons-material/Done";
 import Navbar from "../common/Navbar";
 import { useLocation } from "react-router-dom";
-// import socket from "../../data/socket";
 
 const generateRoomCode = () => {
 	const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

@@ -42,169 +42,287 @@ import {
 import { useNavigate } from "react-router-dom";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ThemeContext } from "../../theme/ThemeContext";
-import socket from "../../data/socket";
 import MenuButton from "./MenuButton";
 import SettingsModal from "../common/modal/SettingsModal";
 import TimeControlModal from "./TimeControlModal";
+import useSocketContext from "../../context/useSocketContext";
 
-function Menu() {
+const Menu = () => {
 	const theme = useTheme();
-	const Icon = theme.palette.mode === "dark" ? LightModeIcon : DarkModeIcon;
-	const { switchColorMode } = useContext(ThemeContext);
-	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const navigate = useNavigate();
+	const { switchColorMode } = useContext(ThemeContext);
+	const { socket, isConnected, emit, on } = useSocketContext();
+	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-	const [isMusicMuted, setIsMusicMuted] = useState(() => {
-		return localStorage.getItem("isMusicMuted") === "true" || false;
+	const [state, setState] = useState({
+		isMusicMuted: localStorage.getItem("isMusicMuted") === "true",
+		isSettingsModalOpen: false,
+		isTimeControlModalOpen: false,
+		isRotating: false,
+		enteredRoomCode: "",
+		isSearching: false,
 	});
-	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
-	const [isRotating, setIsRotating] = useState(false);
-	const [enteredRoomCode, setEnteredRoomCode] = useState("");
-	const [isSearching, setIsSearching] = useState(false);
-	const [searchTimeoutId, setSearchTimeoutId] = useState(null);
 
-	const music = useMemo(
-		() =>
-			new Howl({
+	const sounds = useMemo(
+		() => ({
+			music: new Howl({
 				src: ["/sound/music.mp3"],
 				loop: true,
 				volume: 0.5,
 			}),
-		[]
-	);
-
-	const clickSound = useMemo(
-		() =>
-			new Howl({
+			click: new Howl({
 				src: ["/sound/click.mp3"],
 				volume: 0.7,
 			}),
+		}),
 		[]
 	);
 
-	const handlePlayWithFriendClick = useCallback(() => {
-		clickSound.play();
-		setIsTimeControlModalOpen(true);
-	}, [clickSound]);
-
-	const handleTimeControlClose = useCallback(() => {
-		clickSound.play();
-		setIsTimeControlModalOpen(false);
-	}, [clickSound]);
-
-	const handleSettingsClick = useCallback(() => {
-		clickSound.play();
-		setIsSettingsModalOpen(true);
-	}, [clickSound]);
-
-	const handleCloseSettingsModal = useCallback(() => {
-		clickSound.play();
-		setIsSettingsModalOpen(false);
-	}, [clickSound]);
-
-	const handleImageClick = useCallback(() => {
-		setIsRotating((prevIsRotating) => !prevIsRotating);
+	const updateState = useCallback((updates) => {
+		setState((prev) => ({ ...prev, ...updates }));
 	}, []);
 
+	const playClickSound = useCallback(
+		() => sounds.click.play(),
+		[sounds.click]
+	);
+
+	const handleImageClick = useCallback(() => {
+		updateState({ isRotating: !state.isRotating });
+	}, [state.isRotating, updateState]);
+
 	const handlePassAndPlayClick = useCallback(() => {
-		clickSound.play();
+		playClickSound();
 		navigate("/pass-and-play");
-	}, [clickSound, navigate]);
+	}, [playClickSound, navigate]);
 
 	const handleMatchmakeClick = useCallback(() => {
-		if (isSearching || searchTimeoutId) return;
+		if (state.isSearching) {
+			emit("cancelMatchmaking");
+			updateState({ isSearching: false });
+			toast.info("Matchmaking cancelled");
+			return;
+		}
 
-		clickSound.play();
-		setIsSearching(true);
+		if (!socket || !isConnected) {
+			toast.error("Not connected to server. Please refresh the page.");
+			return;
+		}
 
-		const toastId = toast.info("Searching for opponent...", {
+		const username = localStorage.getItem("username");
+		if (!username) {
+			toast.error("Please set a username first");
+			return;
+		}
+
+		playClickSound();
+		updateState({ isSearching: true });
+
+		toast.info("Searching for opponent...", {
 			position: "top-right",
 			autoClose: false,
 			hideProgressBar: false,
 			closeOnClick: false,
-			pauseOnHover: true,
+			pauseOnHover: false,
 			draggable: false,
-			closeButton: true,
-			onClose: () => {
-				if (searchTimeoutId) {
-					clearTimeout(searchTimeoutId);
-					setSearchTimeoutId(null);
-				}
-				setIsSearching(false);
-			},
 		});
 
-		const timeoutId = setTimeout(() => {
-			toast.dismiss(toastId);
+		emit("findMatch", {
+			timeControl: 10,
+			playerName: username,
+		});
+	}, [
+		state.isSearching,
+		socket,
+		isConnected,
+		emit,
+		playClickSound,
+		updateState,
+	]);
 
-			toast.success("Opponent found!", {
-				position: "top-right",
-				autoClose: 2000,
-				hideProgressBar: false,
-				closeOnClick: true,
-				pauseOnHover: true,
-				draggable: true,
-			});
+	const handlePlayWithFriendClick = useCallback(() => {
+		playClickSound();
+		updateState({ isTimeControlModalOpen: true });
+	}, [playClickSound, updateState]);
 
-			setTimeout(() => {
-				setIsSearching(false);
-				setSearchTimeoutId(null);
-				navigate("/multiplayer");
-			}, 1000);
-		}, 5000);
+	const handleTimeControlClose = useCallback(() => {
+		playClickSound();
+		updateState({ isTimeControlModalOpen: false });
+	}, [playClickSound, updateState]);
 
-		setSearchTimeoutId(timeoutId);
-	}, [clickSound, navigate, isSearching, searchTimeoutId]);
+	const handleSettingsClick = useCallback(() => {
+		playClickSound();
+		updateState({ isSettingsModalOpen: true });
+	}, [playClickSound, updateState]);
+
+	const handleCloseSettingsModal = useCallback(() => {
+		playClickSound();
+		updateState({ isSettingsModalOpen: false });
+	}, [playClickSound, updateState]);
 
 	const handleVersusBotClick = useCallback(() => {
-		clickSound.play();
-		// Add bot navigation when implemented
-	}, [clickSound]);
+		playClickSound();
+		// TODO: Implement bot gameplay
+		toast.info("Bot gameplay coming soon!");
+	}, [playClickSound]);
 
-	const handleMusicToggle = () => {
-		if (isMusicMuted) {
-			music.play();
+	const handleMusicToggle = useCallback(() => {
+		if (state.isMusicMuted) {
+			sounds.music.play();
 		} else {
-			music.stop();
+			sounds.music.stop();
 		}
-		setIsMusicMuted(!isMusicMuted);
-	};
+		updateState({ isMusicMuted: !state.isMusicMuted });
+	}, [state.isMusicMuted, sounds.music, updateState]);
 
 	const handleJoinRoom = useCallback(() => {
-		if (!enteredRoomCode.trim()) return;
+		if (!state.enteredRoomCode.trim()) {
+			toast.error("Please enter a room code");
+			return;
+		}
 
-		socket.emit("joinRoom", { roomCode: enteredRoomCode });
+		if (!socket || !isConnected) {
+			toast.error("Not connected to server");
+			return;
+		}
 
-		const handleRoomJoined = () => {
-			navigate("/multiplayer");
-			socket.off("roomJoined", handleRoomJoined);
-			socket.off("roomNotFound", handleRoomNotFound);
+		const username = localStorage.getItem("username");
+
+		playClickSound();
+		toast.info("Joining room...");
+
+		emit("joinRoom", {
+			roomCode: state.enteredRoomCode.trim(),
+			playerName: username,
+		});
+	}, [state.enteredRoomCode, socket, isConnected, emit, playClickSound]);
+
+	useEffect(() => {
+		if (!socket || !isConnected) return;
+
+		const handleMatchFound = (data) => {
+			console.log("Match found:", data);
+			updateState({ isSearching: false });
+			toast.dismiss();
+			toast.success("Match found!");
+
+			setTimeout(() => {
+				navigate("/multiplayer", { state: data });
+			}, 1000);
+		};
+
+		const handleQueueJoined = (data) => {
+			console.log("Joined queue:", data);
+		};
+
+		const handleMatchmakingCancelled = () => {
+			updateState({ isSearching: false });
+			toast.dismiss();
+		};
+
+		const handleConnectionError = () => {
+			if (state.isSearching) {
+				updateState({ isSearching: false });
+				toast.dismiss();
+				toast.error("Connection lost. Please try again.");
+			}
+		};
+
+		const handleRoomJoined = (data) => {
+			toast.dismiss();
+			toast.success("Joined room successfully!");
+			navigate("/multiplayer", { state: data });
 		};
 
 		const handleRoomNotFound = () => {
-			console.log("room not found");
-			socket.off("roomJoined", handleRoomJoined);
-			socket.off("roomNotFound", handleRoomNotFound);
+			toast.dismiss();
+			toast.error("Room not found. Please check the room code.");
 		};
 
-		socket.on("roomJoined", handleRoomJoined);
-		socket.on("roomNotFound", handleRoomNotFound);
-	}, [enteredRoomCode, navigate]);
+		const handleRoomFull = () => {
+			toast.dismiss();
+			toast.error("Room is full. Cannot join.");
+		};
+
+		const cleanup = [
+			on("matchFound", handleMatchFound),
+			on("queueJoined", handleQueueJoined),
+			on("matchmakingCancelled", handleMatchmakingCancelled),
+			on("connect_error", handleConnectionError),
+			on("disconnect", handleConnectionError),
+			on("gameStarted", handleRoomJoined),
+			on("roomNotFound", handleRoomNotFound),
+			on("roomFull", handleRoomFull),
+		];
+
+		return () => {
+			cleanup.forEach((fn) => fn && fn());
+		};
+	}, [socket, isConnected, on, navigate, updateState, state.isSearching]);
 
 	useEffect(() => {
-		if (!isMusicMuted) {
-			music.play();
+		if (!isConnected && state.isSearching) {
+			updateState({ isSearching: false });
+			toast.dismiss();
+			toast.error("Lost connection. Please try again.");
+		}
+	}, [isConnected, state.isSearching, updateState]);
+
+	useEffect(() => {
+		if (!state.isMusicMuted) {
+			sounds.music.play();
 		} else {
-			music.stop();
+			sounds.music.stop();
 		}
 
-		localStorage.setItem("isMusicMuted", String(isMusicMuted));
+		localStorage.setItem("isMusicMuted", String(state.isMusicMuted));
+		return () => sounds.music.stop();
+	}, [state.isMusicMuted, sounds.music]);
 
-		return () => music.stop();
-	}, [isMusicMuted, music]);
+	const iconButtons = [
+		{
+			icon: QuizIcon,
+			title: "FAQs",
+			color: "#2176ff",
+			onClick: () => toast.info("FAQs coming soon!"),
+		},
+		{
+			icon: GitHubIcon,
+			title: "GitHub",
+			color: "primary.main",
+			onClick: () =>
+				window.open(
+					"https://github.com/nathanielseth/VibeChess",
+					"_blank"
+				),
+		},
+		{
+			icon: FreeBreakfastIcon,
+			title: "Buy Me A Coffee",
+			color: "#F49F0A",
+			onClick: () =>
+				window.open(
+					"https://www.buymeacoffee.com/nathanielseth",
+					"_blank"
+				),
+		},
+		{
+			icon: theme.palette.mode === "dark" ? LightModeIcon : DarkModeIcon,
+			title: "Toggle UI Mode",
+			color: "#1f2123",
+			onClick: switchColorMode,
+		},
+		{
+			icon: state.isMusicMuted
+				? MusicOffRoundedIcon
+				: MusicNoteRoundedIcon,
+			title: "Toggle Music",
+			color: "#1f2123",
+			onClick: handleMusicToggle,
+		},
+	];
 
-	const rotationStyle = isRotating ? rotatingImageRotate : {};
+	const rotationStyle = state.isRotating ? rotatingImageRotate : {};
 	const iconSize = isMobile ? 24 : 26;
 
 	return (
@@ -249,14 +367,10 @@ function Menu() {
 					<Typography
 						variant="h2"
 						color={
-							theme.palette.mode === "dark"
-								? "white"
-								: theme.palette.mode === "light"
-								? "black"
-								: "#f24040"
+							theme.palette.mode === "dark" ? "white" : "black"
 						}
 						textAlign="center"
-						style={{ textAlign: "center", fontSize: "3.5rem" }}
+						sx={{ fontSize: "3.5rem" }}
 					>
 						<span
 							style={{
@@ -284,13 +398,8 @@ function Menu() {
 					overflowY: "visible",
 					width: "100%",
 					justifyContent: "center",
-					"&.MuiButton-root:hover": {
-						bgcolor: "white",
-						color: "black",
-					},
 				}}
 			>
-				{/* Main Buttons */}
 				<MenuButton
 					onClick={handlePassAndPlayClick}
 					icon={PassNPlayIcon}
@@ -302,13 +411,20 @@ function Menu() {
 				<MenuButton
 					onClick={handleMatchmakeClick}
 					icon={MatchmakingIcon}
-					label="MATCHMAKING"
-					backgroundColor="secondary.main"
-					description="Search for an opponent through random matchmaking."
+					label={state.isSearching ? "CANCEL SEARCH" : "MATCHMAKING"}
+					backgroundColor={
+						state.isSearching ? "#ff6b6b" : "secondary.main"
+					}
+					description={
+						state.isSearching
+							? "Cancel current search"
+							: "Search for an opponent through random matchmaking."
+					}
+					disabled={!isConnected}
 				/>
 
 				<Box
-					style={{
+					sx={{
 						display: "flex",
 						flexDirection: "column",
 						alignItems: "center",
@@ -339,15 +455,16 @@ function Menu() {
 									width: "45vh",
 								},
 							}}
-							value={enteredRoomCode}
+							value={state.enteredRoomCode}
 							onChange={(e) =>
-								setEnteredRoomCode(e.target.value.toUpperCase())
+								updateState({
+									enteredRoomCode:
+										e.target.value.toUpperCase(),
+								})
 							}
-							onKeyDown={(e) => {
-								if (e.key === "Enter") {
-									handleJoinRoom();
-								}
-							}}
+							onKeyDown={(e) =>
+								e.key === "Enter" && handleJoinRoom()
+							}
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
@@ -358,7 +475,10 @@ function Menu() {
 													color: "primary.main",
 												},
 											}}
-											disabled={false}
+											disabled={
+												!isConnected ||
+												!state.enteredRoomCode.trim()
+											}
 											onClick={handleJoinRoom}
 											edge="end"
 										>
@@ -396,148 +516,50 @@ function Menu() {
 					marginTop: isMobile ? "0" : "25px",
 				}}
 			>
-				{/* Icon Buttons */}
-				<Slide
-					direction="up"
-					in={true}
-					style={{ transitionDelay: "100ms" }}
-					mountOnEnter
-					unmountOnExit
-				>
-					<Tooltip title="FAQs" arrow>
-						<IconButton
-							disableRipple
-							onClick={() => alert("Circle Button 1")}
-							style={styles.circleButtonStyle}
-						>
-							<QuizIcon
-								sx={{ color: "#2176ff", fontSize: iconSize }}
-							/>
-						</IconButton>
-					</Tooltip>
-				</Slide>
-
-				<Slide
-					direction="up"
-					in={true}
-					style={{ transitionDelay: "150ms" }}
-					mountOnEnter
-					unmountOnExit
-				>
-					<Tooltip title="GitHub" arrow>
-						<IconButton
-							disableRipple
-							onClick={() =>
-								window.open(
-									"https://github.com/nathanielseth/VibeChess",
-									"_blank"
-								)
-							}
-							style={styles.circleButtonStyle}
-						>
-							<GitHubIcon
-								sx={{
-									color: "primary.main",
-									fontSize: iconSize,
-								}}
-							/>
-						</IconButton>
-					</Tooltip>
-				</Slide>
-
-				<Slide
-					direction="up"
-					in={true}
-					style={{ transitionDelay: "200ms" }}
-					mountOnEnter
-					unmountOnExit
-				>
-					<Tooltip title="Buy Me A Coffee" arrow>
-						<IconButton
-							disableRipple
-							onClick={() =>
-								window.open(
-									"https://www.buymeacoffee.com/nathanielseth",
-									"_blank"
-								)
-							}
-							style={styles.circleButtonStyle}
-						>
-							<FreeBreakfastIcon
-								sx={{ color: "#F49F0A", fontSize: iconSize }}
-							/>
-						</IconButton>
-					</Tooltip>
-				</Slide>
-
-				<Slide
-					direction="up"
-					in={true}
-					style={{ transitionDelay: "250ms" }}
-					mountOnEnter
-					unmountOnExit
-				>
-					<Tooltip title="Toggle UI Mode" arrow>
-						<IconButton
-							disableRipple
-							onClick={switchColorMode}
-							style={styles.circleButtonStyle}
-						>
-							<Icon
-								sx={{ color: "#1f2123", fontSize: iconSize }}
-							/>
-						</IconButton>
-					</Tooltip>
-				</Slide>
-
-				<Slide
-					direction="up"
-					in={true}
-					style={{ transitionDelay: "300ms" }}
-					mountOnEnter
-					unmountOnExit
-				>
-					<Tooltip title="Toggle Music" arrow>
-						<IconButton
-							disableRipple
-							onClick={handleMusicToggle}
-							style={styles.circleButtonStyle}
-						>
-							{isMusicMuted ? (
-								<MusicOffRoundedIcon
+				{iconButtons.map((button, index) => (
+					<Slide
+						key={index}
+						direction="up"
+						in={true}
+						style={{ transitionDelay: `${100 + index * 50}ms` }}
+						mountOnEnter
+						unmountOnExit
+					>
+						<Tooltip title={button.title} arrow>
+							<IconButton
+								disableRipple
+								onClick={button.onClick}
+								style={styles.circleButtonStyle}
+							>
+								<button.icon
 									sx={{
-										color: "#1f2123",
+										color: button.color,
 										fontSize: iconSize,
 									}}
 								/>
-							) : (
-								<MusicNoteRoundedIcon
-									sx={{
-										color: "#1f2123",
-										fontSize: iconSize,
-									}}
-								/>
-							)}
-						</IconButton>
-					</Tooltip>
-				</Slide>
+							</IconButton>
+						</Tooltip>
+					</Slide>
+				))}
 			</Box>
 
 			<TimeControlModal
-				isOpen={isTimeControlModalOpen}
+				isOpen={state.isTimeControlModalOpen}
 				onClose={handleTimeControlClose}
 				onSelectTimeControl={(timeControl) => {
-					console.log("Selected Time Control:", timeControl);
 					handleTimeControlClose();
+					navigate("/room", {
+						state: { selectedTimeControl: timeControl },
+					});
 				}}
 			/>
 
 			<SettingsModal
-				isOpen={isSettingsModalOpen}
+				isOpen={state.isSettingsModalOpen}
 				onClose={handleCloseSettingsModal}
 			/>
 		</Box>
 	);
-}
+};
 
 export default Menu;

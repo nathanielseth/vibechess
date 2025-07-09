@@ -7,12 +7,11 @@ import {
 	generatePGN,
 	moveSound,
 	captureSound,
-	tenSecondsSound,
 	notifySound,
 } from "../../../data/utils.js";
 import Engine from "../../game/utils/engine.js";
 
-export const useChessGame = (gameMode = "passandplay") => {
+export const useLocalChessGame = () => {
 	const [game, setGame] = useState(() => new Chess());
 	const engine = useMemo(() => new Engine(), []);
 	const [lastMove, setLastMove] = useState(null);
@@ -24,76 +23,28 @@ export const useChessGame = (gameMode = "passandplay") => {
 	const [isGameOver, setIsGameOver] = useState(false);
 	const [gameEndReason, setGameEndReason] = useState(null);
 	const [pgn, setPgn] = useState("");
+	const [currentPlayer, setCurrentPlayer] = useState("white");
 
 	const [highlightedSquares, setHighlightedSquares] = useState({});
 	const [optionSquares, setOptionSquares] = useState({});
 	const [moveFrom, setMoveFrom] = useState("");
 	const [rightClickedSquares, setRightClickedSquares] = useState({});
 
-	// settings state
+	// local game settings
 	const [analysisMode, setAnalysisMode] = useState(false);
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [bestMove, setBestMove] = useState(null);
 	const [boardOrientation, setBoardOrientation] = useState("white");
 
-	// timer state (for multi)
-	const [whiteTime, setWhiteTime] = useState(10 * 60);
-	const [blackTime, setBlackTime] = useState(10 * 60);
-	const [currentPlayer, setCurrentPlayer] = useState("white");
-	const [hasPlayed, setHasPlayed] = useState({ white: false, black: false });
-
 	const toastId = useRef(null);
 
-	// check for king in check
+	// king in check detection
 	const isKingInCheck = useCallback(() => {
 		return checkKingInCheck(game);
 	}, [game]);
 
 	const gameFen = game.fen();
 	const isGameOverOrNot = !game.isGameOver() || game.isGameOver();
-
-	// timer for multi
-	useEffect(() => {
-		if (gameMode === "multiplayer") {
-			const timer = setInterval(() => {
-				if (!isGameOver) {
-					if (currentPlayer === "white") {
-						setWhiteTime((prevTime) =>
-							prevTime > 0 ? prevTime - 0.1 : 0
-						);
-					} else {
-						setBlackTime((prevTime) =>
-							prevTime > 0 ? prevTime - 0.1 : 0
-						);
-					}
-
-					if (
-						(currentPlayer === "white" &&
-							whiteTime <= 10 &&
-							!hasPlayed.white) ||
-						(currentPlayer === "black" &&
-							blackTime <= 10 &&
-							!hasPlayed.black)
-					) {
-						tenSecondsSound.play();
-						if (currentPlayer === "white") {
-							setHasPlayed((prevState) => ({
-								...prevState,
-								white: true,
-							}));
-						} else {
-							setHasPlayed((prevState) => ({
-								...prevState,
-								black: true,
-							}));
-						}
-					}
-				}
-			}, 100);
-
-			return () => clearInterval(timer);
-		}
-	}, [currentPlayer, isGameOver, whiteTime, blackTime, hasPlayed, gameMode]);
 
 	// analysis mode logic
 	const findBestMove = useCallback(() => {
@@ -106,7 +57,7 @@ export const useChessGame = (gameMode = "passandplay") => {
 		}
 	}, [gameFen, findBestMove, game, analysisMode, isGameOverOrNot]);
 
-	// game over logic
+	// game over logi
 	const checkGameOver = useCallback(() => {
 		let reason = null;
 
@@ -120,32 +71,21 @@ export const useChessGame = (gameMode = "passandplay") => {
 			reason = "nobody won this one..";
 		}
 
-		// check for time out
-		if (!reason && gameMode === "multiplayer") {
-			if (currentPlayer === "white" && whiteTime <= 0) {
-				reason = "White ran out of time!";
-			} else if (currentPlayer === "black" && blackTime <= 0) {
-				reason = "Black ran out of time!";
-			}
-		}
-
 		setGameEndReason(reason);
 
 		if (reason) {
-			if (gameMode === "passandplay") {
-				toastId.current = toast.info(reason, {
-					position: toast.POSITION.TOP_CENTER,
-					autoClose: 2000,
-				});
-			}
+			toastId.current = toast.info(reason, {
+				position: toast.POSITION.TOP_CENTER,
+				autoClose: 2000,
+			});
 
 			setTimeout(() => {
 				setIsGameOver(true);
 			}, 1000);
 		}
-	}, [game, history, gameMode, currentPlayer, whiteTime, blackTime]);
+	}, [game, history]);
 
-	// sound effects
+	// sfx
 	useEffect(() => {
 		if (lastMove && currentIndex > history.length - 2) {
 			moveSound.play();
@@ -165,18 +105,10 @@ export const useChessGame = (gameMode = "passandplay") => {
 	// update PGN and check game over
 	useEffect(() => {
 		checkGameOver();
-		setPgn(generatePGN(history, gameMode));
-	}, [
-		game,
-		gameMode,
-		checkGameOver,
-		history,
-		currentPlayer,
-		whiteTime,
-		blackTime,
-	]);
+		setPgn(generatePGN(history, "passandplay"));
+	}, [game, checkGameOver, history]);
 
-	// game actions
+	// game move logic
 	const makeMove = useCallback(
 		(sourceSquare, targetSquare, promotion = "q") => {
 			if (currentIndex !== history.length - 1 || isGameOver) {
@@ -210,6 +142,7 @@ export const useChessGame = (gameMode = "passandplay") => {
 				setGame(gameCopy);
 				setOptionSquares({});
 				setMoveFrom("");
+
 				return move;
 			}
 
@@ -233,18 +166,13 @@ export const useChessGame = (gameMode = "passandplay") => {
 		setIsGameOver(false);
 		setGameEndReason(null);
 		setPgn("");
-		setWhiteTime(10 * 60);
-		setBlackTime(10 * 60);
-		setHasPlayed({ white: false, black: false });
 		setCurrentPlayer("white");
 
-		if (gameMode === "passandplay") {
-			toastId.current = toast.info("The game has restarted", {
-				position: toast.POSITION.TOP_CENTER,
-				autoClose: 2000,
-			});
-		}
-	}, [gameMode]);
+		toastId.current = toast.info("The game has restarted", {
+			position: toast.POSITION.TOP_CENTER,
+			autoClose: 2000,
+		});
+	}, []);
 
 	const undoMove = useCallback(() => {
 		if (currentIndex > 0) {
@@ -276,7 +204,6 @@ export const useChessGame = (gameMode = "passandplay") => {
 			setCurrentIndex(moveIndex);
 			setOptionSquares({});
 
-			// if navigating back to the current index, restore the last move's highlights
 			if (moveIndex === history.length - 1 && lastMove) {
 				setHighlightedSquares({
 					[lastMove.from]: {
@@ -326,21 +253,18 @@ export const useChessGame = (gameMode = "passandplay") => {
 		isGameOver,
 		gameEndReason,
 		pgn,
+		currentPlayer,
+
 		highlightedSquares,
 		optionSquares,
 		moveFrom,
 		rightClickedSquares,
-		setHighlightedSquares,
-		setOptionSquares,
-		setMoveFrom,
-		setRightClickedSquares,
+
 		analysisMode,
 		autoFlip,
 		bestMove,
 		boardOrientation,
-		whiteTime,
-		blackTime,
-		currentPlayer,
+
 		makeMove,
 		resetGame,
 		undoMove,
@@ -348,7 +272,15 @@ export const useChessGame = (gameMode = "passandplay") => {
 		toggleBoardOrientation,
 		toggleAutoFlip,
 		toggleAnalysisMode,
+
+		// Setters for external use
+		setHighlightedSquares,
+		setOptionSquares,
+		setMoveFrom,
+		setRightClickedSquares,
 		setIsGameOver,
+
+		// Computed
 		isKingInCheck: isKingInCheck(),
 	};
 };

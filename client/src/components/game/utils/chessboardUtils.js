@@ -61,14 +61,8 @@ export const handleSquareRightClick = (
 	setRightClickedSquares(updatedRightClickedSquares);
 };
 
-export const formatTime = (time) => {
-	let minutes = Math.floor(time / 60);
-	let seconds = Math.floor(time % 60);
-	let tenths = "";
-	if (time <= 10) {
-		tenths = Math.floor((time - Math.floor(time)) * 10);
-	}
-	return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}${
-		tenths ? "." + tenths : ""
-	}`;
+export const formatTime = (seconds) => {
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };

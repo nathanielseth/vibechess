@@ -3,15 +3,18 @@
 	"main": "server.js",
 	"type": "module",
 	"scripts": {
-		"dev": "vite"
+		"dev": "vite",
+		"server": "nodemon server.js",
+		"start": "node server.js"
 	},
 	"dependencies": {
+		"chess.js": "^1.4.0",
 		"cors": "^2.8.5",
 		"express": "^4.21.2",
 		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
-		"vite": "^6.3.5",
-		"vite-plugin-node": "^3.1.0"
+		"nodemon": "^3.1.10",
+		"vite": "^6.3.5"
 	}
 }
