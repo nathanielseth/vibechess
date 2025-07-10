@@ -110,6 +110,8 @@ const Menu = () => {
 		}
 
 		const username = localStorage.getItem("username");
+		const selectedFlag = localStorage.getItem("selectedFlag");
+
 		if (!username) {
 			toast.error("Please set a username first");
 			return;
@@ -130,6 +132,7 @@ const Menu = () => {
 		emit("findMatch", {
 			timeControl: 10,
 			playerName: username,
+			flag: selectedFlag,
 		});
 	}, [
 		state.isSearching,
@@ -187,6 +190,7 @@ const Menu = () => {
 		}
 
 		const username = localStorage.getItem("username");
+		const selectedFlag = localStorage.getItem("selectedFlag");
 
 		playClickSound();
 		toast.info("Joining room...");
@@ -194,6 +198,7 @@ const Menu = () => {
 		emit("joinRoom", {
 			roomCode: state.enteredRoomCode.trim(),
 			playerName: username,
+			flag: selectedFlag,
 		});
 	}, [state.enteredRoomCode, socket, isConnected, emit, playClickSound]);
 

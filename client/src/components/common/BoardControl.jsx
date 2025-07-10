@@ -172,7 +172,7 @@ const BoardControl = ({
 												? "#fff"
 												: theme.palette.mode === "light"
 												? "black"
-												: "inherit", // Set color conditionally
+												: "inherit",
 										}}
 									>
 										{isWhiteMove && (

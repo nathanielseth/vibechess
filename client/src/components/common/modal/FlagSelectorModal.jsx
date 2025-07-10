@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
 	Modal,
@@ -16,18 +16,15 @@ import { styles } from "../../../styles/styles";
 const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filteredFlags, setFilteredFlags] = useState([]);
-	const [selectedFlag, setSelectedFlag] = useState("ph");
-
-	const columns = 9;
-	const rows = [];
-	for (let i = 0; i < filteredFlags.length; i += columns) {
-		const rowFlags = filteredFlags.slice(i, i + columns);
-		rows.push(rowFlags);
-	}
-
-	useState(() => {
-		setFilteredFlags(Object.keys(flagData));
-	}, []);
+	const [selectedFlag, setSelectedFlag] = useState(() => {
+		return localStorage.getItem("selectedFlag");
+	});
+	useEffect(() => {
+		if (open) {
+			setFilteredFlags(Object.keys(flagData));
+			setSelectedFlag(localStorage.getItem("selectedFlag"));
+		}
+	}, [open]);
 
 	const handleSearchChange = (event) => {
 		const term = event.target.value.toLowerCase();
@@ -45,12 +42,25 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 
 	const handleOK = () => {
 		onSelect(selectedFlag);
-		window.localStorage.setItem("selectedFlag", selectedFlag);
+		localStorage.setItem("selectedFlag", selectedFlag);
 		onClose();
 	};
 
+	const handleClose = () => {
+		setSearchTerm("");
+		setFilteredFlags(Object.keys(flagData));
+		onClose();
+	};
+
+	const columns = 9;
+	const rows = [];
+	for (let i = 0; i < filteredFlags.length; i += columns) {
+		const rowFlags = filteredFlags.slice(i, i + columns);
+		rows.push(rowFlags);
+	}
+
 	return (
-		<Modal open={open} onClose={onClose} closeAfterTransition>
+		<Modal open={open} onClose={handleClose} closeAfterTransition>
 			<Fade in={open}>
 				<Box
 					sx={{
@@ -61,7 +71,7 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						borderRadius: 3,
 						width: "90%",
 						maxWidth: 800,
-						maxHeigh: 500,
+						maxHeight: 500,
 						bgcolor: "#1f2123",
 						border: "2px solid #000",
 						boxShadow: 24,
@@ -69,7 +79,7 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						...styles.scrollbarStyles,
 					}}
 				>
-					<Typography variant="h4" mb={2}>
+					<Typography variant="h4" mb={2} color="white">
 						CHOOSE YOUR FLAG
 					</Typography>
 
@@ -77,9 +87,20 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						label="Search for a flag"
 						variant="outlined"
 						fullWidth
-						mb={2}
 						value={searchTerm}
 						onChange={handleSearchChange}
+						sx={{
+							mb: 2,
+							"& .MuiOutlinedInput-root": {
+								color: "white",
+							},
+							"& .MuiInputLabel-root": {
+								color: "white",
+							},
+							"& .MuiOutlinedInput-notchedOutline": {
+								borderColor: "white",
+							},
+						}}
 					/>
 
 					<Box
@@ -114,10 +135,13 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 												border:
 													selectedFlag === countryCode
 														? "3.5px solid #ce1126"
-														: "none",
+														: "3.5px solid transparent",
 												width: "74px",
 												height: "74px",
 												boxSizing: "border-box",
+												"&:hover": {
+													backgroundColor: "#2a2d2e",
+												},
 											}}
 										>
 											<CircleFlag
@@ -131,16 +155,29 @@ const FlagSelectorModal = ({ open, onClose, onSelect }) => {
 						))}
 					</Box>
 
-					<Box display="flex" justifyContent="flex-end">
-						<Button variant="outlined" onClick={onClose}>
+					<Box display="flex" justifyContent="flex-end" gap={2}>
+						<Button
+							variant="outlined"
+							onClick={handleClose}
+							sx={{
+								color: "white",
+								borderColor: "white",
+								"&:hover": {
+									borderColor: "#ce1126",
+									color: "#ce1126",
+								},
+							}}
+						>
 							CANCEL
 						</Button>
-						<Box mr={2} />
 						<Button
 							variant="contained"
-							style={{
+							sx={{
 								backgroundColor: "#ce1126",
 								color: "white",
+								"&:hover": {
+									backgroundColor: "#a00e1f",
+								},
 							}}
 							onClick={handleOK}
 						>

@@ -84,7 +84,7 @@ const Multiplayer = () => {
 		);
 
 		const username = localStorage.getItem("username") || "Player";
-		const selectedFlag = localStorage.getItem("selectedFlag") || "PH";
+		const selectedFlag = localStorage.getItem("selectedFlag");
 
 		const joinTimer = setTimeout(() => {
 			if (socket && isConnected && matchData && socket.id) {

@@ -12,25 +12,27 @@ const PlayerInfo = ({
 	isCurrentPlayer,
 	isTop = false,
 }) => {
-	const getDisplayName = () => {
-		if (gameMode === "multiplayer") {
-			return isTop
-				? opponent?.name || "Opponent"
-				: localStorage.getItem("username") || "You";
-		}
-		return player === "white" ? "Player" : "Opponent";
-	};
-
-	const getPlayerFlag = () => {
+	const getDisplayInfo = () => {
 		if (gameMode === "multiplayer") {
 			if (isTop) {
-				return opponent?.flag || opponent?.countryCode || "UN";
+				return {
+					name: opponent?.name || "Opponent",
+					flag: opponent?.flag || null,
+				};
 			} else {
-				return localStorage.getItem("selectedFlag");
+				return {
+					name: localStorage.getItem("username") || "You",
+					flag: localStorage.getItem("selectedFlag"),
+				};
 			}
 		}
-		return localStorage.getItem("selectedFlag") || "PH";
+		return {
+			name: player === "white" ? "Player" : "Opponent",
+			flag: localStorage.getItem("selectedFlag"),
+		};
 	};
+
+	const { name, flag } = getDisplayInfo();
 
 	return (
 		<Stack flexDirection="row" justifyContent="space-between">
@@ -40,10 +42,9 @@ const PlayerInfo = ({
 				gap={1}
 				direction={{ xs: "column", md: "row" }}
 			>
-				<CircleFlag countryCode={getPlayerFlag()} height="35" />
-				<Typography variant="h4">{getDisplayName()}</Typography>
+				{flag && <CircleFlag countryCode={flag} height="35" />}
+				<Typography variant="h4">{name}</Typography>
 			</Stack>
-
 			<Stack
 				sx={{
 					backgroundColor: isCurrentPlayer ? "white" : "#1f2123",

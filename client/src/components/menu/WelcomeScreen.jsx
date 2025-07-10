@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
 	Box,
@@ -6,6 +6,7 @@ import {
 	InputAdornment,
 	TextField,
 	Typography,
+	Button,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { CircleFlag } from "react-circle-flags";
@@ -16,8 +17,14 @@ import FlagSelectorModal from "../common/modal/FlagSelectorModal";
 const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 	const [username, setUsername] = useState("");
 	const [error, setError] = useState(null);
-	const [selectedFlag, setSelectedFlag] = useState("ph");
+	const [selectedFlag, setSelectedFlag] = useState(() => {
+		return localStorage.getItem("selectedFlag");
+	});
 	const [isFlagModalOpen, setFlagModalOpen] = useState(false);
+
+	useEffect(() => {
+		setFlagCallback(selectedFlag);
+	}, [selectedFlag, setFlagCallback]);
 
 	const handleFlagSelect = (code) => {
 		setSelectedFlag(code);
@@ -25,7 +32,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 	};
 
 	const handleSubmit = () => {
-		let newUsername = username || generateRandomUsername();
+		let newUsername = username.trim() || generateRandomUsername();
 
 		if (newUsername.length < 2) {
 			setError("Please use at least 2 characters.");
@@ -34,8 +41,8 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 
 		setUsernameCallback(newUsername);
 		setFlagCallback(selectedFlag);
-		window.localStorage.setItem("username", newUsername);
-		window.localStorage.setItem("selectedFlag", selectedFlag);
+		localStorage.setItem("username", newUsername);
+		localStorage.setItem("selectedFlag", selectedFlag);
 
 		toast.success(`Welcome, ${newUsername}!`, {
 			position: "top-right",
@@ -77,10 +84,13 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 			>
 				<span style={{ color: "#f24040" }}>Vibe</span>Chess
 			</Typography>
+
 			<Box
 				display="flex"
-				width={{ xs: "auto", md: "30%", lg: "20%" }}
+				flexDirection="column"
+				width={{ xs: "90%", sm: "400px", md: "30%", lg: "20%" }}
 				alignItems="center"
+				gap={2}
 			>
 				<TextField
 					onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -90,14 +100,23 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 						setUsername(e.target.value);
 					}}
 					fullWidth
-					error={error}
+					error={!!error}
 					helperText={error}
 					autoComplete="off"
 					label="What should we call you?"
+					placeholder="Enter your username or leave blank for random"
 					inputProps={{ maxLength: 14 }}
 					variant="outlined"
 					sx={{
-						height: "65px",
+						"& .MuiOutlinedInput-root": {
+							color: "white",
+						},
+						"& .MuiInputLabel-root": {
+							color: "white",
+						},
+						"& .MuiOutlinedInput-notchedOutline": {
+							borderColor: "white",
+						},
 						"& .MuiOutlinedInput-input": {
 							padding: "18px 14px",
 						},
@@ -107,7 +126,13 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 							<InputAdornment position="end">
 								<IconButton
 									onClick={() => setFlagModalOpen(true)}
-									style={{ borderRadius: "100%" }}
+									sx={{
+										borderRadius: "100%",
+										"&:hover": {
+											backgroundColor:
+												"rgba(255, 255, 255, 0.1)",
+										},
+									}}
 									edge="end"
 								>
 									<CircleFlag
@@ -119,7 +144,25 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 						),
 					}}
 				/>
+
+				<Button
+					onClick={handleSubmit}
+					variant="contained"
+					fullWidth
+					sx={{
+						backgroundColor: "#f24040",
+						color: "white",
+						py: 1.5,
+						fontSize: "1.1rem",
+						"&:hover": {
+							backgroundColor: "#d63636",
+						},
+					}}
+				>
+					Start Playing
+				</Button>
 			</Box>
+
 			<FlagSelectorModal
 				open={isFlagModalOpen}
 				onClose={() => setFlagModalOpen(false)}

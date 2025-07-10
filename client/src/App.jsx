@@ -21,7 +21,7 @@ const App = () => {
 	const storedFlag = window.localStorage.getItem("selectedFlag");
 
 	const [username, setUsername] = useState(storedUsername);
-	const [flag, setFlag] = useState(storedFlag || "PH");
+	const [flag, setFlag] = useState(storedFlag);
 	const [usernameSubmitted, setUsernameSubmitted] = useState(
 		!!storedUsername
 	);

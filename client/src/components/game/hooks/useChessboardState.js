@@ -13,27 +13,28 @@ export const useChessboardState = (gameMode, matchData) => {
 	const [boardWidth, setBoardWidth] = useState(480);
 
 	// multiplayer state
-	const [playerColor, setPlayerColor] = useState(null);
-	const [opponent, setOpponent] = useState(null);
-	const [roomCode, setRoomCode] = useState(null);
+	const [gameState, setGameState] = useState({
+		playerColor: null,
+		opponent: null,
+		roomCode: null,
+	});
 
 	useEffect(() => {
-		if (matchData && gameMode === "multiplayer") {
-			console.log("Processing matchData:", matchData);
+		if (!matchData || gameMode !== "multiplayer") return;
 
-			setPlayerColor(matchData.yourColor);
-			setRoomCode(matchData.roomCode);
+		console.log("Processing matchData:", matchData);
 
-			if (matchData.opponent) {
-				setOpponent({
-					name: matchData.opponent.name,
-					color: matchData.opponent.color,
-					flag: matchData.opponent.flag || "PH",
-				});
-			} else {
-				console.error("No opponent data found in matchData");
-			}
-		}
+		setGameState({
+			playerColor: matchData.yourColor,
+			roomCode: matchData.roomCode,
+			opponent: matchData.opponent
+				? {
+						name: matchData.opponent.name,
+						color: matchData.opponent.color,
+						flag: matchData.opponent.flag?.toLowerCase(),
+				  }
+				: null,
+		});
 	}, [matchData, gameMode]);
 
 	const handleResize = useCallback(() => {
@@ -68,8 +69,6 @@ export const useChessboardState = (gameMode, matchData) => {
 		setShareModalOpen,
 		boardWidth,
 
-		playerColor,
-		opponent,
-		roomCode,
+		...gameState,
 	};
 };
