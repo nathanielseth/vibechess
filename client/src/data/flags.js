@@ -323,7 +323,6 @@ const flags = {
 	tw: "Taiwan",
 	tz: "Tanzania",
 	ug: "Uganda",
-	uk: "United Kingdom",
 	"us-hi": "Hawaii",
 	uy: "Uruguay",
 	uz: "Uzbekistan",
@@ -346,14 +345,11 @@ const flags = {
 	zw: "Zimbabwe",
 };
 
-const first9Items = Object.fromEntries(Object.entries(flags).slice(0, 9));
+const flagEntries = Object.entries(flags);
 
-const restOfItems = Object.fromEntries(
-	Object.entries(flags)
-		.slice(9)
-		.sort(([, countryA], [, countryB]) => countryA.localeCompare(countryB))
-);
-
-const flagData = { ...first9Items, ...restOfItems };
+const flagData = Object.fromEntries([
+	...flagEntries.slice(0, 9),
+	...flagEntries.slice(9).sort(([, a], [, b]) => a.localeCompare(b)),
+]);
 
 export default flagData;
