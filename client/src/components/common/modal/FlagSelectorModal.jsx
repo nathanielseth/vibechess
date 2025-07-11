@@ -30,7 +30,6 @@ const FlagButton = React.memo(
 				title={flagName}
 				placement="top"
 				arrow
-				disablePortal
 				PopperProps={{
 					container: () =>
 						document.querySelector("[data-flag-container]"),

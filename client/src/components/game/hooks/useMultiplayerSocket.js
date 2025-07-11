@@ -93,20 +93,6 @@ export const useMultiplayerSocket = (
 		[chessGame, playerColor]
 	);
 
-	// handle realtime timer updates from server
-	const handleTimeUpdate = useCallback(
-		(data) => {
-			if (chessGame.isGameOver) return;
-
-			chessGame.updateServerTimes({
-				whiteTime: data.whiteTimeRemaining,
-				blackTime: data.blackTimeRemaining,
-				timestamp: data.timestamp || Date.now(),
-			});
-		},
-		[chessGame]
-	);
-
 	// move rejection from server
 	const handleMoveRejected = useCallback(
 		(data) => {
@@ -157,7 +143,6 @@ export const useMultiplayerSocket = (
 
 		const eventHandlers = [
 			{ event: "gameState", handler: handleGameState },
-			{ event: "timeUpdate", handler: handleTimeUpdate },
 			{ event: "moveRejected", handler: handleMoveRejected },
 			{ event: "playerDisconnected", handler: handlePlayerDisconnected },
 			{ event: "error", handler: handleError },
@@ -178,7 +163,6 @@ export const useMultiplayerSocket = (
 		on,
 		gameMode,
 		handleGameState,
-		handleTimeUpdate,
 		handleMoveRejected,
 		handlePlayerDisconnected,
 		handleError,

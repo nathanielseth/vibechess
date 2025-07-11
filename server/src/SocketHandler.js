@@ -29,48 +29,23 @@ export class SocketHandler {
 			timeControl,
 			playerName,
 			preferredColor,
-			flag
-		);
-		socket.emit("roomCreated", {
-			roomCode: result.roomCode,
-			playerColor: preferredColor,
-		});
-	}
-
-	handleJoinPrivateRoom(socket, { roomCode, playerName, flag }) {
-		if (!validatePlayerName(playerName)) {
-			socket.emit("error", { message: "Invalid player name" });
-			return;
-		}
-
-		const result = this.gm.joinPrivateRoom(
-			roomCode,
-			playerName,
 			flag,
 			socket.id
 		);
 
-		if (!result.success) {
-			socket.emit("roomNotFound", { message: result.reason });
-			return;
-		}
+		socket.join(result.roomCode);
 
-		socket.join(roomCode);
-
-		if (result.isHost) {
-			socket.emit("roomJoined", {
-				roomCode,
-				playerColor: result.room.hostPreferredColor,
-				isHost: true,
-			});
-		} else {
-			const gameState = this.gm.getGameStateForBroadcast(result.room);
-			this.io.to(roomCode).emit("gameStarted", {
-				roomCode,
-				gameState,
+		socket.emit("roomCreated", {
+			roomCode: result.roomCode,
+			playerColor: result.player.color,
+			isHost: true,
+			room: {
+				roomCode: result.roomCode,
+				timeControl: result.room.timeControl,
+				waitingForOpponent: result.room.waitingForOpponent,
 				players: result.room.players,
-			});
-		}
+			},
+		});
 	}
 
 	handleLeaveRoom(socket, { roomCode }) {
@@ -92,29 +67,31 @@ export class SocketHandler {
 			return;
 		}
 
-		let player = room.players.find(
-			(p) => p.name === playerName || p.id === socket.id
+		const result = this.gm.joinPrivateRoom(
+			roomCode,
+			playerName,
+			flag,
+			socket.id
 		);
-		if (!player) {
-			socket.emit("initializationError", {
-				message: "Player not found in room",
-			});
+
+		if (!result.success) {
+			socket.emit("initializationError", { message: result.reason });
 			return;
 		}
 
-		if (player.id !== socket.id) {
-			this.gm.playerRooms.delete(player.id);
-			player.id = socket.id;
-		}
-		if (flag) player.flag = normalizeFlag(flag);
-
 		socket.join(roomCode);
-		this.gm.playerRooms.set(socket.id, roomCode);
 
 		const gameState = this.gm.getGameStateForBroadcast(room);
+		const player = room.players.find((p) => p.id === socket.id);
 		const opponent = room.players.find((p) => p.id !== socket.id);
 
-		setTimeout(() => {
+		if (result.gameReady) {
+			this.io.to(roomCode).emit("gameStarted", {
+				roomCode,
+				gameState,
+				players: room.players,
+			});
+		} else {
 			socket.emit("gameInitialized", {
 				gameState,
 				playerColor: player.color,
@@ -127,13 +104,7 @@ export class SocketHandler {
 					: null,
 				roomCode,
 			});
-
-			socket.to(roomCode).emit("playerJoined", {
-				playerName: player.name,
-				playerColor: player.color,
-				flag: player.flag,
-			});
-		}, 100);
+		}
 	}
 
 	handleRejoinRoom(socket, { roomCode, flag }) {

@@ -157,7 +157,6 @@ const Multiplayer = () => {
 			>
 				<ChessboardComponent
 					gameMode={gameMode}
-					isAnalysisMode={false}
 					matchData={matchData}
 					socket={socket}
 					isConnected={isConnected}

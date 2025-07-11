@@ -47,12 +47,6 @@ io.on("connection", (socket) => {
 	socket.on("createRoom", (data) =>
 		socketHandler.handleCreateRoom(socket, data)
 	);
-	socket.on("joinPrivateRoom", (data) =>
-		socketHandler.handleJoinPrivateRoom(socket, data)
-	);
-	socket.on("leaveRoom", (data) =>
-		socketHandler.handleLeaveRoom(socket, data)
-	);
 	socket.on("disconnect", () => socketHandler.handleDisconnect(socket));
 	socket.on("ping", () => socket.emit("pong"));
 });

@@ -26,9 +26,9 @@ import useSocketContext from "../../context/useSocketContext";
 
 const ChessboardComponent = ({
 	gameMode,
-	onGameEnd,
-	onGameStart,
-	matchData,
+	onGameEnd = null,
+	onGameStart = null,
+	matchData = null,
 }) => {
 	const { socket, isConnected, emit, on } = useSocketContext();
 
@@ -134,10 +134,47 @@ const ChessboardComponent = ({
 		/>
 	);
 
-	// don't render if chessGame is not ready
+	// Don't render if chessGame is not ready
 	if (!chessGame) {
 		return <div>Loading...</div>;
 	}
+
+	// Get props with defaults for multiplayer mode
+	const getBoardControlProps = () => {
+		const baseProps = {
+			currentIndex: chessGame.currentIndex,
+			navigateMove: chessGame.navigateMove,
+			history: chessGame.history,
+			openSettingsModal: modalHandlers.openSettings,
+			openShareModal: modalHandlers.openShare,
+			pgn: chessGame.pgn,
+			handleRematch: chessGame.resetGame,
+			gameMode: gameMode,
+			setIsGameOver: chessGame.setIsGameOver,
+		};
+
+		if (gameMode === "multiplayer") {
+			// Provide default values for multiplayer mode
+			return {
+				...baseProps,
+				toggleAutoFlip: () => {}, // No-op for multiplayer
+				autoFlip: false, // Always false for multiplayer
+				toggleAnalysisMode: () => {}, // No-op for multiplayer
+				analysisMode: false, // Always false for multiplayer
+				handleUndoMove: () => {}, // No-op for multiplayer
+			};
+		} else {
+			// Use actual props for local games
+			return {
+				...baseProps,
+				toggleAutoFlip: chessGame.toggleAutoFlip,
+				autoFlip: chessGame.autoFlip,
+				toggleAnalysisMode: chessGame.toggleAnalysisMode,
+				analysisMode: chessGame.analysisMode,
+				handleUndoMove: chessGame.undoMove,
+			};
+		}
+	};
 
 	return (
 		<Stack
@@ -153,7 +190,7 @@ const ChessboardComponent = ({
 		>
 			<Stack flexDirection="row">
 				<Stack flexDirection="column">
-					{/* top player info */}
+					{/* Top player info */}
 					{gameMode === "multiplayer" &&
 						(playerColor === "white"
 							? renderPlayerInfo(
@@ -220,7 +257,7 @@ const ChessboardComponent = ({
 						/>
 					</Stack>
 
-					{/* bottom player info*/}
+					{/* Bottom player info */}
 					{gameMode === "multiplayer" &&
 						(playerColor === "white"
 							? renderPlayerInfo(
@@ -237,7 +274,7 @@ const ChessboardComponent = ({
 							  ))}
 				</Stack>
 
-				{/* control panel */}
+				{/* Control panel */}
 				<ControlPanel
 					isSettingsHovered={isSettingsHovered}
 					setIsSettingsHovered={setIsSettingsHovered}
@@ -247,29 +284,14 @@ const ChessboardComponent = ({
 				/>
 			</Stack>
 
-			{/* side panel */}
+			{/* Side panel */}
 			<Stack>
-				<BoardControl
-					currentIndex={chessGame.currentIndex}
-					navigateMove={chessGame.navigateMove}
-					history={chessGame.history}
-					toggleAutoFlip={chessGame.toggleAutoFlip}
-					autoFlip={chessGame.autoFlip}
-					toggleAnalysisMode={chessGame.toggleAnalysisMode}
-					analysisMode={chessGame.analysisMode}
-					openSettingsModal={modalHandlers.openSettings}
-					openShareModal={modalHandlers.openShare}
-					pgn={chessGame.pgn}
-					handleRematch={chessGame.resetGame}
-					gameMode={gameMode}
-					handleUndoMove={chessGame.undoMove}
-					setIsGameOver={chessGame.setIsGameOver}
-				/>
+				<BoardControl {...getBoardControlProps()} />
 
-				{/* chat for multi */}
+				{/* Chat for multiplayer */}
 				{gameMode === "multiplayer" && <Chatbox />}
 
-				{/* modals */}
+				{/* Modals */}
 				<SettingsModal
 					isOpen={isSettingsModalOpen}
 					onClose={modalHandlers.closeSettings}
@@ -299,12 +321,6 @@ ChessboardComponent.propTypes = {
 	onGameEnd: PropTypes.func,
 	onGameStart: PropTypes.func,
 	matchData: PropTypes.object,
-};
-
-ChessboardComponent.defaultProps = {
-	onGameEnd: null,
-	onGameStart: null,
-	matchData: null,
 };
 
 export default ChessboardComponent;

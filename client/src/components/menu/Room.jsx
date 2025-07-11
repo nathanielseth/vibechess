@@ -1,81 +1,178 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
-import { Stack, Typography, Tooltip, Box, Grid } from "@mui/material";
+import { Stack, Typography, Tooltip, Box, Grid, Button } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DoneIcon from "@mui/icons-material/Done";
 import Navbar from "../common/Navbar";
 import { useLocation } from "react-router-dom";
-
-const generateRoomCode = () => {
-	const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	let code = "";
-	for (let i = 0; i < 5; i++) {
-		code += characters.charAt(
-			Math.floor(Math.random() * characters.length)
-		);
-	}
-	return code;
-};
+import useSocketContext from "../../context/useSocketContext";
+import { useNavigate } from "react-router-dom";
 
 const Room = () => {
 	const location = useLocation();
+	const navigate = useNavigate();
+	const { socket } = useSocketContext();
+
+	const [roomState, setRoomState] = useState(null);
+	const [isCopied, setIsCopied] = useState(false);
+	const [selectedIncrement, setSelectedIncrement] = useState(1);
+
+	const [preferredColor, setPreferredColor] = useState("white");
+	const [whiteBoxOpacity, setWhiteBoxOpacity] = useState(1.0);
+	const [blackBoxOpacity, setBlackBoxOpacity] = useState(0.3);
+
+	const [incrementOneOpacity, setIncrementOneOpacity] = useState(1.0);
+	const [incrementFiveOpacity, setIncrementFiveOpacity] = useState(0.3);
+	const [incrementTenOpacity, setIncrementTenOpacity] = useState(0.3);
+
+	const hasEmittedCreate = useRef(false);
+
 	const { selectedTimeControl } = location.state || {};
-	const [roomCode, setRoomCode] = useState(null);
-	const [isCopied, setCopied] = useState(false);
 	const selectedPieceSet =
 		window.localStorage.getItem("selectedPieces") || "tatiana";
 
-	const [selectedPiece, setSelectedPiece] = useState(selectedPieceSet);
-	const [whiteBoxOpacity, setWhiteBoxOpacity] = useState(0.3);
-	const [blackBoxOpacity, setBlackBoxOpacity] = useState(0.3);
-	const [incrementOneOpacity, setIncrementOneOpacity] = useState(0.3);
-	const [incrementFiveOpacity, setIncrementFiveOpacity] = useState(0.3);
-	const [incrementTenOpacity, setIncrementTenOpacity] = useState(0.3);
-	const [selectedIncrement, setSelectedIncrement] = useState(null);
+	const handleCreateRoom = useCallback(() => {
+		if (!socket || hasEmittedCreate.current || roomState === "creating")
+			return;
+
+		hasEmittedCreate.current = true;
+		setRoomState("creating");
+
+		socket.emit("createRoom", {
+			timeControl: selectedTimeControl,
+			increment: selectedIncrement,
+			playerName: localStorage.getItem("playerName"),
+			preferredColor,
+			flag: localStorage.getItem("selectedFlag") || "ph",
+		});
+	}, [
+		socket,
+		roomState,
+		selectedTimeControl,
+		selectedIncrement,
+		preferredColor,
+	]);
 
 	useEffect(() => {
-		if (!roomCode) {
-			const generatedCode = generateRoomCode();
-			setRoomCode(generatedCode);
+		if (!socket) return;
+
+		const handleRoomCreated = (data) => {
+			setRoomState(data);
+		};
+
+		const handleError = (data) => {
+			console.error("Room creation error:", data.message);
+			setRoomState(null);
+			hasEmittedCreate.current = false;
+		};
+
+		const handleGameStarted = (data) => {
+			navigate("/multiplayer", {
+				state: {
+					roomCode: data.roomCode,
+					gameState: data.gameState,
+					players: data.players,
+					timeControl: selectedTimeControl,
+					increment: selectedIncrement,
+				},
+			});
+		};
+
+		const handleGameInitialized = (data) => {
+			navigate("/multiplayer", {
+				state: {
+					roomCode: data.roomCode,
+					gameState: data.gameState,
+					playerColor: data.playerColor,
+					opponent: data.opponent,
+					timeControl: selectedTimeControl,
+					increment: selectedIncrement,
+				},
+			});
+		};
+
+		socket.on("roomCreated", handleRoomCreated);
+		socket.on("error", handleError);
+		socket.on("gameStarted", handleGameStarted);
+		socket.on("gameInitialized", handleGameInitialized);
+
+		if (!hasEmittedCreate.current) {
+			handleCreateRoom();
 		}
-	}, [roomCode]);
+
+		return () => {
+			socket.off("roomCreated", handleRoomCreated);
+			socket.off("error", handleError);
+			socket.off("gameStarted", handleGameStarted);
+			socket.off("gameInitialized", handleGameInitialized);
+		};
+	}, [
+		socket,
+		navigate,
+		handleCreateRoom,
+		selectedTimeControl,
+		selectedIncrement,
+	]);
 
 	const handleWhiteSelect = () => {
+		setPreferredColor("white");
 		setWhiteBoxOpacity(1.0);
 		setBlackBoxOpacity(0.3);
-		setSelectedPiece("white");
-		console.log(selectedPiece);
 	};
 
 	const handleBlackSelect = () => {
+		setPreferredColor("black");
 		setWhiteBoxOpacity(0.3);
 		setBlackBoxOpacity(1.0);
-		setSelectedPiece("black");
-		console.log(selectedPiece);
 	};
 
 	const handleIncrementClick = (incrementValue) => {
 		setSelectedIncrement(incrementValue);
 
+		setIncrementOneOpacity(0.3);
+		setIncrementFiveOpacity(0.3);
+		setIncrementTenOpacity(0.3);
+
 		switch (incrementValue) {
 			case 1:
 				setIncrementOneOpacity(1.0);
-				setIncrementFiveOpacity(0.3);
-				setIncrementTenOpacity(0.3);
 				break;
 			case 5:
-				setIncrementOneOpacity(0.3);
 				setIncrementFiveOpacity(1.0);
-				setIncrementTenOpacity(0.3);
 				break;
 			case 10:
-				setIncrementOneOpacity(0.3);
-				setIncrementFiveOpacity(0.3);
 				setIncrementTenOpacity(1.0);
 				break;
 			default:
 				break;
 		}
+	};
+
+	const handleRoomCodeCopy = () => {
+		if (roomState?.roomCode) {
+			navigator.clipboard?.writeText(roomState.roomCode);
+			setIsCopied(true);
+			setTimeout(() => setIsCopied(false), 5000);
+		}
+	};
+
+	const getIncrementOpacity = (incrementValue) => {
+		switch (incrementValue) {
+			case 1:
+				return incrementOneOpacity;
+			case 5:
+				return incrementFiveOpacity;
+			case 10:
+				return incrementTenOpacity;
+			default:
+				return 0.3;
+		}
+	};
+
+	const getRoomCode = () => {
+		if (roomState === "creating") return "Creating...";
+		if (roomState?.roomCode) return roomState.roomCode;
+		return "Click Create Room";
 	};
 
 	return (
@@ -116,31 +213,26 @@ const Room = () => {
 						borderColor="secondary.main"
 						borderRadius={1}
 						sx={{
-							cursor: "pointer",
+							cursor: roomState?.roomCode ? "pointer" : "default",
 							transition: "all 200ms",
 							"&:hover": {
-								transform: "scale(1.1)",
+								transform: roomState?.roomCode
+									? "scale(1.1)"
+									: "none",
 							},
 						}}
 						px={3}
 						py={2}
-						onClick={() => {
-							navigator.clipboard?.writeText(roomCode);
-							setCopied(true);
-
-							const timeout = setTimeout(() => {
-								setCopied(false);
-							}, 5000);
-
-							return () => clearTimeout(timeout);
-						}}
+						onClick={
+							roomState?.roomCode ? handleRoomCodeCopy : undefined
+						}
 					>
 						<Typography
 							color="secondary.main"
 							variant="h4"
 							textAlign="center"
 						>
-							Room Code: {roomCode}
+							Room Code: {getRoomCode()}
 						</Typography>
 					</Box>
 				</Tooltip>
@@ -165,12 +257,7 @@ const Room = () => {
 						px={5}
 						py={5}
 						onClick={handleWhiteSelect}
-					>
-						<Typography
-							variant="h4"
-							textAlign="center"
-						></Typography>
-					</Box>
+					/>
 					<Box
 						borderRadius={1}
 						sx={{
@@ -187,13 +274,7 @@ const Room = () => {
 						px={5}
 						py={5}
 						onClick={handleBlackSelect}
-					>
-						<Typography
-							color="secondary.main"
-							variant="h4"
-							textAlign="center"
-						></Typography>
-					</Box>
+					/>
 				</Box>
 
 				<Box display="flex" alignItems="center">
@@ -227,11 +308,7 @@ const Room = () => {
 									width: "50px",
 									height: "50px",
 									opacity:
-										incrementValue === 1
-											? incrementOneOpacity
-											: incrementValue === 5
-											? incrementFiveOpacity
-											: incrementTenOpacity,
+										getIncrementOpacity(incrementValue),
 								}}
 								onClick={() =>
 									handleIncrementClick(incrementValue)
@@ -244,6 +321,32 @@ const Room = () => {
 						</Grid>
 					))}
 				</Grid>
+
+				{/* need to yeet this */}
+				<Button
+					variant="contained"
+					color="primary"
+					size="large"
+					onClick={handleCreateRoom}
+					disabled={roomState === "creating" || !!roomState?.roomCode}
+					sx={{ mt: 3 }}
+				>
+					{roomState === "creating"
+						? "Creating Room..."
+						: roomState?.roomCode
+						? "Room Created - Waiting for Opponent"
+						: "Create Room"}
+				</Button>
+
+				{roomState?.roomCode && (
+					<Typography
+						variant="body2"
+						color="text.secondary"
+						sx={{ mt: 2 }}
+					>
+						Share the room code with your opponent to start the game
+					</Typography>
+				)}
 			</Stack>
 		</Stack>
 	);

@@ -26,7 +26,6 @@ const App = () => {
 		!!storedUsername
 	);
 
-	// Ensure username persistence across sessions
 	useEffect(() => {
 		if (username && usernameSubmitted) {
 			window.localStorage.setItem("username", username);
@@ -50,42 +49,6 @@ const App = () => {
 			window.localStorage.setItem("username", username);
 		}
 	};
-
-	// Handle page visibility for multiplayer connections
-	useEffect(() => {
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === "visible") {
-				// Refresh any stale data when user returns to tab
-				console.log("🔄 App visible, checking connections...");
-			}
-		};
-
-		document.addEventListener("visibilitychange", handleVisibilityChange);
-		return () =>
-			document.removeEventListener(
-				"visibilitychange",
-				handleVisibilityChange
-			);
-	}, []);
-
-	// Handle online/offline events for multiplayer
-	useEffect(() => {
-		const handleOnline = () => {
-			console.log("🌐 App back online");
-		};
-
-		const handleOffline = () => {
-			console.log("📡 App offline");
-		};
-
-		window.addEventListener("online", handleOnline);
-		window.addEventListener("offline", handleOffline);
-
-		return () => {
-			window.removeEventListener("online", handleOnline);
-			window.removeEventListener("offline", handleOffline);
-		};
-	}, []);
 
 	return (
 		<ThemeContextProvider value={theme}>

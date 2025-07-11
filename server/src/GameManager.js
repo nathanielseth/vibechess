@@ -38,7 +38,7 @@ export class GameManager {
 		};
 	}
 
-	createPrivateRoom(timeControl, playerName, preferredColor, flag) {
+	createPrivateRoom(timeControl, playerName, preferredColor, flag, socketId) {
 		const roomCode = generateRoomCode();
 		const gameState = this.createGameState(timeControl);
 
@@ -47,7 +47,7 @@ export class GameManager {
 			gameState,
 			players: [
 				{
-					id: null,
+					id: socketId,
 					name: playerName,
 					color: preferredColor,
 					flag: flag?.toLowerCase(),
@@ -63,36 +63,46 @@ export class GameManager {
 		};
 
 		this.rooms.set(roomCode, room);
-		return { roomCode, room };
+		this.playerRooms.set(socketId, roomCode);
+
+		return { roomCode, room, player: room.players[0] };
 	}
 
 	joinPrivateRoom(roomCode, playerName, flag, socketId) {
 		const room = this.rooms.get(roomCode);
 		if (!room) return { success: false, reason: "Room not found" };
-		if (!room.isPrivate)
-			return { success: false, reason: "Invalid room type" };
-		if (room.players.length >= 2)
-			return { success: false, reason: "Room is full" };
 
-		if (!room.players[0].id) {
-			room.players[0].id = socketId;
+		const existingPlayer = room.players.find(
+			(p) => p.id === socketId || p.name === playerName
+		);
+		if (existingPlayer) {
+			existingPlayer.id = socketId;
 			this.playerRooms.set(socketId, roomCode);
-			return { success: true, room, isHost: true };
+			return { success: true, room, isHost: existingPlayer.isHost };
 		}
 
-		const opponentColor =
-			room.hostPreferredColor === "white" ? "black" : "white";
-		room.players.push({
-			id: socketId,
-			name: playerName,
-			color: opponentColor,
-			flag: flag?.toLowerCase(),
-			isHost: false,
-		});
+		if (room.players.length >= 2) {
+			return { success: false, reason: "Room is full" };
+		}
 
-		room.waitingForOpponent = false;
+		if (room.isPrivate) {
+			const opponentColor =
+				room.hostPreferredColor === "white" ? "black" : "white";
+			room.players.push({
+				id: socketId,
+				name: playerName,
+				color: opponentColor,
+				flag: flag?.toLowerCase(),
+				isHost: false,
+			});
+
+			room.waitingForOpponent = false;
+			this.playerRooms.set(socketId, roomCode);
+
+			return { success: true, room, isHost: false, gameReady: true };
+		}
+
 		this.playerRooms.set(socketId, roomCode);
-
 		return { success: true, room, isHost: false, gameReady: true };
 	}
 
@@ -120,6 +130,8 @@ export class GameManager {
 			],
 			timeControl,
 			createdAt: Date.now(),
+			isPrivate: false,
+			waitingForOpponent: false,
 			rematchRequests: new Set(),
 		};
 

@@ -190,13 +190,13 @@ const Menu = () => {
 		}
 
 		const username = localStorage.getItem("username");
-		const selectedFlag = localStorage.getItem("selectedFlag");
+		const selectedFlag = localStorage.getItem("selectedFlag") || "ph";
 
 		playClickSound();
 		toast.info("Joining room...");
 
 		emit("joinRoom", {
-			roomCode: state.enteredRoomCode.trim(),
+			roomCode: state.enteredRoomCode.trim().toUpperCase(),
 			playerName: username,
 			flag: selectedFlag,
 		});
@@ -215,7 +215,11 @@ const Menu = () => {
 				navigate("/multiplayer", { state: data });
 			}, 1000);
 		};
-
+		const handleGameStarted = (data) => {
+			toast.dismiss();
+			toast.success("Game started!");
+			navigate("/multiplayer", { state: data });
+		};
 		const handleQueueJoined = (data) => {
 			console.log("Joined queue:", data);
 		};
@@ -251,6 +255,7 @@ const Menu = () => {
 
 		const cleanup = [
 			on("matchFound", handleMatchFound),
+			on("gameStarted", handleGameStarted),
 			on("queueJoined", handleQueueJoined),
 			on("matchmakingCancelled", handleMatchmakingCancelled),
 			on("connect_error", handleConnectionError),
