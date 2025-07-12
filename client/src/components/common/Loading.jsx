@@ -10,7 +10,8 @@ const Container = styled.div`
 	height: 100vh;
 `;
 
-const Animation = keyframes`
+const stepRotate = keyframes`
+  0% { transform: rotate(0deg); }
   20% { transform: rotate(90deg); }
   40% { transform: rotate(180deg); }
   60% { transform: rotate(270deg); }
@@ -19,22 +20,20 @@ const Animation = keyframes`
 `;
 
 const Spinner = styled.div`
-	--dark-clr: #f24040;
-	--light-clr: #fff;
-	height: ${(props) => props.size || "4rem"};
-	width: ${(props) => props.size || "4rem"};
+	height: ${({ size }) => size || "4rem"};
+	width: ${({ size }) => size || "4rem"};
 	border-radius: 20%;
-	background-image: conic-gradient(
-		var(--dark-clr) 0,
-		var(--dark-clr) 90deg,
-		var(--light-clr) 90deg,
-		var(--light-clr) 180deg,
-		var(--dark-clr) 180deg,
-		var(--dark-clr) 270deg,
-		var(--light-clr) 270deg,
-		var(--light-clr) 360deg
+	background: conic-gradient(
+		#f24040 0deg,
+		#f24040 90deg,
+		#fff 90deg,
+		#fff 180deg,
+		#f24040 180deg,
+		#f24040 270deg,
+		#fff 270deg,
+		#fff 360deg
 	);
-	animation: ${Animation} 5s infinite;
+	animation: ${stepRotate} 2s ease-in-out infinite;
 `;
 
 const Loading = ({ size }) => (

@@ -18,7 +18,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 	const [username, setUsername] = useState("");
 	const [error, setError] = useState(null);
 	const [selectedFlag, setSelectedFlag] = useState(() => {
-		return localStorage.getItem("selectedFlag");
+		return localStorage.getItem("selectedFlag") || "ph";
 	});
 	const [isFlagModalOpen, setFlagModalOpen] = useState(false);
 
@@ -104,19 +104,10 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 					helperText={error}
 					autoComplete="off"
 					label="What should we call you?"
-					placeholder="Enter your username or leave blank for random"
 					inputProps={{ maxLength: 14 }}
 					variant="outlined"
 					sx={{
-						"& .MuiOutlinedInput-root": {
-							color: "white",
-						},
-						"& .MuiInputLabel-root": {
-							color: "white",
-						},
-						"& .MuiOutlinedInput-notchedOutline": {
-							borderColor: "white",
-						},
+						height: "65px",
 						"& .MuiOutlinedInput-input": {
 							padding: "18px 14px",
 						},
@@ -159,7 +150,7 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 						},
 					}}
 				>
-					Start Playing
+					Enter VibeChess
 				</Button>
 			</Box>
 

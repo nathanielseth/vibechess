@@ -32,8 +32,15 @@ const Room = () => {
 		window.localStorage.getItem("selectedPieces") || "tatiana";
 
 	const handleCreateRoom = useCallback(() => {
-		if (!socket || hasEmittedCreate.current || roomState === "creating")
+		if (
+			!socket ||
+			hasEmittedCreate.current ||
+			roomState === "creating" ||
+			roomState?.roomCode
+		)
 			return;
+
+		const playerName = localStorage.getItem("username");
 
 		hasEmittedCreate.current = true;
 		setRoomState("creating");
@@ -41,22 +48,23 @@ const Room = () => {
 		socket.emit("createRoom", {
 			timeControl: selectedTimeControl,
 			increment: selectedIncrement,
-			playerName: localStorage.getItem("playerName"),
+			playerName: playerName,
 			preferredColor,
 			flag: localStorage.getItem("selectedFlag") || "ph",
 		});
 	}, [
 		socket,
-		roomState,
 		selectedTimeControl,
 		selectedIncrement,
 		preferredColor,
+		roomState,
 	]);
 
 	useEffect(() => {
 		if (!socket) return;
 
 		const handleRoomCreated = (data) => {
+			console.log("Room created:", data);
 			setRoomState(data);
 		};
 
@@ -67,6 +75,7 @@ const Room = () => {
 		};
 
 		const handleGameStarted = (data) => {
+			console.log("Game started:", data);
 			navigate("/multiplayer", {
 				state: {
 					roomCode: data.roomCode,
@@ -79,6 +88,7 @@ const Room = () => {
 		};
 
 		const handleGameInitialized = (data) => {
+			console.log("Game initialized:", data);
 			navigate("/multiplayer", {
 				state: {
 					roomCode: data.roomCode,
@@ -96,8 +106,10 @@ const Room = () => {
 		socket.on("gameStarted", handleGameStarted);
 		socket.on("gameInitialized", handleGameInitialized);
 
-		if (!hasEmittedCreate.current) {
-			handleCreateRoom();
+		if (!hasEmittedCreate.current && !roomState) {
+			setTimeout(() => {
+				handleCreateRoom();
+			}, 100);
 		}
 
 		return () => {
@@ -108,10 +120,11 @@ const Room = () => {
 		};
 	}, [
 		socket,
-		navigate,
 		handleCreateRoom,
+		navigate,
 		selectedTimeControl,
 		selectedIncrement,
+		roomState,
 	]);
 
 	const handleWhiteSelect = () => {
@@ -173,6 +186,14 @@ const Room = () => {
 		if (roomState === "creating") return "Creating...";
 		if (roomState?.roomCode) return roomState.roomCode;
 		return "Click Create Room";
+	};
+
+	const handleManualCreateRoom = () => {
+		if (roomState?.roomCode || roomState === "creating") return;
+
+		hasEmittedCreate.current = false;
+		setRoomState(null);
+		handleCreateRoom();
 	};
 
 	return (
@@ -322,12 +343,11 @@ const Room = () => {
 					))}
 				</Grid>
 
-				{/* need to yeet this */}
 				<Button
 					variant="contained"
 					color="primary"
 					size="large"
-					onClick={handleCreateRoom}
+					onClick={handleManualCreateRoom}
 					disabled={roomState === "creating" || !!roomState?.roomCode}
 					sx={{ mt: 3 }}
 				>
