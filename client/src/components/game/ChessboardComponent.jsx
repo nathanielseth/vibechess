@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Stack } from "@mui/material";
-import { styles } from "../../styles/styles";
+//import { styles } from "../../styles/styles";
 import { useLocalChessGame } from "./hooks/useLocalChessGame.js";
 import { useVersusBot } from "./hooks/useVersusBot.js";
 import { useMultiplayerGame } from "./hooks/useMultiplayerChessGame.js";
@@ -128,8 +128,12 @@ const ChessboardComponent = ({
 				chessGame?.rightClickedSquares,
 				chessGame?.setRightClickedSquares
 			);
+
+			if (chessGame?.clearPremoves) {
+				chessGame.clearPremoves();
+			}
 		},
-		[chessGame?.rightClickedSquares, chessGame?.setRightClickedSquares]
+		[chessGame]
 	);
 
 	const modalHandlers = useMemo(
@@ -189,8 +193,8 @@ const ChessboardComponent = ({
 		};
 	}, [chessGame, modalHandlers, gameMode, isMultiplayer]);
 
-	const customSquareStyles = useMemo(
-		() => ({
+	const customSquareStyles = useMemo(() => {
+		const styles = {
 			...chessGame?.highlightedSquares,
 			...chessGame?.rightClickedSquares,
 			...chessGame?.optionSquares,
@@ -199,14 +203,29 @@ const ChessboardComponent = ({
 						[chessGame.kingInCheck]: styles.kingInCheckStyle,
 				  }
 				: {}),
-		}),
-		[
-			chessGame?.highlightedSquares,
-			chessGame?.rightClickedSquares,
-			chessGame?.optionSquares,
-			chessGame?.kingInCheck,
-		]
-	);
+		};
+
+		if (chessGame?.premoves) {
+			chessGame.premoves.forEach((premove) => {
+				styles[premove.sourceSquare] = {
+					backgroundColor: "rgba(255, 0, 0, 0.3)",
+					...styles[premove.sourceSquare],
+				};
+				styles[premove.targetSquare] = {
+					backgroundColor: "rgba(255, 0, 0, 0.3)",
+					...styles[premove.targetSquare],
+				};
+			});
+		}
+
+		return styles;
+	}, [
+		chessGame?.highlightedSquares,
+		chessGame?.rightClickedSquares,
+		chessGame?.optionSquares,
+		chessGame?.kingInCheck,
+		chessGame?.premoves,
+	]);
 
 	const customArrows = useMemo(() => {
 		if (chessGame?.analysisMode && chessGame?.bestMove) {
@@ -276,7 +295,7 @@ const ChessboardComponent = ({
 							id="StyledBoard"
 							boardOrientation={boardOrientation}
 							boardWidth={boardWidth}
-							position={chessGame.game.fen()}
+							position={chessGame?.game?.fen()}
 							onPieceDrop={onDrop}
 							onSquareClick={onSquareClick}
 							customBoardStyle={{ borderRadius: "10px" }}

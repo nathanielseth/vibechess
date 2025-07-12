@@ -11,6 +11,8 @@ import {
 export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	const [game, setGame] = useState(() => new Chess());
 	const [lastMove, setLastMove] = useState(null);
+	const [premoves, setPremoves] = useState([]);
+	const premovesRef = useRef([]);
 	const [history, setHistory] = useState([
 		{ fen: new Chess().fen(), lastMove: null },
 	]);
@@ -287,6 +289,45 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		[history, lastMove, setMoveHighlights]
 	);
 
+	const executePremove = useCallback(() => {
+		if (premovesRef.current.length > 0) {
+			const currentTurn = game.turn() === "w" ? "white" : "black";
+			if (currentTurn !== playerColor) {
+				return;
+			}
+
+			const nextPremove = premovesRef.current[0];
+			premovesRef.current.splice(0, 1);
+
+			setTimeout(() => {
+				if (socket && matchData?.roomCode) {
+					socket.emit("makeMove", {
+						roomCode: matchData.roomCode,
+						move: nextPremove.moveData,
+					});
+				}
+
+				setPremoves([...premovesRef.current]);
+			}, 100);
+		}
+	}, [socket, matchData, game, playerColor]);
+
+	useEffect(() => {
+		if (currentIndex === history.length - 1) {
+			const currentTurn = game.turn() === "w" ? "white" : "black";
+			if (currentTurn === playerColor) {
+				executePremove();
+			}
+		}
+	}, [
+		currentPlayer,
+		executePremove,
+		currentIndex,
+		history.length,
+		game,
+		playerColor,
+	]);
+
 	const toggleBoardOrientation = useCallback(() => {
 		setBoardOrientation((prev) => (prev === "white" ? "black" : "white"));
 	}, []);
@@ -294,6 +335,13 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	return {
 		game,
 		lastMove,
+		premoves,
+		setPremoves,
+		premovesRef,
+		clearPremoves: () => {
+			premovesRef.current = [];
+			setPremoves([]);
+		},
 		history,
 		currentIndex,
 		kingInCheck,

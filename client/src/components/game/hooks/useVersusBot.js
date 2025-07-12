@@ -13,6 +13,8 @@ import Engine from "../../game/utils/engine.js";
 export const useVersusBot = (playerColor = "white", difficulty = 18) => {
 	const [game, setGame] = useState(() => new Chess());
 	const [lastMove, setLastMove] = useState(null);
+	const [premoves, setPremoves] = useState([]);
+	const premovesRef = useRef([]);
 	const [history, setHistory] = useState([
 		{ fen: new Chess().fen(), lastMove: null },
 	]);
@@ -313,6 +315,33 @@ export const useVersusBot = (playerColor = "white", difficulty = 18) => {
 		});
 	}, [cleanupBotEngine]);
 
+	const executePremove = useCallback(() => {
+		if (premovesRef.current.length > 0 && isPlayerTurn()) {
+			const nextPremove = premovesRef.current[0];
+			premovesRef.current.splice(0, 1);
+
+			setTimeout(() => {
+				const move = makeMove(
+					nextPremove.sourceSquare,
+					nextPremove.targetSquare,
+					nextPremove.moveData.promotion
+				);
+
+				if (!move) {
+					premovesRef.current = [];
+				}
+
+				setPremoves([...premovesRef.current]);
+			}, 100);
+		}
+	}, [makeMove, isPlayerTurn]);
+
+	useEffect(() => {
+		if (isPlayerTurn() && currentIndex === history.length - 1) {
+			executePremove();
+		}
+	}, [isPlayerTurn, executePremove, currentIndex, history.length]);
+
 	const undoMove = useCallback(() => {
 		if (currentIndex > 1 && !isThinking) {
 			cleanupBotEngine();
@@ -376,6 +405,13 @@ export const useVersusBot = (playerColor = "white", difficulty = 18) => {
 	return {
 		game,
 		lastMove,
+		premoves,
+		setPremoves,
+		premovesRef,
+		clearPremoves: () => {
+			premovesRef.current = [];
+			setPremoves([]);
+		},
 		history,
 		currentIndex,
 		kingInCheck,
