@@ -20,7 +20,6 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	const [gameEndReason, setGameEndReason] = useState(null);
 	const [pgn, setPgn] = useState("");
 	const [currentPlayer, setCurrentPlayer] = useState("white");
-
 	const [highlightedSquares, setHighlightedSquares] = useState({});
 	const [optionSquares, setOptionSquares] = useState({});
 	const [moveFrom, setMoveFrom] = useState("");
@@ -48,7 +47,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 
 	const initialTimes = useMemo(() => getInitialTime(), [getInitialTime]);
 
-	// Simplified timer state
+	// Timer state
 	const [displayWhiteTime, setDisplayWhiteTime] = useState(
 		Math.ceil(initialTimes.white / 100)
 	);
@@ -56,7 +55,6 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		Math.ceil(initialTimes.black / 100)
 	);
 
-	// Store the last server time data
 	const serverTimeRef = useRef({
 		whiteTime: initialTimes.white,
 		blackTime: initialTimes.black,
@@ -65,7 +63,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 
 	const animationRef = useRef();
 
-	// SINGLE timer function - only client-side interpolation
+	// Timer animation
 	const animateTimer = useCallback(() => {
 		if (isGameOver) return;
 
@@ -76,7 +74,6 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		let newWhiteTime = serverTimeRef.current.whiteTime;
 		let newBlackTime = serverTimeRef.current.blackTime;
 
-		// Only subtract time from the current player
 		if (currentPlayer === "white") {
 			newWhiteTime = Math.max(
 				0,
@@ -89,14 +86,13 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 			);
 		}
 
-		// Update display (convert centiseconds to seconds)
 		setDisplayWhiteTime(Math.max(0, Math.ceil(newWhiteTime / 100)));
 		setDisplayBlackTime(Math.max(0, Math.ceil(newBlackTime / 100)));
 
 		animationRef.current = requestAnimationFrame(animateTimer);
 	}, [currentPlayer, isGameOver]);
 
-	// Start the timer
+	// Timer effect
 	useEffect(() => {
 		if (!isGameOver) {
 			animationRef.current = requestAnimationFrame(animateTimer);
@@ -109,7 +105,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		};
 	}, [animateTimer, isGameOver]);
 
-	// SIMPLE server time update - just update the reference, let client handle display
+	// Server time updates
 	const updateServerTimes = useCallback(
 		({ whiteTime, blackTime, timestamp }) => {
 			serverTimeRef.current = {
@@ -117,63 +113,76 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 				blackTime,
 				timestamp: timestamp || Date.now(),
 			};
-
-			// Don't update display here - let the animation loop handle it
-			// This prevents the twitching!
 		},
 		[]
 	);
 
-	useEffect(() => {
-		if (matchData?.gameState) {
-			const serverState = matchData.gameState;
+	// Helper function to create move history
+	const createMoveHistory = useCallback((moves) => {
+		const newHistory = [{ fen: new Chess().fen(), lastMove: null }];
+		const tempGame = new Chess();
 
-			const newGame = new Chess(serverState.fen);
-			setGame(newGame);
-			setCurrentPlayer(serverState.currentPlayer);
+		moves.forEach((move) => {
+			const gameMove = tempGame.move(move);
+			if (gameMove) {
+				newHistory.push({
+					fen: tempGame.fen(),
+					lastMove: gameMove,
+				});
+			}
+		});
 
-			updateServerTimes({
-				whiteTime: serverState.whiteTimeRemaining,
-				blackTime: serverState.blackTimeRemaining,
-				timestamp: serverState.timestamp,
+		return newHistory;
+	}, []);
+
+	// Helper function to set move highlights
+	const setMoveHighlights = useCallback((move) => {
+		if (move) {
+			setHighlightedSquares({
+				[move.from]: {
+					backgroundColor: "rgba(252, 220, 77, 0.4)",
+				},
+				[move.to]: {
+					backgroundColor: "rgba(252, 220, 77, 0.4)",
+				},
 			});
-
-			setIsGameOver(serverState.isGameOver);
-			setGameEndReason(serverState.gameOverReason);
-
-			if (serverState.moves?.length > 0) {
-				const newHistory = [{ fen: new Chess().fen(), lastMove: null }];
-				const tempGame = new Chess();
-
-				serverState.moves.forEach((move) => {
-					const gameMove = tempGame.move(move);
-					if (gameMove) {
-						newHistory.push({
-							fen: tempGame.fen(),
-							lastMove: gameMove,
-						});
-					}
-				});
-
-				setHistory(newHistory);
-				setCurrentIndex(newHistory.length - 1);
-			}
-
-			if (serverState.lastMove) {
-				setLastMove(serverState.lastMove);
-				setHighlightedSquares({
-					[serverState.lastMove.from]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-					[serverState.lastMove.to]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-				});
-			}
-
-			setKingInCheck(checkKingInCheck(newGame));
+		} else {
+			setHighlightedSquares({});
 		}
-	}, [matchData, updateServerTimes]);
+	}, []);
+
+	// Initialize game state from server
+	useEffect(() => {
+		if (!matchData?.gameState) return;
+
+		const serverState = matchData.gameState;
+		const newGame = new Chess(serverState.fen);
+
+		setGame(newGame);
+		setCurrentPlayer(serverState.currentPlayer);
+		setIsGameOver(serverState.isGameOver);
+		setGameEndReason(serverState.gameOverReason);
+		setKingInCheck(checkKingInCheck(newGame));
+
+		updateServerTimes({
+			whiteTime: serverState.whiteTimeRemaining,
+			blackTime: serverState.blackTimeRemaining,
+			timestamp: serverState.timestamp,
+		});
+
+		// Handle move history
+		if (serverState.moves?.length > 0) {
+			const newHistory = createMoveHistory(serverState.moves);
+			setHistory(newHistory);
+			setCurrentIndex(newHistory.length - 1);
+		}
+
+		// Handle last move highlighting
+		if (serverState.lastMove) {
+			setLastMove(serverState.lastMove);
+			setMoveHighlights(serverState.lastMove);
+		}
+	}, [matchData, updateServerTimes, createMoveHistory, setMoveHighlights]);
 
 	// Sound effects
 	useEffect(() => {
@@ -199,23 +208,22 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	// Move logic
 	const makeMove = useCallback(
 		(sourceSquare, targetSquare, promotion = "q") => {
-			if (socket && matchData?.roomCode) {
-				socket.emit("makeMove", {
-					roomCode: matchData.roomCode,
-					move: {
-						from: sourceSquare,
-						to: targetSquare,
-						promotion: promotion.toLowerCase(),
-					},
-				});
+			if (!socket || !matchData?.roomCode) return false;
 
-				setOptionSquares({});
-				setMoveFrom("");
-				setRightClickedSquares({});
+			socket.emit("makeMove", {
+				roomCode: matchData.roomCode,
+				move: {
+					from: sourceSquare,
+					to: targetSquare,
+					promotion: promotion.toLowerCase(),
+				},
+			});
 
-				return true;
-			}
-			return false;
+			setOptionSquares({});
+			setMoveFrom("");
+			setRightClickedSquares({});
+
+			return true;
 		},
 		[socket, matchData]
 	);
@@ -223,50 +231,21 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	const syncGameState = useCallback(
 		(serverState) => {
 			const newGame = new Chess(serverState.fen);
+
 			setGame(newGame);
 			setCurrentPlayer(serverState.currentPlayer);
+			setIsGameOver(serverState.isGameOver);
+			setGameEndReason(serverState.gameOverReason);
+			setKingInCheck(checkKingInCheck(newGame));
 
-			// Update server time reference
 			updateServerTimes({
 				whiteTime: serverState.whiteTimeRemaining,
 				blackTime: serverState.blackTimeRemaining,
 				timestamp: serverState.timestamp,
 			});
 
-			setIsGameOver(serverState.isGameOver);
-			setGameEndReason(serverState.gameOverReason);
-
-			if (serverState.lastMove) {
-				setLastMove(serverState.lastMove);
-				setHighlightedSquares({
-					[serverState.lastMove.from]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-					[serverState.lastMove.to]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-				});
-			} else {
-				setLastMove(null);
-				setHighlightedSquares({});
-			}
-
-			setKingInCheck(checkKingInCheck(newGame));
-
 			if (serverState.moves?.length > 0) {
-				const newHistory = [{ fen: new Chess().fen(), lastMove: null }];
-				const tempGame = new Chess();
-
-				serverState.moves.forEach((move) => {
-					const gameMove = tempGame.move(move);
-					if (gameMove) {
-						newHistory.push({
-							fen: tempGame.fen(),
-							lastMove: gameMove,
-						});
-					}
-				});
-
+				const newHistory = createMoveHistory(serverState.moves);
 				setHistory(newHistory);
 				setCurrentIndex(newHistory.length - 1);
 			} else {
@@ -274,11 +253,14 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 				setCurrentIndex(0);
 			}
 
+			setLastMove(serverState.lastMove || null);
+			setMoveHighlights(serverState.lastMove);
+
 			setMoveFrom("");
 			setOptionSquares({});
 			setRightClickedSquares({});
 		},
-		[updateServerTimes]
+		[updateServerTimes, createMoveHistory, setMoveHighlights]
 	);
 
 	const resetGame = useCallback(() => {
@@ -289,27 +271,20 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 
 	const navigateMove = useCallback(
 		(moveIndex) => {
-			if (moveIndex >= 0 && moveIndex < history.length) {
-				setGame(new Chess(history[moveIndex].fen));
-				setCurrentIndex(moveIndex);
-				setOptionSquares({});
-				setMoveFrom("");
+			if (moveIndex < 0 || moveIndex >= history.length) return;
 
-				if (moveIndex === history.length - 1 && lastMove) {
-					setHighlightedSquares({
-						[lastMove.from]: {
-							backgroundColor: "rgba(252, 220, 77, 0.4)",
-						},
-						[lastMove.to]: {
-							backgroundColor: "rgba(252, 220, 77, 0.4)",
-						},
-					});
-				} else {
-					setHighlightedSquares({});
-				}
+			setGame(new Chess(history[moveIndex].fen));
+			setCurrentIndex(moveIndex);
+			setOptionSquares({});
+			setMoveFrom("");
+
+			if (moveIndex === history.length - 1 && lastMove) {
+				setMoveHighlights(lastMove);
+			} else {
+				setMoveHighlights(null);
 			}
 		},
-		[history, lastMove]
+		[history, lastMove, setMoveHighlights]
 	);
 
 	const toggleBoardOrientation = useCallback(() => {
@@ -340,7 +315,6 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		resetGame,
 		navigateMove,
 		toggleBoardOrientation,
-
 		syncGameState,
 		updateServerTimes,
 

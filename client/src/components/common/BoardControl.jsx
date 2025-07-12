@@ -20,12 +20,12 @@ const BoardControl = ({
 	currentIndex,
 	navigateMove,
 	history,
-	toggleAutoFlip,
-	autoFlip,
-	toggleAnalysisMode,
-	analysisMode,
+	toggleAutoFlip = null,
+	autoFlip = false,
+	toggleAnalysisMode = null,
+	analysisMode = false,
 	pgn,
-	gameMode,
+	gameMode = "versus-bot",
 	handleUndoMove,
 	setIsGameOver,
 }) => {
@@ -209,7 +209,8 @@ const BoardControl = ({
 							<UndoRoundedIcon sx={{ fontSize: "1.35rem" }} />
 						</IconButton>
 					</Tooltip>
-					{gameMode === "passandplay" && (
+
+					{gameMode === "passandplay" && toggleAnalysisMode && (
 						<Tooltip title="Evaluation Mode" enterDelay={400} arrow>
 							<IconButton
 								onClick={toggleAnalysisMode}
@@ -222,7 +223,7 @@ const BoardControl = ({
 						</Tooltip>
 					)}
 
-					{gameMode === "passandplay" && (
+					{gameMode === "passandplay" && toggleAutoFlip && (
 						<Tooltip title="Auto-Flip" enterDelay={400} arrow>
 							<IconButton
 								onClick={toggleAutoFlip}
@@ -283,16 +284,13 @@ BoardControl.propTypes = {
 	currentIndex: PropTypes.number.isRequired,
 	navigateMove: PropTypes.func.isRequired,
 	history: PropTypes.array.isRequired,
-	toggleAutoFlip: PropTypes.func.isRequired,
-	autoFlip: PropTypes.bool.isRequired,
-	toggleAnalysisMode: PropTypes.func.isRequired,
-	analysisMode: PropTypes.bool.isRequired,
-	openShareModal: PropTypes.func.isRequired,
+	toggleAutoFlip: PropTypes.func,
+	autoFlip: PropTypes.bool,
+	toggleAnalysisMode: PropTypes.func,
+	analysisMode: PropTypes.bool,
 	pgn: PropTypes.string.isRequired,
 	gameMode: PropTypes.string,
-	handleRematch: PropTypes.func.isRequired,
 	handleUndoMove: PropTypes.func.isRequired,
-	isResignation: PropTypes.func,
 	setIsGameOver: PropTypes.func.isRequired,
 };
 

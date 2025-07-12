@@ -25,8 +25,13 @@ export const useChessboardEvents = (
 				chessGame.game.turn() === "w" ? "white" : "black";
 			return currentTurn === playerColor;
 		}
+
+		if (gameMode === "versus-bot" && playerColor) {
+			return chessGame.isPlayerTurn;
+		}
+
 		return true;
-	}, [gameMode, playerColor, chessGame.game]);
+	}, [gameMode, playerColor, chessGame.game, chessGame.isPlayerTurn]);
 
 	const canMakeMove = useCallback(() => {
 		const gameNotOver = !chessGame.isGameOver;
@@ -34,19 +39,16 @@ export const useChessboardEvents = (
 		const currentPosition =
 			chessGame.currentIndex === chessGame.history.length - 1;
 		const hasConnection = gameMode !== "multiplayer" || (roomCode && emit);
+		const notThinking = gameMode !== "versus-bot" || !chessGame.isThinking;
 
-		console.log("Move permission check:", {
-			gameNotOver,
-			rightTurn,
-			currentPosition,
-			hasConnection,
-			gameMode,
-			playerColor,
-			currentTurn: chessGame.game.turn() === "w" ? "white" : "black",
-		});
-
-		return gameNotOver && rightTurn && currentPosition && hasConnection;
-	}, [gameMode, chessGame, roomCode, emit, checkTurnPermission, playerColor]);
+		return (
+			gameNotOver &&
+			rightTurn &&
+			currentPosition &&
+			hasConnection &&
+			notThinking
+		);
+	}, [gameMode, chessGame, roomCode, emit, checkTurnPermission]);
 
 	const sendMoveToServer = useCallback(
 		(moveData) => {
@@ -95,7 +97,10 @@ export const useChessboardEvents = (
 					targetSquare,
 					moveData.promotion
 				);
-				if (move) getMoveOptions(targetSquare);
+				if (move) {
+					getMoveOptions(targetSquare);
+					clearUIState();
+				}
 				return !!move;
 			}
 		},
@@ -113,11 +118,8 @@ export const useChessboardEvents = (
 		(square) => {
 			chessGame.setRightClickedSquares({});
 
-			// check if we can make moves
 			if (!canMakeMove()) {
-				console.log(
-					"Cannot make move - game over, wrong turn, or not current position"
-				);
+				console.log("Cannot make move - conditions not met");
 				return;
 			}
 
@@ -129,6 +131,18 @@ export const useChessboardEvents = (
 
 			const clickedPiece = chessGame.game.get(square);
 			const currentTurn = chessGame.game.turn();
+
+			if (gameMode === "versus-bot" && playerColor) {
+				const playerPieceColor = playerColor === "white" ? "w" : "b";
+				const isPlayerPiece =
+					clickedPiece && clickedPiece.color === playerPieceColor;
+
+				if (clickedPiece && !isPlayerPiece) {
+					chessGame.setMoveFrom("");
+					chessGame.setOptionSquares({});
+					return;
+				}
+			}
 
 			const isOwnPiece =
 				clickedPiece && clickedPiece.color === currentTurn;
@@ -160,7 +174,6 @@ export const useChessboardEvents = (
 				}
 
 				if (gameMode === "multiplayer") {
-					console.log("Sending move to server:", moveData);
 					sendMoveToServer(moveData);
 					clearUIState();
 				} else {
@@ -170,9 +183,8 @@ export const useChessboardEvents = (
 						moveData.promotion
 					);
 					if (move) {
-						chessGame.setMoveFrom("");
-						chessGame.setOptionSquares({});
 						getMoveOptions(square);
+						clearUIState();
 					} else {
 						console.log("Invalid move attempted");
 						chessGame.setMoveFrom("");
@@ -182,7 +194,6 @@ export const useChessboardEvents = (
 			} else {
 				chessGame.setMoveFrom("");
 				chessGame.setOptionSquares({});
-				console.log("Clicked on empty square or opponent piece");
 			}
 		},
 		[
@@ -192,16 +203,28 @@ export const useChessboardEvents = (
 			sendMoveToServer,
 			gameMode,
 			clearUIState,
+			playerColor,
 		]
 	);
 
 	const onPieceDragBegin = useCallback(
 		(piece, sourceSquare) => {
 			if (!canMakeMove()) return false;
+
+			if (gameMode === "versus-bot" && playerColor) {
+				const playerPieceColor = playerColor === "white" ? "w" : "b";
+				const pieceColor = piece[0];
+
+				if (pieceColor !== playerPieceColor) {
+					console.log("Cannot drag bot's piece");
+					return false;
+				}
+			}
+
 			getMoveOptions(sourceSquare);
 			return true;
 		},
-		[canMakeMove, getMoveOptions]
+		[canMakeMove, getMoveOptions, gameMode, playerColor]
 	);
 
 	return {

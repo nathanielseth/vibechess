@@ -3,8 +3,9 @@ import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Stack } from "@mui/material";
 import { styles } from "../../styles/styles";
-import { useLocalChessGame } from "../game/hooks/useLocalChessGame.js";
-import { useMultiplayerGame } from "../game/hooks/useMultiplayerChessGame.js";
+import { useLocalChessGame } from "./hooks/useLocalChessGame.js";
+import { useVersusBot } from "./hooks/useVersusBot.js";
+import { useMultiplayerGame } from "./hooks/useMultiplayerChessGame.js";
 import { handleSquareRightClick } from "./utils/chessboardUtils.js";
 import { useChessboardState } from "./hooks/useChessboardState";
 import { useMultiplayerSocket } from "./hooks/useMultiplayerSocket";
@@ -33,12 +34,18 @@ const ChessboardComponent = ({
 	const { socket, isConnected, emit, on } = useSocketContext();
 
 	const localGame = useLocalChessGame();
+	const versusBotGame = useVersusBot("white", 18);
 	const multiplayerGame = useMultiplayerGame(
 		matchData,
 		socket,
 		matchData?.yourColor || "white"
 	);
-	const chessGame = gameMode === "multiplayer" ? multiplayerGame : localGame;
+	const chessGame =
+		gameMode === "multiplayer"
+			? multiplayerGame
+			: gameMode === "versus-bot"
+			? versusBotGame
+			: localGame;
 
 	const {
 		selectedPieceSet,
@@ -110,6 +117,7 @@ const ChessboardComponent = ({
 
 	const isMultiplayer = gameMode === "multiplayer";
 	const isPassAndPlay = gameMode === "passandplay";
+	//const isVersusBot = gameMode === "versus-bot";
 
 	const isGameReady = chessGame?.game?.fen;
 

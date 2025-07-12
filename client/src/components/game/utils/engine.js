@@ -1,14 +1,10 @@
-const stockfish = new Worker("./stockfish.wasm.js");
-
 class Engine {
 	constructor() {
-		this.stockfish = stockfish;
+		this.stockfish = new Worker("./stockfish.wasm.js");
 		this.isReady = false;
-		this.onMessage = (callback) => {
-			this.stockfish.addEventListener("message", (e) => {
-				callback(this.transformSFMessageData(e));
-			});
-		};
+		this.isDestroyed = false;
+		this.messageHandlers = new Set();
+
 		this.init();
 	}
 
@@ -26,9 +22,31 @@ class Engine {
 		};
 	}
 
+	onMessage(callback) {
+		if (this.isDestroyed) return;
+
+		const handler = (e) => {
+			if (this.isDestroyed) return;
+			callback(this.transformSFMessageData(e));
+		};
+
+		this.messageHandlers.add(handler);
+		this.stockfish.addEventListener("message", handler);
+
+		return () => {
+			this.messageHandlers.delete(handler);
+			if (this.stockfish) {
+				this.stockfish.removeEventListener("message", handler);
+			}
+		};
+	}
+
 	init() {
+		if (this.isDestroyed) return;
+
 		this.stockfish.postMessage("uci");
 		this.stockfish.postMessage("isready");
+
 		this.onMessage(({ uciMessage }) => {
 			if (uciMessage === "readyok") {
 				this.isReady = true;
@@ -37,14 +55,22 @@ class Engine {
 	}
 
 	onReady(callback) {
-		this.onMessage(({ uciMessage }) => {
-			if (uciMessage === "readyok") {
-				callback();
-			}
-		});
+		if (this.isDestroyed) return;
+
+		if (this.isReady) {
+			callback();
+		} else {
+			this.onMessage(({ uciMessage }) => {
+				if (uciMessage === "readyok") {
+					callback();
+				}
+			});
+		}
 	}
 
 	evaluatePosition(fen, depth = 24) {
+		if (this.isDestroyed || !this.isReady) return;
+
 		if (depth > 30) depth = 30;
 
 		this.stockfish.postMessage(`position fen ${fen}`);
@@ -52,12 +78,28 @@ class Engine {
 	}
 
 	stop() {
+		if (this.isDestroyed || !this.stockfish) return;
 		this.stockfish.postMessage("stop");
 	}
 
 	terminate() {
+		if (this.isDestroyed) return;
+
+		this.isDestroyed = true;
 		this.isReady = false;
-		this.stockfish.postMessage("quit");
+
+		this.messageHandlers.forEach((handler) => {
+			if (this.stockfish) {
+				this.stockfish.removeEventListener("message", handler);
+			}
+		});
+		this.messageHandlers.clear();
+
+		if (this.stockfish) {
+			this.stockfish.postMessage("quit");
+			this.stockfish.terminate();
+			this.stockfish = null;
+		}
 	}
 }
 

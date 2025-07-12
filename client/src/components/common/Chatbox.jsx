@@ -145,22 +145,31 @@ const Chatbox = ({ roomCode }) => {
 			return new Date(message.createdAt).getTime();
 		}
 		if (message.timestamp) {
-			const today = new Date();
-			const [time, period] = message.timestamp.split(" ");
-			const [hours, minutes] = time.split(":").map(Number);
-			let hour24 = hours;
+			if (typeof message.timestamp === "number") {
+				return message.timestamp;
+			}
 
-			if (period === "PM" && hours !== 12) hour24 += 12;
-			if (period === "AM" && hours === 12) hour24 = 0;
+			if (
+				typeof message.timestamp === "string" &&
+				message.timestamp.includes(":")
+			) {
+				const today = new Date();
+				const [time, period] = message.timestamp.split(" ");
+				const [hours, minutes] = time.split(":").map(Number);
+				let hour24 = hours;
 
-			const messageDate = new Date(
-				today.getFullYear(),
-				today.getMonth(),
-				today.getDate(),
-				hour24,
-				minutes
-			);
-			return messageDate.getTime();
+				if (period === "PM" && hours !== 12) hour24 += 12;
+				if (period === "AM" && hours === 12) hour24 = 0;
+
+				const messageDate = new Date(
+					today.getFullYear(),
+					today.getMonth(),
+					today.getDate(),
+					hour24,
+					minutes
+				);
+				return messageDate.getTime();
+			}
 		}
 		return Date.now();
 	}, []);
@@ -214,11 +223,13 @@ const Chatbox = ({ roomCode }) => {
 			const messageWithSender = {
 				...chatMessage,
 				sender: isCurrentUser ? "user" : "opponent",
-				timestamp: new Date().toLocaleTimeString([], {
-					hour: "2-digit",
-					minute: "2-digit",
-				}),
-				createdAt: new Date().toISOString(),
+				timestamp:
+					chatMessage.timestamp ||
+					new Date().toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+					}),
+				createdAt: chatMessage.createdAt || new Date().toISOString(),
 			};
 			setMessages((prev) => [...prev, messageWithSender]);
 		};
@@ -375,7 +386,7 @@ const Chatbox = ({ roomCode }) => {
 };
 
 Chatbox.propTypes = {
-	roomCode: PropTypes.string.isRequired,
+	roomCode: PropTypes.string,
 };
 
 const Message = React.memo(({ message }) => {
@@ -412,7 +423,7 @@ Message.propTypes = {
 		message: PropTypes.string,
 		text: PropTypes.string,
 		sender: PropTypes.string,
-		timestamp: PropTypes.string,
+		timestamp: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 		groupPosition: PropTypes.string,
 		showTimestamp: PropTypes.bool,
 	}).isRequired,
@@ -515,7 +526,7 @@ const MessageBubble = React.memo(
 MessageBubble.propTypes = {
 	isUser: PropTypes.bool.isRequired,
 	text: PropTypes.string.isRequired,
-	timestamp: PropTypes.string,
+	timestamp: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	groupPosition: PropTypes.string,
 };
 

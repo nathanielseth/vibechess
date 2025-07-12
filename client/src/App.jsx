@@ -11,6 +11,7 @@ import { useTheme } from "@mui/material/styles";
 const WelcomeScreen = lazy(() => import("./components/menu/WelcomeScreen"));
 const Menu = lazy(() => import("./components/menu/Menu"));
 const PassAndPlay = lazy(() => import("./components/game/PassAndPlay"));
+const VersusBot = lazy(() => import("./components/game/VersusBot"));
 const Multiplayer = lazy(() => import("./components/game/Multiplayer"));
 const Room = lazy(() => import("./components/menu/Room"));
 const Loading = lazy(() => import("./components/common/Loading"));
@@ -84,6 +85,7 @@ const App = () => {
 								path="/pass-and-play"
 								element={<PassAndPlay />}
 							/>
+							<Route path="/versus-bot" element={<VersusBot />} />
 							<Route
 								path="/multiplayer"
 								element={<Multiplayer />}

@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 
 export const useMenuNavigation = (playClickSound) => {
 	const navigate = useNavigate();
@@ -17,8 +16,8 @@ export const useMenuNavigation = (playClickSound) => {
 
 	const handleVersusBotClick = useCallback(() => {
 		playClickSound();
-		toast.info("Bot gameplay coming soon!");
-	}, [playClickSound]);
+		navigate("/versus-bot");
+	}, [playClickSound, navigate]);
 
 	const handleSettingsClick = useCallback(() => {
 		playClickSound();
