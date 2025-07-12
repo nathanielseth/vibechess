@@ -10,11 +10,10 @@
 	"dependencies": {
 		"chess.js": "^1.4.0",
 		"cors": "^2.8.5",
-		"express": "^4.21.2",
+		"express": "^5.1.0",
 		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.10",
-		"vite": "^6.3.5"
+		"nodemon": "^3.1.10"
 	}
 }
