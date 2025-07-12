@@ -55,7 +55,7 @@ const Menu = () => {
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
 	const [state, setState] = useState({
-		isMusicMuted: localStorage.getItem("isMusicMuted") === "true",
+		isMusicMuted: true,
 		isSettingsModalOpen: false,
 		isTimeControlModalOpen: false,
 		isRotating: false,
@@ -170,16 +170,22 @@ const Menu = () => {
 	}, [playClickSound]);
 
 	const handleMusicToggle = useCallback(() => {
-		if (state.isMusicMuted) {
-			sounds.music.play();
-		} else {
+		const newMutedState = !state.isMusicMuted;
+
+		if (newMutedState) {
 			sounds.music.stop();
+		} else {
+			sounds.music.play();
 		}
-		updateState({ isMusicMuted: !state.isMusicMuted });
+
+		updateState({ isMusicMuted: newMutedState });
+		localStorage.setItem("isMusicMuted", String(newMutedState));
 	}, [state.isMusicMuted, sounds.music, updateState]);
 
 	const handleJoinRoom = useCallback(() => {
-		if (!state.enteredRoomCode.trim()) {
+		const roomCode = state.enteredRoomCode.trim();
+
+		if (!roomCode) {
 			toast.error("Please enter a room code");
 			return;
 		}
@@ -196,7 +202,7 @@ const Menu = () => {
 		toast.info("Joining room...");
 
 		emit("joinRoom", {
-			roomCode: state.enteredRoomCode.trim().toUpperCase(),
+			roomCode: roomCode.toUpperCase(),
 			playerName: username,
 			flag: selectedFlag,
 		});
@@ -210,16 +216,15 @@ const Menu = () => {
 			updateState({ isSearching: false });
 			toast.dismiss();
 			toast.success("Match found!");
-
-			setTimeout(() => {
-				navigate("/multiplayer", { state: data });
-			}, 1000);
+			setTimeout(() => navigate("/multiplayer", { state: data }), 1000);
 		};
+
 		const handleGameStarted = (data) => {
 			toast.dismiss();
 			toast.success("Game started!");
 			navigate("/multiplayer", { state: data });
 		};
+
 		const handleQueueJoined = (data) => {
 			console.log("Joined queue:", data);
 		};
@@ -277,60 +282,71 @@ const Menu = () => {
 			toast.error("Lost connection. Please try again.");
 		}
 	}, [isConnected, state.isSearching, updateState]);
-
 	useEffect(() => {
-		if (!state.isMusicMuted) {
-			sounds.music.play();
-		} else {
-			sounds.music.stop();
+		const savedMusicState = localStorage.getItem("isMusicMuted");
+		if (savedMusicState !== null) {
+			const isMuted = savedMusicState === "true";
+			updateState({ isMusicMuted: isMuted });
 		}
 
-		localStorage.setItem("isMusicMuted", String(state.isMusicMuted));
-		return () => sounds.music.stop();
-	}, [state.isMusicMuted, sounds.music]);
+		return () => {
+			sounds.music.stop();
+		};
+	}, [sounds.music, updateState]);
 
-	const iconButtons = [
-		{
-			icon: QuizIcon,
-			title: "FAQs",
-			color: "#2176ff",
-			onClick: () => toast.info("FAQs coming soon!"),
-		},
-		{
-			icon: GitHubIcon,
-			title: "GitHub",
-			color: "primary.main",
-			onClick: () =>
-				window.open(
-					"https://github.com/nathanielseth/VibeChess",
-					"_blank"
-				),
-		},
-		{
-			icon: FreeBreakfastIcon,
-			title: "Buy Me A Coffee",
-			color: "#F49F0A",
-			onClick: () =>
-				window.open(
-					"https://www.buymeacoffee.com/nathanielseth",
-					"_blank"
-				),
-		},
-		{
-			icon: theme.palette.mode === "dark" ? LightModeIcon : DarkModeIcon,
-			title: "Toggle UI Mode",
-			color: "#1f2123",
-			onClick: switchColorMode,
-		},
-		{
-			icon: state.isMusicMuted
-				? MusicOffRoundedIcon
-				: MusicNoteRoundedIcon,
-			title: "Toggle Music",
-			color: "#1f2123",
-			onClick: handleMusicToggle,
-		},
-	];
+	const iconButtons = useMemo(
+		() => [
+			{
+				icon: QuizIcon,
+				title: "FAQs",
+				color: "#2176ff",
+				onClick: () => toast.info("FAQs coming soon!"),
+			},
+			{
+				icon: GitHubIcon,
+				title: "GitHub",
+				color: "primary.main",
+				onClick: () =>
+					window.open(
+						"https://github.com/nathanielseth/VibeChess",
+						"_blank"
+					),
+			},
+			{
+				icon: FreeBreakfastIcon,
+				title: "Buy Me A Coffee",
+				color: "#F49F0A",
+				onClick: () =>
+					window.open(
+						"https://www.buymeacoffee.com/nathanielseth",
+						"_blank"
+					),
+			},
+			{
+				icon:
+					theme.palette.mode === "dark"
+						? LightModeIcon
+						: DarkModeIcon,
+				title: "Toggle UI Mode",
+				color: "#1f2123",
+				onClick: switchColorMode,
+			},
+			{
+				icon: state.isMusicMuted
+					? MusicOffRoundedIcon
+					: MusicNoteRoundedIcon,
+				title: "Toggle Music",
+				color: "#1f2123",
+				onClick: handleMusicToggle,
+			},
+		],
+		[
+			theme.palette.mode,
+			state.isMusicMuted,
+			switchColorMode,
+			handleMusicToggle,
+		]
+	);
 
 	const rotationStyle = state.isRotating ? rotatingImageRotate : {};
 	const iconSize = isMobile ? 24 : 26;
@@ -349,6 +365,7 @@ const Menu = () => {
 				overflowX: { xs: "auto", sm: "auto", md: "hidden" },
 			}}
 		>
+			{/* Title */}
 			<Container
 				sx={{
 					display: "flex",
@@ -369,6 +386,7 @@ const Menu = () => {
 						style={{
 							...rotatingImageStyle,
 							...rotationStyle,
+							cursor: "pointer",
 						}}
 						onClick={handleImageClick}
 					/>
@@ -397,6 +415,7 @@ const Menu = () => {
 				</Zoom>
 			</Container>
 
+			{/* Main Menu Buttons */}
 			<Box
 				sx={{
 					display: "flex",
@@ -433,6 +452,7 @@ const Menu = () => {
 					disabled={!isConnected}
 				/>
 
+				{/* Private Room */}
 				<Box
 					sx={{
 						display: "flex",
@@ -451,9 +471,9 @@ const Menu = () => {
 					<Slide direction="up" in={true} mountOnEnter unmountOnExit>
 						<TextField
 							label="Room Code"
-							inputProps={{ style: { fontSize: 18 } }}
 							variant="outlined"
 							color="primary"
+							fullWidth
 							sx={{
 								width: "30vh",
 								marginBottom: "10px",
@@ -476,6 +496,7 @@ const Menu = () => {
 								e.key === "Enter" && handleJoinRoom()
 							}
 							InputProps={{
+								style: { fontSize: 18 },
 								endAdornment: (
 									<InputAdornment position="end">
 										<IconButton
@@ -518,12 +539,14 @@ const Menu = () => {
 				/>
 			</Box>
 
+			{/* Icon Buttons */}
 			<Box
 				sx={{
 					display: "flex",
 					flexDirection: "row",
 					alignItems: "center",
 					marginTop: isMobile ? "0" : "25px",
+					gap: 1,
 				}}
 			>
 				{iconButtons.map((button, index) => (
@@ -539,7 +562,13 @@ const Menu = () => {
 							<IconButton
 								disableRipple
 								onClick={button.onClick}
-								style={styles.circleButtonStyle}
+								sx={{
+									...styles.circleButtonStyle,
+									transition: "all 0.3s ease",
+									"&:hover": {
+										transform: "scale(1.1)",
+									},
+								}}
 							>
 								<button.icon
 									sx={{
@@ -553,6 +582,7 @@ const Menu = () => {
 				))}
 			</Box>
 
+			{/* Modals */}
 			<TimeControlModal
 				isOpen={state.isTimeControlModalOpen}
 				onClose={handleTimeControlClose}

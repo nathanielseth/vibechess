@@ -104,6 +104,10 @@ export class SocketHandler {
 					: null,
 				roomCode,
 			});
+			socket.emit("chatHistory", {
+				messages:
+					this.gm.chatManager?.getChatHistory(room.roomCode) || [],
+			});
 		}
 	}
 
@@ -149,6 +153,10 @@ export class SocketHandler {
 					  }
 					: null,
 				roomCode: room.roomCode,
+			});
+			socket.emit("chatHistory", {
+				messages:
+					this.gm.chatManager?.getChatHistory(room.roomCode) || [],
 			});
 		}, 100);
 	}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../common/Navbar";
+import Loading from "../common/Loading";
 import { Stack } from "@mui/material";
 import ChessboardComponent from "./ChessboardComponent";
 import { notifySound } from "../../data/utils";
@@ -13,10 +14,7 @@ const Multiplayer = () => {
 	const [gameMode] = useState("multiplayer");
 	const [matchData, setMatchData] = useState(null);
 	const [isGameReady, setIsGameReady] = useState(false);
-	const [connectionStatus, setConnectionStatus] = useState("connecting");
 	const gameInitialized = useRef(false);
-	const joinAttempted = useRef(false);
-	const initialMatchData = useRef(null);
 
 	const { socket, isConnected, emit, on } = useSocketContext();
 
@@ -28,38 +26,21 @@ const Multiplayer = () => {
 			return;
 		}
 
-		if (JSON.stringify(data) !== JSON.stringify(initialMatchData.current)) {
-			console.log("📦 Match data received:", data);
-			setMatchData(data);
-			initialMatchData.current = data;
-			gameInitialized.current = false;
-			joinAttempted.current = false;
-			setIsGameReady(false);
-			setConnectionStatus("connecting");
-		}
-	}, [location.state, navigate]);
+		setMatchData(data);
+		console.log("📦 Match data received:", data);
 
-	// game initialization
-	useEffect(() => {
-		if (
-			!socket ||
-			!isConnected ||
-			!matchData ||
-			gameInitialized.current ||
-			joinAttempted.current
-		)
-			return;
+		gameInitialized.current = false;
+		setIsGameReady(false);
+
+		if (!socket || !isConnected) return;
 
 		console.log("🔌 Socket connected, initializing game...");
-		setConnectionStatus("initializing");
-		joinAttempted.current = true;
 
 		const cleanup = [];
 
 		cleanup.push(
 			on("gameInitialized", (data) => {
 				console.log("🎮 Game initialized:", data);
-				setConnectionStatus("ready");
 				setIsGameReady(true);
 				gameInitialized.current = true;
 				notifySound.play();
@@ -70,8 +51,6 @@ const Multiplayer = () => {
 			on("initializationError", (error) => {
 				console.error("❌ Game initialization failed:", error);
 				toast.error(`Failed to initialize: ${error.message}`);
-				setConnectionStatus("error");
-				joinAttempted.current = false;
 			})
 		);
 
@@ -83,16 +62,16 @@ const Multiplayer = () => {
 			})
 		);
 
-		const username = localStorage.getItem("username") || "Player";
-		const selectedFlag = localStorage.getItem("selectedFlag");
-
 		const joinTimer = setTimeout(() => {
-			if (socket && isConnected && matchData && socket.id) {
+			if (socket?.id) {
+				const username = localStorage.getItem("username") || "Player";
+				const selectedFlag = localStorage.getItem("selectedFlag");
+
 				console.log(
-					`🚪 Joining room: ${matchData.roomCode} with socket ID: ${socket.id}`
+					`🚪 Joining room: ${data.roomCode} with socket ID: ${socket.id}`
 				);
 				emit("joinRoom", {
-					roomCode: matchData.roomCode,
+					roomCode: data.roomCode,
 					playerName: username,
 					flag: selectedFlag,
 				});
@@ -103,36 +82,18 @@ const Multiplayer = () => {
 			clearTimeout(joinTimer);
 			cleanup.forEach((fn) => fn && fn());
 		};
-	}, [socket, isConnected, matchData, emit, on, navigate]);
+	}, [location.state, socket, isConnected, navigate, emit, on]);
 
 	useEffect(() => {
 		if (!isConnected && gameInitialized.current) {
-			console.log("🔄 Connection lost, marking as reconnecting...");
-			setConnectionStatus("reconnecting");
+			console.log("🔄 Connection lost, resetting...");
 			setIsGameReady(false);
 			gameInitialized.current = false;
-			joinAttempted.current = false;
+			toast.info("Reconnecting...");
 		}
 	}, [isConnected]);
 
-	const renderStatus = () => {
-		switch (connectionStatus) {
-			case "connecting":
-				return "Connecting to server...";
-			case "initializing":
-				return "Initializing game...";
-			case "reconnecting":
-				return "Reconnecting...";
-			case "error":
-				return "Connection error. Please refresh.";
-			case "ready":
-				return null;
-			default:
-				return "Loading...";
-		}
-	};
-
-	if (!isGameReady || !matchData || connectionStatus !== "ready") {
+	if (!isGameReady || !matchData) {
 		return (
 			<Stack>
 				<Navbar gameMode={gameMode} />
@@ -141,20 +102,16 @@ const Multiplayer = () => {
 					justifyContent="center"
 					alignItems="center"
 				>
-					{renderStatus()}
+					<Loading />
 				</Stack>
 			</Stack>
 		);
 	}
 
 	return (
-		<Stack>
+		<Stack minHeight="100dvh">
 			<Navbar gameMode={gameMode} />
-			<Stack
-				minHeight="100dvh"
-				justifyContent="center"
-				alignItems="center"
-			>
+			<Stack flexGrow={1} justifyContent="center" alignItems="center">
 				<ChessboardComponent
 					gameMode={gameMode}
 					matchData={matchData}

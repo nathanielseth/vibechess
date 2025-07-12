@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { GameManager } from "./GameManager.js";
 import { SocketHandler } from "./SocketHandler.js";
+import { ChatManager } from "./ChatManager.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -19,6 +20,10 @@ app.use(cors());
 
 const gameManager = new GameManager(io);
 const socketHandler = new SocketHandler(gameManager);
+const chatManager = new ChatManager(gameManager);
+
+gameManager.setChatManager(chatManager);
+chatManager.gm = gameManager;
 
 io.on("connection", (socket) => {
 	socket.on("joinRoom", (data) => socketHandler.handleJoinRoom(socket, data));
@@ -49,10 +54,14 @@ io.on("connection", (socket) => {
 	);
 	socket.on("disconnect", () => socketHandler.handleDisconnect(socket));
 	socket.on("ping", () => socket.emit("pong"));
+	socket.on("chatMessage", (data) =>
+		chatManager.handleChatMessage(socket, data)
+	);
 });
 
 process.on("SIGINT", () => {
 	gameManager.cleanup();
+	chatManager.cleanup();
 	httpServer.close(() => {
 		console.log("Server closed gracefully");
 		process.exit(0);

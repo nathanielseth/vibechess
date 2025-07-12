@@ -9,6 +9,7 @@ export class GameManager {
 		this.matchmakingQueue = [];
 		this.playerRooms = new Map();
 		this.gameTimer = null;
+		this.chatManager = null;
 		this.startTimer();
 	}
 
@@ -341,6 +342,10 @@ export class GameManager {
 				}
 			}
 		}, 100);
+	}
+
+	setChatManager(chatManager) {
+		this.chatManager = chatManager;
 	}
 
 	cleanup() {
