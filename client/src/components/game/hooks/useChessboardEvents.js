@@ -127,9 +127,22 @@ export const useChessboardEvents = (
 				return;
 			}
 
-			if (square === chessGame.moveFrom) {
-				chessGame.setMoveFrom("");
-				chessGame.setOptionSquares({});
+			const clickedPiece = chessGame.game.get(square);
+			const currentTurn = chessGame.game.turn();
+
+			const isOwnPiece =
+				clickedPiece && clickedPiece.color === currentTurn;
+
+			if (isOwnPiece) {
+				const hasMoveOptions = getMoveOptions(square);
+				if (hasMoveOptions) {
+					chessGame.setMoveFrom(square);
+					console.log("Selected square:", square);
+				} else {
+					chessGame.setMoveFrom("");
+					chessGame.setOptionSquares({});
+					console.log("No moves available from square:", square);
+				}
 				return;
 			}
 
@@ -162,20 +175,14 @@ export const useChessboardEvents = (
 						getMoveOptions(square);
 					} else {
 						console.log("Invalid move attempted");
+						chessGame.setMoveFrom("");
+						chessGame.setOptionSquares({});
 					}
 				}
 			} else {
-				const hasMoveOptions = getMoveOptions(square);
-
-				if (hasMoveOptions) {
-					chessGame.setMoveFrom(square);
-					console.log("Selected square:", square);
-				} else {
-					// no valid moves from this square
-					chessGame.setMoveFrom("");
-					chessGame.setOptionSquares({});
-					console.log("No moves available from square:", square);
-				}
+				chessGame.setMoveFrom("");
+				chessGame.setOptionSquares({});
+				console.log("Clicked on empty square or opponent piece");
 			}
 		},
 		[
