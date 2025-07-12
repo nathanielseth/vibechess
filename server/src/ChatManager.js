@@ -30,7 +30,7 @@ export class ChatManager {
 		}
 
 		const trimmedMessage = message.trim();
-		if (trimmedMessage.length > 200) {
+		if (trimmedMessage.length > 100) {
 			socket.emit("error", { message: "Message too long" });
 			return;
 		}

@@ -1,10 +1,4 @@
-import React, {
-	useState,
-	useMemo,
-	useEffect,
-	useContext,
-	useCallback,
-} from "react";
+import React, { useState, useMemo, useContext, useCallback } from "react";
 import {
 	Box,
 	Container,
@@ -16,7 +10,6 @@ import {
 	Zoom,
 	Tooltip,
 } from "@mui/material";
-import { Howl } from "howler";
 import { useTheme } from "@mui/material/styles";
 import { toast } from "react-toastify";
 import GitHubIcon from "@mui/icons-material/GitHub";
@@ -47,252 +40,70 @@ import SettingsModal from "../common/modal/SettingsModal";
 import TimeControlModal from "./TimeControlModal";
 import useSocketContext from "../../context/useSocketContext";
 
+import { useMenuSounds } from "../../hooks/useMenuSounds";
+import { useMatchmaking } from "../../hooks/useMatchmaking";
+import { useRoomJoining } from "../../hooks/useRoomJoining";
+import { useMenuNavigation } from "../../hooks/useMenuNavigation";
+
 const Menu = () => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 	const { switchColorMode } = useContext(ThemeContext);
-	const { socket, isConnected, emit, on } = useSocketContext();
+	const { isConnected } = useSocketContext();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-	const [state, setState] = useState({
-		isMusicMuted: true,
-		isSettingsModalOpen: false,
-		isTimeControlModalOpen: false,
-		isRotating: false,
-		enteredRoomCode: "",
-		isSearching: false,
-	});
+	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
+	const [isRotating, setIsRotating] = useState(false);
 
-	const sounds = useMemo(
-		() => ({
-			music: new Howl({
-				src: ["/sound/music.mp3"],
-				loop: true,
-				volume: 0.5,
-			}),
-			click: new Howl({
-				src: ["/sound/click.mp3"],
-				volume: 0.7,
-			}),
-		}),
-		[]
-	);
-
-	const updateState = useCallback((updates) => {
-		setState((prev) => ({ ...prev, ...updates }));
-	}, []);
-
-	const playClickSound = useCallback(
-		() => sounds.click.play(),
-		[sounds.click]
-	);
+	const { isMusicMuted, playClickSound, handleMusicToggle } = useMenuSounds();
+	const { isSearching, handleMatchmakeClick } = useMatchmaking();
+	const { enteredRoomCode, setEnteredRoomCode, handleJoinRoom } =
+		useRoomJoining();
+	const {
+		handlePassAndPlayClick,
+		handlePlayWithFriendClick,
+		handleVersusBotClick,
+		handleSettingsClick,
+	} = useMenuNavigation(playClickSound);
 
 	const handleImageClick = useCallback(() => {
-		updateState({ isRotating: !state.isRotating });
-	}, [state.isRotating, updateState]);
-
-	const handlePassAndPlayClick = useCallback(() => {
-		playClickSound();
-		navigate("/pass-and-play");
-	}, [playClickSound, navigate]);
-
-	const handleMatchmakeClick = useCallback(() => {
-		if (state.isSearching) {
-			emit("cancelMatchmaking");
-			updateState({ isSearching: false });
-			toast.info("Matchmaking cancelled");
-			return;
-		}
-
-		if (!socket || !isConnected) {
-			toast.error("Not connected to server. Please refresh the page.");
-			return;
-		}
-
-		const username = localStorage.getItem("username");
-		const selectedFlag = localStorage.getItem("selectedFlag");
-
-		if (!username) {
-			toast.error("Please set a username first");
-			return;
-		}
-
-		playClickSound();
-		updateState({ isSearching: true });
-
-		toast.info("Searching for opponent...", {
-			position: "top-right",
-			autoClose: false,
-			hideProgressBar: false,
-			closeOnClick: false,
-			pauseOnHover: false,
-			draggable: false,
-		});
-
-		emit("findMatch", {
-			timeControl: 10,
-			playerName: username,
-			flag: selectedFlag,
-		});
-	}, [
-		state.isSearching,
-		socket,
-		isConnected,
-		emit,
-		playClickSound,
-		updateState,
-	]);
-
-	const handlePlayWithFriendClick = useCallback(() => {
-		playClickSound();
-		updateState({ isTimeControlModalOpen: true });
-	}, [playClickSound, updateState]);
+		setIsRotating((prev) => !prev);
+	}, []);
 
 	const handleTimeControlClose = useCallback(() => {
 		playClickSound();
-		updateState({ isTimeControlModalOpen: false });
-	}, [playClickSound, updateState]);
-
-	const handleSettingsClick = useCallback(() => {
-		playClickSound();
-		updateState({ isSettingsModalOpen: true });
-	}, [playClickSound, updateState]);
+		setIsTimeControlModalOpen(false);
+	}, [playClickSound]);
 
 	const handleCloseSettingsModal = useCallback(() => {
 		playClickSound();
-		updateState({ isSettingsModalOpen: false });
-	}, [playClickSound, updateState]);
-
-	const handleVersusBotClick = useCallback(() => {
-		playClickSound();
-		// TODO: Implement bot gameplay
-		toast.info("Bot gameplay coming soon!");
+		setIsSettingsModalOpen(false);
 	}, [playClickSound]);
 
-	const handleMusicToggle = useCallback(() => {
-		const newMutedState = !state.isMusicMuted;
-
-		if (newMutedState) {
-			sounds.music.stop();
-		} else {
-			sounds.music.play();
+	const handlePlayWithFriendWrapper = useCallback(() => {
+		const shouldOpen = handlePlayWithFriendClick();
+		if (shouldOpen) {
+			setIsTimeControlModalOpen(true);
 		}
+	}, [handlePlayWithFriendClick]);
 
-		updateState({ isMusicMuted: newMutedState });
-		localStorage.setItem("isMusicMuted", String(newMutedState));
-	}, [state.isMusicMuted, sounds.music, updateState]);
-
-	const handleJoinRoom = useCallback(() => {
-		const roomCode = state.enteredRoomCode.trim();
-
-		if (!roomCode) {
-			toast.error("Please enter a room code");
-			return;
+	const handleSettingsWrapper = useCallback(() => {
+		const shouldOpen = handleSettingsClick();
+		if (shouldOpen) {
+			setIsSettingsModalOpen(true);
 		}
+	}, [handleSettingsClick]);
 
-		if (!socket || !isConnected) {
-			toast.error("Not connected to server");
-			return;
-		}
-
-		const username = localStorage.getItem("username");
-		const selectedFlag = localStorage.getItem("selectedFlag") || "ph";
-
+	const handleMatchmakeWrapper = useCallback(() => {
 		playClickSound();
-		toast.info("Joining room...");
+		handleMatchmakeClick();
+	}, [playClickSound, handleMatchmakeClick]);
 
-		emit("joinRoom", {
-			roomCode: roomCode.toUpperCase(),
-			playerName: username,
-			flag: selectedFlag,
-		});
-	}, [state.enteredRoomCode, socket, isConnected, emit, playClickSound]);
-
-	useEffect(() => {
-		if (!socket || !isConnected) return;
-
-		const handleMatchFound = (data) => {
-			console.log("Match found:", data);
-			updateState({ isSearching: false });
-			toast.dismiss();
-			toast.success("Match found!");
-			setTimeout(() => navigate("/multiplayer", { state: data }), 1000);
-		};
-
-		const handleGameStarted = (data) => {
-			toast.dismiss();
-			toast.success("Game started!");
-			navigate("/multiplayer", { state: data });
-		};
-
-		const handleQueueJoined = (data) => {
-			console.log("Joined queue:", data);
-		};
-
-		const handleMatchmakingCancelled = () => {
-			updateState({ isSearching: false });
-			toast.dismiss();
-		};
-
-		const handleConnectionError = () => {
-			if (state.isSearching) {
-				updateState({ isSearching: false });
-				toast.dismiss();
-				toast.error("Connection lost. Please try again.");
-			}
-		};
-
-		const handleRoomJoined = (data) => {
-			toast.dismiss();
-			toast.success("Joined room successfully!");
-			navigate("/multiplayer", { state: data });
-		};
-
-		const handleRoomNotFound = () => {
-			toast.dismiss();
-			toast.error("Room not found. Please check the room code.");
-		};
-
-		const handleRoomFull = () => {
-			toast.dismiss();
-			toast.error("Room is full. Cannot join.");
-		};
-
-		const cleanup = [
-			on("matchFound", handleMatchFound),
-			on("gameStarted", handleGameStarted),
-			on("queueJoined", handleQueueJoined),
-			on("matchmakingCancelled", handleMatchmakingCancelled),
-			on("connect_error", handleConnectionError),
-			on("disconnect", handleConnectionError),
-			on("gameStarted", handleRoomJoined),
-			on("roomNotFound", handleRoomNotFound),
-			on("roomFull", handleRoomFull),
-		];
-
-		return () => {
-			cleanup.forEach((fn) => fn && fn());
-		};
-	}, [socket, isConnected, on, navigate, updateState, state.isSearching]);
-
-	useEffect(() => {
-		if (!isConnected && state.isSearching) {
-			updateState({ isSearching: false });
-			toast.dismiss();
-			toast.error("Lost connection. Please try again.");
-		}
-	}, [isConnected, state.isSearching, updateState]);
-	useEffect(() => {
-		const savedMusicState = localStorage.getItem("isMusicMuted");
-		if (savedMusicState !== null) {
-			const isMuted = savedMusicState === "true";
-			updateState({ isMusicMuted: isMuted });
-		}
-
-		return () => {
-			sounds.music.stop();
-		};
-	}, [sounds.music, updateState]);
+	const handleJoinRoomWrapper = useCallback(() => {
+		playClickSound();
+		handleJoinRoom();
+	}, [playClickSound, handleJoinRoom]);
 
 	const iconButtons = useMemo(
 		() => [
@@ -332,23 +143,16 @@ const Menu = () => {
 				onClick: switchColorMode,
 			},
 			{
-				icon: state.isMusicMuted
-					? MusicOffRoundedIcon
-					: MusicNoteRoundedIcon,
+				icon: isMusicMuted ? MusicOffRoundedIcon : MusicNoteRoundedIcon,
 				title: "Toggle Music",
 				color: "#1f2123",
 				onClick: handleMusicToggle,
 			},
 		],
-		[
-			theme.palette.mode,
-			state.isMusicMuted,
-			switchColorMode,
-			handleMusicToggle,
-		]
+		[theme.palette.mode, isMusicMuted, switchColorMode, handleMusicToggle]
 	);
 
-	const rotationStyle = state.isRotating ? rotatingImageRotate : {};
+	const rotationStyle = isRotating ? rotatingImageRotate : {};
 	const iconSize = isMobile ? 24 : 26;
 
 	return (
@@ -438,14 +242,12 @@ const Menu = () => {
 				/>
 
 				<MenuButton
-					onClick={handleMatchmakeClick}
+					onClick={handleMatchmakeWrapper}
 					icon={MatchmakingIcon}
-					label={state.isSearching ? "CANCEL SEARCH" : "MATCHMAKING"}
-					backgroundColor={
-						state.isSearching ? "#ff6b6b" : "secondary.main"
-					}
+					label={isSearching ? "CANCEL SEARCH" : "MATCHMAKING"}
+					backgroundColor={isSearching ? "#ff6b6b" : "secondary.main"}
 					description={
-						state.isSearching
+						isSearching
 							? "Cancel current search"
 							: "Search for an opponent through random matchmaking."
 					}
@@ -461,7 +263,7 @@ const Menu = () => {
 					}}
 				>
 					<MenuButton
-						onClick={handlePlayWithFriendClick}
+						onClick={handlePlayWithFriendWrapper}
 						icon={PlayWithFriendIcon}
 						label="PLAY WITH FRIEND"
 						backgroundColor="primary.main"
@@ -485,15 +287,12 @@ const Menu = () => {
 									width: "45vh",
 								},
 							}}
-							value={state.enteredRoomCode}
+							value={enteredRoomCode}
 							onChange={(e) =>
-								updateState({
-									enteredRoomCode:
-										e.target.value.toUpperCase(),
-								})
+								setEnteredRoomCode(e.target.value.toUpperCase())
 							}
 							onKeyDown={(e) =>
-								e.key === "Enter" && handleJoinRoom()
+								e.key === "Enter" && handleJoinRoomWrapper()
 							}
 							InputProps={{
 								style: { fontSize: 18 },
@@ -508,9 +307,9 @@ const Menu = () => {
 											}}
 											disabled={
 												!isConnected ||
-												!state.enteredRoomCode.trim()
+												!enteredRoomCode.trim()
 											}
-											onClick={handleJoinRoom}
+											onClick={handleJoinRoomWrapper}
 											edge="end"
 										>
 											<ArrowIcon />
@@ -531,7 +330,7 @@ const Menu = () => {
 				/>
 
 				<MenuButton
-					onClick={handleSettingsClick}
+					onClick={handleSettingsWrapper}
 					icon={SettingsIcon}
 					label="OPTIONS"
 					backgroundColor="#565676"
@@ -546,7 +345,9 @@ const Menu = () => {
 					flexDirection: "row",
 					alignItems: "center",
 					marginTop: isMobile ? "0" : "25px",
-					gap: 1,
+					position: "relative",
+					zIndex: 1,
+					overflow: "visible",
 				}}
 			>
 				{iconButtons.map((button, index) => (
@@ -554,37 +355,38 @@ const Menu = () => {
 						key={index}
 						direction="up"
 						in={true}
-						style={{ transitionDelay: `${100 + index * 50}ms` }}
+						timeout={{
+							enter: 50 + index * 100,
+							exit: 300,
+						}}
 						mountOnEnter
 						unmountOnExit
 					>
-						<Tooltip title={button.title} arrow>
-							<IconButton
-								disableRipple
-								onClick={button.onClick}
-								sx={{
-									...styles.circleButtonStyle,
-									transition: "all 0.3s ease",
-									"&:hover": {
-										transform: "scale(1.1)",
-									},
-								}}
-							>
-								<button.icon
+						<Box>
+							<Tooltip title={button.title} arrow>
+								<IconButton
+									disableRipple
+									onClick={button.onClick}
 									sx={{
-										color: button.color,
-										fontSize: iconSize,
+										...styles.circleButtonStyle,
 									}}
-								/>
-							</IconButton>
-						</Tooltip>
+								>
+									<button.icon
+										sx={{
+											color: button.color,
+											fontSize: iconSize,
+										}}
+									/>
+								</IconButton>
+							</Tooltip>
+						</Box>
 					</Slide>
 				))}
 			</Box>
 
 			{/* Modals */}
 			<TimeControlModal
-				isOpen={state.isTimeControlModalOpen}
+				isOpen={isTimeControlModalOpen}
 				onClose={handleTimeControlClose}
 				onSelectTimeControl={(timeControl) => {
 					handleTimeControlClose();
@@ -595,7 +397,7 @@ const Menu = () => {
 			/>
 
 			<SettingsModal
-				isOpen={state.isSettingsModalOpen}
+				isOpen={isSettingsModalOpen}
 				onClose={handleCloseSettingsModal}
 			/>
 		</Box>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Stack } from "@mui/material";
@@ -88,93 +88,149 @@ const ChessboardComponent = ({
 		}
 	}, [chessGame?.currentIndex, onGameStart]);
 
-	const { customDarkSquareColor, customLightSquareColor } =
-		getThemeColors(selectedTheme);
+	const themeColors = useMemo(
+		() => getThemeColors(selectedTheme),
+		[selectedTheme]
+	);
+
 	const customPieces = useMemo(
 		() => createCustomPieces(selectedPieceSet),
 		[selectedPieceSet]
 	);
-	const boardOrientation = getBoardOrientation(
-		gameMode,
-		playerColor,
-		chessGame
+
+	const boardOrientation = useMemo(
+		() => getBoardOrientation(gameMode, playerColor, chessGame),
+		[gameMode, playerColor, chessGame]
 	);
-	const currentPlayer = getCurrentPlayer(chessGame);
 
-	const onSquareRightClick = (square) => {
-		handleSquareRightClick(
-			square,
-			chessGame?.rightClickedSquares,
-			chessGame?.setRightClickedSquares
-		);
-	};
+	const currentPlayer = useMemo(
+		() => getCurrentPlayer(chessGame),
+		[chessGame]
+	);
 
-	const modalHandlers = {
-		openShare: () => setShareModalOpen(true),
-		closeShare: () => setShareModalOpen(false),
-		openSettings: () => setIsSettingsModalOpen(true),
-		closeSettings: () => {
-			setIsSettingsModalOpen(false);
-			setSelectedPieceSet(
-				localStorage.getItem("selectedPieces") || "tatiana"
+	const isMultiplayer = gameMode === "multiplayer";
+	const isPassAndPlay = gameMode === "passandplay";
+
+	const isGameReady = chessGame?.game?.fen;
+
+	const onSquareRightClick = useCallback(
+		(square) => {
+			handleSquareRightClick(
+				square,
+				chessGame?.rightClickedSquares,
+				chessGame?.setRightClickedSquares
 			);
-			setSelectedTheme(localStorage.getItem("selectedBoard") || "grey");
 		},
-	};
-
-	const renderPlayerInfo = (player, time, isCurrentPlayer, isTop = false) => (
-		<PlayerInfo
-			gameMode={gameMode}
-			playerColor={playerColor}
-			opponent={opponent}
-			player={player}
-			time={time}
-			isCurrentPlayer={isCurrentPlayer}
-			isTop={isTop}
-		/>
+		[chessGame?.rightClickedSquares, chessGame?.setRightClickedSquares]
 	);
 
-	// Don't render if chessGame is not ready
-	if (!chessGame) {
-		return <div>Loading...</div>;
-	}
+	const modalHandlers = useMemo(
+		() => ({
+			openShare: () => setShareModalOpen(true),
+			closeShare: () => setShareModalOpen(false),
+			openSettings: () => setIsSettingsModalOpen(true),
+			closeSettings: () => {
+				setIsSettingsModalOpen(false);
+				setSelectedPieceSet(
+					localStorage.getItem("selectedPieces") || "tatiana"
+				);
+				setSelectedTheme(
+					localStorage.getItem("selectedBoard") || "grey"
+				);
+			},
+		}),
+		[
+			setShareModalOpen,
+			setIsSettingsModalOpen,
+			setSelectedPieceSet,
+			setSelectedTheme,
+		]
+	);
 
-	// Get props with defaults for multiplayer mode
-	const getBoardControlProps = () => {
+	const boardControlProps = useMemo(() => {
 		const baseProps = {
-			currentIndex: chessGame.currentIndex,
-			navigateMove: chessGame.navigateMove,
-			history: chessGame.history,
+			currentIndex: chessGame?.currentIndex,
+			navigateMove: chessGame?.navigateMove,
+			history: chessGame?.history,
 			openSettingsModal: modalHandlers.openSettings,
 			openShareModal: modalHandlers.openShare,
-			pgn: chessGame.pgn,
-			handleRematch: chessGame.resetGame,
+			pgn: chessGame?.pgn,
+			handleRematch: chessGame?.resetGame,
 			gameMode: gameMode,
-			setIsGameOver: chessGame.setIsGameOver,
+			setIsGameOver: chessGame?.setIsGameOver,
 		};
 
-		if (gameMode === "multiplayer") {
-			// Provide default values for multiplayer mode
+		if (isMultiplayer) {
 			return {
 				...baseProps,
-				toggleAutoFlip: () => {}, // No-op for multiplayer
-				autoFlip: false, // Always false for multiplayer
-				toggleAnalysisMode: () => {}, // No-op for multiplayer
-				analysisMode: false, // Always false for multiplayer
-				handleUndoMove: () => {}, // No-op for multiplayer
-			};
-		} else {
-			// Use actual props for local games
-			return {
-				...baseProps,
-				toggleAutoFlip: chessGame.toggleAutoFlip,
-				autoFlip: chessGame.autoFlip,
-				toggleAnalysisMode: chessGame.toggleAnalysisMode,
-				analysisMode: chessGame.analysisMode,
-				handleUndoMove: chessGame.undoMove,
+				toggleAutoFlip: () => {},
+				autoFlip: false,
+				toggleAnalysisMode: () => {},
+				analysisMode: false,
+				handleUndoMove: () => {},
 			};
 		}
-	};
+
+		return {
+			...baseProps,
+			toggleAutoFlip: chessGame?.toggleAutoFlip,
+			autoFlip: chessGame?.autoFlip,
+			toggleAnalysisMode: chessGame?.toggleAnalysisMode,
+			analysisMode: chessGame?.analysisMode,
+			handleUndoMove: chessGame?.undoMove,
+		};
+	}, [chessGame, modalHandlers, gameMode, isMultiplayer]);
+
+	const customSquareStyles = useMemo(
+		() => ({
+			...chessGame?.highlightedSquares,
+			...chessGame?.rightClickedSquares,
+			...chessGame?.optionSquares,
+			...(chessGame?.kingInCheck
+				? {
+						[chessGame.kingInCheck]: styles.kingInCheckStyle,
+				  }
+				: {}),
+		}),
+		[
+			chessGame?.highlightedSquares,
+			chessGame?.rightClickedSquares,
+			chessGame?.optionSquares,
+			chessGame?.kingInCheck,
+		]
+	);
+
+	const customArrows = useMemo(() => {
+		if (chessGame?.analysisMode && chessGame?.bestMove) {
+			return [
+				[
+					chessGame.bestMove.substring(0, 2),
+					chessGame.bestMove.substring(2, 4),
+					"rgb(196, 144, 209)",
+				],
+			];
+		}
+		return [];
+	}, [chessGame?.analysisMode, chessGame?.bestMove]);
+
+	const renderPlayerInfo = useCallback(
+		(player, time, isCurrentPlayer, isTop = false) => (
+			<PlayerInfo
+				gameMode={gameMode}
+				playerColor={playerColor}
+				opponent={opponent}
+				player={player}
+				time={time}
+				isCurrentPlayer={isCurrentPlayer}
+				isTop={isTop}
+			/>
+		),
+		[gameMode, playerColor, opponent]
+	);
+
+	if (!isGameReady) {
+		return null;
+	}
 
 	return (
 		<Stack
@@ -182,7 +238,7 @@ const ChessboardComponent = ({
 			sx={{
 				zIndex: 1,
 				maxHeight: "100dvh",
-				...(gameMode !== "multiplayer"
+				...(!isMultiplayer
 					? { mt: { xs: "90px", sm: "90px", md: 0 } }
 					: {}),
 			}}
@@ -191,7 +247,7 @@ const ChessboardComponent = ({
 			<Stack flexDirection="row">
 				<Stack flexDirection="column">
 					{/* Top player info */}
-					{gameMode === "multiplayer" &&
+					{isMultiplayer &&
 						(playerColor === "white"
 							? renderPlayerInfo(
 									"black",
@@ -216,49 +272,25 @@ const ChessboardComponent = ({
 							onPieceDrop={onDrop}
 							onSquareClick={onSquareClick}
 							customBoardStyle={{ borderRadius: "10px" }}
-							customSquareStyles={{
-								...chessGame.highlightedSquares,
-								...chessGame.rightClickedSquares,
-								...chessGame.optionSquares,
-								...(chessGame.kingInCheck
-									? {
-											[chessGame.kingInCheck]:
-												styles.kingInCheckStyle,
-									  }
-									: {}),
-							}}
+							customSquareStyles={customSquareStyles}
 							customDarkSquareStyle={{
-								backgroundColor: customDarkSquareColor,
+								backgroundColor:
+									themeColors.customDarkSquareColor,
 							}}
 							customLightSquareStyle={{
-								backgroundColor: customLightSquareColor,
+								backgroundColor:
+									themeColors.customLightSquareColor,
 							}}
 							customArrowColor="#f24040"
 							customPieces={customPieces}
 							onPieceDragBegin={onPieceDragBegin}
-							customArrows={
-								chessGame.analysisMode && chessGame.bestMove
-									? [
-											[
-												chessGame.bestMove.substring(
-													0,
-													2
-												),
-												chessGame.bestMove.substring(
-													2,
-													4
-												),
-												"rgb(196, 144, 209)",
-											],
-									  ]
-									: []
-							}
+							customArrows={customArrows}
 							onSquareRightClick={onSquareRightClick}
 						/>
 					</Stack>
 
 					{/* Bottom player info */}
-					{gameMode === "multiplayer" &&
+					{isMultiplayer &&
 						(playerColor === "white"
 							? renderPlayerInfo(
 									"white",
@@ -285,11 +317,11 @@ const ChessboardComponent = ({
 			</Stack>
 
 			{/* Side panel */}
-			<Stack>
-				<BoardControl {...getBoardControlProps()} />
+			<Stack spacing={2}>
+				<BoardControl {...boardControlProps} />
 
 				{/* Chat for multiplayer */}
-				{gameMode === "multiplayer" && <Chatbox />}
+				{isMultiplayer && <Chatbox roomCode={roomCode} />}
 
 				{/* Modals */}
 				<SettingsModal
@@ -299,15 +331,15 @@ const ChessboardComponent = ({
 				<ShareModal
 					isOpen={shareModalOpen}
 					onClose={modalHandlers.closeShare}
-					pgn={chessGame.pgn}
+					pgn={chessGame?.pgn}
 				/>
-				{gameMode !== "passandplay" && (
+				{!isPassAndPlay && (
 					<GameOverModal
-						isOpen={chessGame.isGameOver}
-						onClose={() => chessGame.setIsGameOver(false)}
-						onRematch={chessGame.resetGame}
-						onNewGame={chessGame.resetGame}
-						endReason={chessGame.gameEndReason}
+						isOpen={chessGame?.isGameOver}
+						onClose={() => chessGame?.setIsGameOver(false)}
+						onRematch={chessGame?.resetGame}
+						onNewGame={chessGame?.resetGame}
+						endReason={chessGame?.gameEndReason}
 						gameMode={gameMode}
 					/>
 				)}
@@ -323,4 +355,4 @@ ChessboardComponent.propTypes = {
 	matchData: PropTypes.object,
 };
 
-export default ChessboardComponent;
+export default React.memo(ChessboardComponent);

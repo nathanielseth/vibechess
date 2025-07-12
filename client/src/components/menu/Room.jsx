@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
-import { Stack, Typography, Tooltip, Box, Grid, Button } from "@mui/material";
+import { Stack, Typography, Tooltip, Box, Grid } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DoneIcon from "@mui/icons-material/Done";
 import Navbar from "../common/Navbar";
@@ -15,18 +15,10 @@ const Room = () => {
 
 	const [roomState, setRoomState] = useState(null);
 	const [isCopied, setIsCopied] = useState(false);
-	const [selectedIncrement, setSelectedIncrement] = useState(1);
-
+	const [selectedIncrement, setSelectedIncrement] = useState(0);
 	const [preferredColor, setPreferredColor] = useState("white");
-	const [whiteBoxOpacity, setWhiteBoxOpacity] = useState(1.0);
-	const [blackBoxOpacity, setBlackBoxOpacity] = useState(0.3);
-
-	const [incrementOneOpacity, setIncrementOneOpacity] = useState(1.0);
-	const [incrementFiveOpacity, setIncrementFiveOpacity] = useState(0.3);
-	const [incrementTenOpacity, setIncrementTenOpacity] = useState(0.3);
 
 	const hasEmittedCreate = useRef(false);
-
 	const { selectedTimeControl } = location.state || {};
 	const selectedPieceSet =
 		window.localStorage.getItem("selectedPieces") || "tatiana";
@@ -37,11 +29,11 @@ const Room = () => {
 			hasEmittedCreate.current ||
 			roomState === "creating" ||
 			roomState?.roomCode
-		)
+		) {
 			return;
+		}
 
 		const playerName = localStorage.getItem("username");
-
 		hasEmittedCreate.current = true;
 		setRoomState("creating");
 
@@ -59,6 +51,16 @@ const Room = () => {
 		preferredColor,
 		roomState,
 	]);
+
+	const handleUpdateRoomSettings = useCallback(() => {
+		if (!socket || !roomState?.roomCode) return;
+
+		socket.emit("updateRoomSettings", {
+			roomCode: roomState.roomCode,
+			increment: selectedIncrement,
+			preferredColor,
+		});
+	}, [socket, roomState, selectedIncrement, preferredColor]);
 
 	useEffect(() => {
 		if (!socket) return;
@@ -127,38 +129,23 @@ const Room = () => {
 		roomState,
 	]);
 
-	const handleWhiteSelect = () => {
-		setPreferredColor("white");
-		setWhiteBoxOpacity(1.0);
-		setBlackBoxOpacity(0.3);
-	};
+	useEffect(() => {
+		if (roomState?.roomCode && roomState !== "creating") {
+			handleUpdateRoomSettings();
+		}
+	}, [
+		selectedIncrement,
+		preferredColor,
+		handleUpdateRoomSettings,
+		roomState,
+	]);
 
-	const handleBlackSelect = () => {
-		setPreferredColor("black");
-		setWhiteBoxOpacity(0.3);
-		setBlackBoxOpacity(1.0);
+	const handleColorSelect = (color) => {
+		setPreferredColor(color);
 	};
 
 	const handleIncrementClick = (incrementValue) => {
 		setSelectedIncrement(incrementValue);
-
-		setIncrementOneOpacity(0.3);
-		setIncrementFiveOpacity(0.3);
-		setIncrementTenOpacity(0.3);
-
-		switch (incrementValue) {
-			case 1:
-				setIncrementOneOpacity(1.0);
-				break;
-			case 5:
-				setIncrementFiveOpacity(1.0);
-				break;
-			case 10:
-				setIncrementTenOpacity(1.0);
-				break;
-			default:
-				break;
-		}
 	};
 
 	const handleRoomCodeCopy = () => {
@@ -169,32 +156,13 @@ const Room = () => {
 		}
 	};
 
-	const getIncrementOpacity = (incrementValue) => {
-		switch (incrementValue) {
-			case 1:
-				return incrementOneOpacity;
-			case 5:
-				return incrementFiveOpacity;
-			case 10:
-				return incrementTenOpacity;
-			default:
-				return 0.3;
-		}
-	};
-
 	const getRoomCode = () => {
 		if (roomState === "creating") return "Creating...";
 		if (roomState?.roomCode) return roomState.roomCode;
-		return "Click Create Room";
+		return "Creating...";
 	};
 
-	const handleManualCreateRoom = () => {
-		if (roomState?.roomCode || roomState === "creating") return;
-
-		hasEmittedCreate.current = false;
-		setRoomState(null);
-		handleCreateRoom();
-	};
+	const incrementOptions = [0, 1, 5, 10];
 
 	return (
 		<Stack
@@ -273,11 +241,11 @@ const Room = () => {
 							backgroundImage: `url(/piece/${selectedPieceSet}/wN.svg)`,
 							backgroundSize: "cover",
 							bgcolor: "secondary.main",
-							opacity: whiteBoxOpacity,
+							opacity: preferredColor === "white" ? 1.0 : 0.3,
 						}}
 						px={5}
 						py={5}
-						onClick={handleWhiteSelect}
+						onClick={() => handleColorSelect("white")}
 					/>
 					<Box
 						borderRadius={1}
@@ -290,11 +258,11 @@ const Room = () => {
 							backgroundImage: `url(/piece/${selectedPieceSet}/bN.svg)`,
 							backgroundSize: "cover",
 							bgcolor: "primary.main",
-							opacity: blackBoxOpacity,
+							opacity: preferredColor === "black" ? 1.0 : 0.3,
 						}}
 						px={5}
 						py={5}
-						onClick={handleBlackSelect}
+						onClick={() => handleColorSelect("black")}
 					/>
 				</Box>
 
@@ -306,7 +274,7 @@ const Room = () => {
 				</Box>
 
 				<Grid container spacing={1} justifyContent="center">
-					{[1, 5, 10].map((incrementValue) => (
+					{incrementOptions.map((incrementValue) => (
 						<Grid item key={incrementValue}>
 							<Box
 								display="flex"
@@ -329,7 +297,9 @@ const Room = () => {
 									width: "50px",
 									height: "50px",
 									opacity:
-										getIncrementOpacity(incrementValue),
+										selectedIncrement === incrementValue
+											? 1.0
+											: 0.3,
 								}}
 								onClick={() =>
 									handleIncrementClick(incrementValue)
@@ -343,30 +313,13 @@ const Room = () => {
 					))}
 				</Grid>
 
-				<Button
-					variant="contained"
-					color="primary"
-					size="large"
-					onClick={handleManualCreateRoom}
-					disabled={roomState === "creating" || !!roomState?.roomCode}
-					sx={{ mt: 3 }}
+				<Typography
+					variant="body2"
+					color="text.secondary"
+					sx={{ mt: 2 }}
 				>
-					{roomState === "creating"
-						? "Creating Room..."
-						: roomState?.roomCode
-						? "Room Created - Waiting for Opponent"
-						: "Create Room"}
-				</Button>
-
-				{roomState?.roomCode && (
-					<Typography
-						variant="body2"
-						color="text.secondary"
-						sx={{ mt: 2 }}
-					>
-						Share the room code with your opponent to start the game
-					</Typography>
-				)}
+					Share room code with your friend to start
+				</Typography>
 			</Stack>
 		</Stack>
 	);

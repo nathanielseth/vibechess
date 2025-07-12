@@ -338,7 +338,7 @@ const Chatbox = ({ roomCode }) => {
 					onChange={handleInputChange}
 					value={input}
 					disabled={isMuted || isRateLimited}
-					inputProps={{ maxLength: 50 }}
+					inputProps={{ maxLength: 100 }}
 					placeholder={getPlaceholderText()}
 					variant="outlined"
 					sx={{
