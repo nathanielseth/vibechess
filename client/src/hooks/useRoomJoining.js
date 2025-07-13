@@ -39,13 +39,32 @@ export const useRoomJoining = () => {
 		const handleGameStarted = (data) => {
 			toast.dismiss();
 			toast.success("Game started!");
-			navigate("/multiplayer", { state: data });
+
+			const player = data.players?.find((p) => p.id === socket.id);
+			const opponent = data.players?.find((p) => p.id !== socket.id);
+
+			navigate("/multiplayer", {
+				state: {
+					roomCode: data.roomCode,
+					gameState: data.gameState,
+					yourColor: player?.color,
+					opponent: opponent,
+					timeControl: data.timeControl,
+					increment: data.increment,
+					isRoomMatch: true,
+				},
+			});
 		};
 
-		const handleRoomJoined = (data) => {
+		const handleGameInitialized = (data) => {
 			toast.dismiss();
 			toast.success("Joined room successfully!");
-			navigate("/multiplayer", { state: data });
+			navigate("/multiplayer", {
+				state: {
+					...data,
+					isRoomMatch: true,
+				},
+			});
 		};
 
 		const handleRoomNotFound = () => {
@@ -60,9 +79,9 @@ export const useRoomJoining = () => {
 
 		const cleanup = [
 			on("gameStarted", handleGameStarted),
-			on("gameStarted", handleRoomJoined),
+			on("gameInitialized", handleGameInitialized),
 			on("roomNotFound", handleRoomNotFound),
-			on("roomFull", handleRoomFull),
+			on("initializationError", handleRoomFull),
 		];
 
 		return () => {

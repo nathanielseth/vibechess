@@ -121,16 +121,38 @@ export class SocketHandler {
 		const opponent = room.players.find((p) => p.id !== socket.id);
 
 		if (result.gameReady) {
+			room.gameState.increment = room.increment * 100;
+
+			const hostPlayer = room.players.find((p) => p.isHost);
+			if (hostPlayer && room.hostPreferredColor) {
+				hostPlayer.color = room.hostPreferredColor;
+				const opponentPlayer = room.players.find((p) => !p.isHost);
+				if (opponentPlayer) {
+					opponentPlayer.color =
+						room.hostPreferredColor === "white" ? "black" : "white";
+				}
+			}
+
+			console.log(
+				`[DEBUG] Players after sync:`,
+				room.players.map((p) => ({
+					name: p.name,
+					color: p.color,
+					isHost: p.isHost,
+				}))
+			);
+
 			this.io.to(roomCode).emit("gameStarted", {
 				roomCode,
 				gameState,
 				players: room.players,
+				timeControl: room.timeControl,
+				increment: room.increment,
 			});
 		} else {
 			socket.emit("gameInitialized", {
 				gameState,
 				playerColor: player.color,
-				increment: room.increment,
 				opponent: opponent
 					? {
 							name: opponent.name,
@@ -139,7 +161,10 @@ export class SocketHandler {
 					  }
 					: null,
 				roomCode,
+				timeControl: room.timeControl,
+				increment: room.increment,
 			});
+
 			socket.emit("chatHistory", {
 				messages:
 					this.gm.chatManager?.getChatHistory(room.roomCode) || [],
@@ -204,6 +229,39 @@ export class SocketHandler {
 				);
 			}
 		);
+	}
+
+	handleUpdateRoomSettings(socket, { roomCode, increment, preferredColor }) {
+		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
+			this.withPlayer(
+				room,
+				socket.id,
+				socket,
+				"error",
+				"Not authorized to update room settings",
+				(player) => {
+					if (!player.isHost) {
+						socket.emit("error", {
+							message: "Only host can update room settings",
+						});
+						return;
+					}
+
+					const success = this.gm.updateRoomSettings(
+						roomCode,
+						increment,
+						preferredColor
+					);
+
+					if (success) {
+						this.io.to(roomCode).emit("roomSettingsUpdated", {
+							increment,
+							hostPreferredColor: preferredColor,
+						});
+					}
+				}
+			);
+		});
 	}
 
 	handleMakeMove(socket, { roomCode, move }) {

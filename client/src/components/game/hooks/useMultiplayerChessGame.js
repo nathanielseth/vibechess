@@ -31,10 +31,11 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	);
 
 	const getInitialTime = useCallback(() => {
-		if (matchData?.gameState?.whiteTimeRemaining !== undefined) {
+		const gameState = matchData?.gameState;
+		if (gameState?.whiteTimeRemaining !== undefined) {
 			return {
-				white: matchData.gameState.whiteTimeRemaining,
-				black: matchData.gameState.blackTimeRemaining,
+				white: gameState.whiteTimeRemaining,
+				black: gameState.blackTimeRemaining,
 			};
 		}
 
@@ -243,10 +244,15 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 			updateServerTimes({
 				whiteTime: serverState.whiteTimeRemaining,
 				blackTime: serverState.blackTimeRemaining,
-				timestamp: serverState.timestamp,
+				timestamp: serverState.timestamp || Date.now(),
 			});
 
-			//const increment = serverState.increment || matchData?.increment || 0;
+			setDisplayWhiteTime(
+				Math.max(0, Math.ceil(serverState.whiteTimeRemaining / 100))
+			);
+			setDisplayBlackTime(
+				Math.max(0, Math.ceil(serverState.blackTimeRemaining / 100))
+			);
 
 			const newHistory =
 				serverState.moves?.length > 0

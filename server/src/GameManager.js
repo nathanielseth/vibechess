@@ -97,8 +97,10 @@ export class GameManager {
 		}
 
 		if (room.isPrivate) {
-			const opponentColor =
-				room.hostPreferredColor === "white" ? "black" : "white";
+			const host = room.players.find((p) => p.isHost);
+			const hostColor = host ? host.color : room.hostPreferredColor;
+			const opponentColor = hostColor === "white" ? "black" : "white";
+
 			room.players.push({
 				id: socketId,
 				name: playerName,
@@ -106,6 +108,8 @@ export class GameManager {
 				flag: flag?.toLowerCase(),
 				isHost: false,
 			});
+
+			room.gameState.increment = room.increment * 100;
 
 			room.waitingForOpponent = false;
 			this.playerRooms.set(socketId, roomCode);
@@ -118,7 +122,7 @@ export class GameManager {
 	}
 
 	createMatchmakingRoom(player1, player2, timeControl, roomCode) {
-		const gameState = this.createGameState(timeControl);
+		const gameState = this.createGameState(timeControl, 0);
 		const colors =
 			Math.random() < 0.5 ? ["white", "black"] : ["black", "white"];
 
@@ -140,6 +144,7 @@ export class GameManager {
 				},
 			],
 			timeControl,
+			increment: 0,
 			createdAt: Date.now(),
 			isPrivate: false,
 			waitingForOpponent: false,
@@ -359,6 +364,23 @@ export class GameManager {
 				}
 			});
 		}, 100);
+	}
+
+	updateRoomSettings(roomCode, increment, preferredColor) {
+		const room = this.rooms.get(roomCode);
+		if (!room || !room.waitingForOpponent) return false;
+
+		room.increment = increment;
+		room.gameState.increment = increment * 100;
+
+		room.hostPreferredColor = preferredColor;
+
+		const hostPlayer = room.players.find((p) => p.isHost);
+		if (hostPlayer) {
+			hostPlayer.color = preferredColor;
+		}
+
+		return true;
 	}
 
 	setChatManager(chatManager) {

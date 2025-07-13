@@ -2,25 +2,40 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import dotenv from "dotenv";
+
 import { GameManager } from "./GameManager.js";
 import { SocketHandler } from "./SocketHandler.js";
 import { ChatManager } from "./ChatManager.js";
 
+dotenv.config();
+
+const PORT = process.env.PORT || 5000;
+const CORS_ORIGIN = process.env.CORS_ORIGIN?.split(",") || [
+	"http://localhost:3000",
+];
+
 const app = express();
 const httpServer = createServer(app);
+
+app.use(
+	cors({
+		origin: CORS_ORIGIN,
+		credentials: true,
+	})
+);
+
 const io = new Server(httpServer, {
 	cors: {
-		origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+		origin: CORS_ORIGIN,
 		methods: ["GET", "POST"],
 		credentials: true,
 	},
 });
 
-app.use(cors());
-
 const gameManager = new GameManager(io);
-const socketHandler = new SocketHandler(gameManager);
 const chatManager = new ChatManager(gameManager);
+const socketHandler = new SocketHandler(gameManager);
 
 gameManager.setChatManager(chatManager);
 chatManager.gm = gameManager;
@@ -52,6 +67,9 @@ io.on("connection", (socket) => {
 	socket.on("createRoom", (data) =>
 		socketHandler.handleCreateRoom(socket, data)
 	);
+	socket.on("updateRoomSettings", (data) =>
+		socketHandler.handleUpdateRoomSettings(socket, data)
+	);
 	socket.on("disconnect", () => socketHandler.handleDisconnect(socket));
 	socket.on("ping", () => socket.emit("pong"));
 	socket.on("chatMessage", (data) =>
@@ -68,6 +86,7 @@ process.on("SIGINT", () => {
 	});
 });
 
-httpServer.listen(5000, () => {
-	console.log("Chess server listening on port 5000");
+httpServer.listen(PORT, () => {
+	console.log(`♟️ Chess server listening on port ${PORT}`);
+	console.log(`🌐 Allowed origins: ${CORS_ORIGIN.join(", ")}`);
 });

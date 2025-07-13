@@ -49,16 +49,6 @@ const Room = () => {
 		roomCode,
 	]);
 
-	const handleUpdateRoomSettings = useCallback(() => {
-		if (!socket || !roomCode) return;
-
-		socket.emit("updateRoomSettings", {
-			roomCode,
-			increment: selectedIncrement,
-			preferredColor,
-		});
-	}, [socket, roomCode, selectedIncrement, preferredColor]);
-
 	useEffect(() => {
 		if (!socket) return;
 
@@ -79,13 +69,18 @@ const Room = () => {
 
 		const handleGameStarted = (data) => {
 			console.log("Game started:", data);
+			const player = data.players.find((p) => p.id === socket.id);
+			const opponent = data.players.find((p) => p.id !== socket.id);
+
 			navigate("/multiplayer", {
 				state: {
 					roomCode: data.roomCode,
 					gameState: data.gameState,
-					players: data.players,
+					yourColor: player?.color,
+					opponent: opponent,
 					timeControl: selectedTimeControl,
 					increment: selectedIncrement,
+					isRoomMatch: true,
 				},
 			});
 		};
@@ -96,23 +91,33 @@ const Room = () => {
 				state: {
 					roomCode: data.roomCode,
 					gameState: data.gameState,
-					playerColor: data.playerColor,
+					yourColor: data.playerColor,
 					opponent: data.opponent,
 					timeControl: selectedTimeControl,
 					increment: selectedIncrement,
+					isRoomMatch: true,
 				},
 			});
+		};
+
+		const handleRoomSettingsUpdated = (data) => {
+			setSelectedIncrement(data.increment);
+			setPreferredColor(data.hostPreferredColor);
 		};
 
 		socket.on("roomCreated", handleRoomCreated);
 		socket.on("error", handleError);
 		socket.on("gameStarted", handleGameStarted);
 		socket.on("gameInitialized", handleGameInitialized);
+		socket.on("roomSettingsUpdated", handleRoomSettingsUpdated);
 
-		if (!hasEmittedCreate.current && !isCreating && !roomCode) {
-			setTimeout(() => {
-				handleCreateRoom();
-			}, 100);
+		if (
+			!hasEmittedCreate.current &&
+			!isCreating &&
+			!roomCode &&
+			socket.connected
+		) {
+			handleCreateRoom();
 		}
 
 		return () => {
@@ -120,6 +125,7 @@ const Room = () => {
 			socket.off("error", handleError);
 			socket.off("gameStarted", handleGameStarted);
 			socket.off("gameInitialized", handleGameInitialized);
+			socket.off("roomSettingsUpdated", handleRoomSettingsUpdated);
 		};
 	}, [
 		socket,
@@ -131,24 +137,26 @@ const Room = () => {
 		roomCode,
 	]);
 
-	useEffect(() => {
-		if (roomCode && !isCreating) {
-			handleUpdateRoomSettings();
-		}
-	}, [
-		selectedIncrement,
-		preferredColor,
-		handleUpdateRoomSettings,
-		roomCode,
-		isCreating,
-	]);
-
 	const handleColorSelect = (color) => {
 		setPreferredColor(color);
+		if (socket && roomCode && !isCreating) {
+			socket.emit("updateRoomSettings", {
+				roomCode,
+				increment: selectedIncrement,
+				preferredColor: color,
+			});
+		}
 	};
 
 	const handleIncrementClick = (incrementValue) => {
 		setSelectedIncrement(incrementValue);
+		if (socket && roomCode && !isCreating) {
+			socket.emit("updateRoomSettings", {
+				roomCode,
+				increment: incrementValue,
+				preferredColor,
+			});
+		}
 	};
 
 	const handleRoomCodeCopy = () => {
