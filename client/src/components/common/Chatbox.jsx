@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useMemo,
+} from "react";
 import PropTypes from "prop-types";
 import {
 	Box,
@@ -12,6 +18,7 @@ import ArrowIcon from "@mui/icons-material/Send";
 import NotificationsRoundedIcon from "@mui/icons-material/Notifications";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import { toast } from "react-toastify";
+import { Filter } from "bad-words";
 import { styles } from "../../styles/styles";
 import { useTheme } from "@mui/material/styles";
 import useSocketContext from "../../context/useSocketContext";
@@ -38,6 +45,23 @@ const Chatbox = ({ roomCode }) => {
 	const cooldownTimer = useRef(null);
 
 	const { socket, emit, on } = useSocketContext();
+
+	const [isChatFilterEnabled, setIsChatFilterEnabled] = useState(() => {
+		const stored = window.localStorage.getItem("enableChatFilter");
+		return stored === null ? true : stored === "true";
+	});
+
+	const chatFilter = useMemo(() => {
+		if (!isChatFilterEnabled) {
+			return null;
+		}
+
+		const filter = new Filter();
+
+		// filter.addWords('customword1');
+
+		return filter;
+	}, [isChatFilterEnabled]);
 
 	const scrollToBottom = useCallback(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,6 +125,22 @@ const Chatbox = ({ roomCode }) => {
 		return true;
 	}, [clearCooldownTimer, hasShownSpamWarning, isRateLimited]);
 
+	const filterMessage = useCallback(
+		(message) => {
+			if (!chatFilter) {
+				return message;
+			}
+
+			try {
+				return chatFilter.clean(message);
+			} catch (error) {
+				console.warn("Chat filter error:", error);
+				return message;
+			}
+		},
+		[chatFilter]
+	);
+
 	const handleInputChange = useCallback((event) => {
 		setInput(event.target.value);
 	}, []);
@@ -111,13 +151,23 @@ const Chatbox = ({ roomCode }) => {
 
 		if (!checkRateLimit()) return;
 
+		const filteredMessage = filterMessage(trimmedInput);
+
 		emit("chatMessage", {
 			roomCode,
-			message: trimmedInput,
+			message: filteredMessage,
 		});
 
 		setInput("");
-	}, [input, socket, isRateLimited, checkRateLimit, emit, roomCode]);
+	}, [
+		input,
+		socket,
+		isRateLimited,
+		checkRateLimit,
+		emit,
+		roomCode,
+		filterMessage,
+	]);
 
 	const handleKeyPress = useCallback(
 		(event) => {
@@ -216,12 +266,32 @@ const Chatbox = ({ roomCode }) => {
 	}, [messages, getMessageTime]);
 
 	useEffect(() => {
+		const handleSettingsChange = (event) => {
+			const { enableChatFilter } = event.detail;
+			setIsChatFilterEnabled(enableChatFilter);
+		};
+
+		window.addEventListener("settingsChanged", handleSettingsChange);
+
+		return () => {
+			window.removeEventListener("settingsChanged", handleSettingsChange);
+		};
+	}, []);
+
+	useEffect(() => {
 		if (!socket) return;
 
 		const handleChatMessage = (chatMessage) => {
 			const isCurrentUser = chatMessage.playerId === socket.id;
+
+			const filteredMessage = filterMessage(
+				chatMessage.message || chatMessage.text || ""
+			);
+
 			const messageWithSender = {
 				...chatMessage,
+				message: filteredMessage,
+				text: filteredMessage,
 				sender: isCurrentUser ? "user" : "opponent",
 				timestamp:
 					chatMessage.timestamp ||
@@ -237,8 +307,14 @@ const Chatbox = ({ roomCode }) => {
 		const handleChatHistory = (data) => {
 			const messagesWithSender = (data.messages || []).map((msg) => {
 				const isCurrentUser = msg.playerId === socket.id;
+				const filteredMessage = filterMessage(
+					msg.message || msg.text || ""
+				);
+
 				return {
 					...msg,
+					message: filteredMessage,
+					text: filteredMessage,
 					sender: isCurrentUser ? "user" : "opponent",
 					timestamp:
 						msg.timestamp ||
@@ -261,7 +337,7 @@ const Chatbox = ({ roomCode }) => {
 			cleanupChatHistory?.();
 			clearCooldownTimer();
 		};
-	}, [socket, on, clearCooldownTimer]);
+	}, [socket, on, clearCooldownTimer, filterMessage]);
 
 	useEffect(() => {
 		scrollToBottom();

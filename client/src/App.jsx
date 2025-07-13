@@ -3,24 +3,24 @@ import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { lazy } from "@loadable/component";
 import { ThemeContextProvider } from "./theme/ThemeContextProvider";
 import SocketProvider from "./context/SocketProvider";
 import { useTheme } from "@mui/material/styles";
+import PassAndPlay from "./components/game/PassAndPlay";
+import VersusBot from "./components/game/VersusBot";
+import Multiplayer from "./components/game/Multiplayer";
+import Room from "./components/menu/Room";
+import Loading from "./components/common/Loading";
 
-const WelcomeScreen = lazy(() => import("./components/menu/WelcomeScreen"));
-const Menu = lazy(() => import("./components/menu/Menu"));
-const PassAndPlay = lazy(() => import("./components/game/PassAndPlay"));
-const VersusBot = lazy(() => import("./components/game/VersusBot"));
-const Multiplayer = lazy(() => import("./components/game/Multiplayer"));
-const Room = lazy(() => import("./components/menu/Room"));
-const Loading = lazy(() => import("./components/common/Loading"));
+const WelcomeScreen = React.lazy(() =>
+	import("./components/menu/WelcomeScreen")
+);
+const Menu = React.lazy(() => import("./components/menu/Menu"));
 
 const App = () => {
 	const theme = useTheme();
 	const storedUsername = window.localStorage.getItem("username");
 	const storedFlag = window.localStorage.getItem("selectedFlag");
-
 	const [username, setUsername] = useState(storedUsername);
 	const [flag, setFlag] = useState(storedFlag);
 	const [usernameSubmitted, setUsernameSubmitted] = useState(
@@ -61,24 +61,17 @@ const App = () => {
 							<Route
 								path="/"
 								element={
-									<>
-										{!usernameSubmitted || !username ? (
-											<WelcomeScreen
-												setUsernameCallback={
-													setUsernameCallback
-												}
-												setFlagCallback={
-													setFlagCallback
-												}
-												onSubmit={handleUsernameSubmit}
-											/>
-										) : (
-											<Menu
-												username={username}
-												flag={flag}
-											/>
-										)}
-									</>
+									!usernameSubmitted || !username ? (
+										<WelcomeScreen
+											setUsernameCallback={
+												setUsernameCallback
+											}
+											setFlagCallback={setFlagCallback}
+											onSubmit={handleUsernameSubmit}
+										/>
+									) : (
+										<Menu username={username} flag={flag} />
+									)
 								}
 							/>
 							<Route

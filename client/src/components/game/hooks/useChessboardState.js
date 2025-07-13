@@ -19,11 +19,31 @@ export const useChessboardState = (gameMode, matchData) => {
 		roomCode: null,
 	});
 
+	const handleBoardChange = useCallback((newTheme) => {
+		setSelectedTheme(newTheme);
+	}, []);
+
+	const handlePiecesChange = useCallback((newPieces) => {
+		setSelectedPieceSet(newPieces);
+	}, []);
+
+	useEffect(() => {
+		const handleStorageChange = (e) => {
+			if (e.key === "selectedBoard") {
+				setSelectedTheme(e.newValue || "grey");
+			} else if (e.key === "selectedPieces") {
+				setSelectedPieceSet(e.newValue || "tatiana");
+			}
+		};
+
+		window.addEventListener("storage", handleStorageChange);
+		return () => window.removeEventListener("storage", handleStorageChange);
+	}, []);
+
 	useEffect(() => {
 		if (!matchData || gameMode !== "multiplayer") return;
 
 		console.log("Processing matchData:", matchData);
-
 		setGameState({
 			playerColor: matchData.yourColor,
 			roomCode: matchData.roomCode,
@@ -42,7 +62,6 @@ export const useChessboardState = (gameMode, matchData) => {
 		const minWidth = 310;
 		const availableWidth = Math.min(window.innerWidth - 100, maxWidth);
 		const availableHeight = window.innerHeight;
-
 		const newBoardWidth = Math.max(
 			Math.min(availableWidth, availableHeight * 0.75),
 			minWidth
@@ -68,7 +87,8 @@ export const useChessboardState = (gameMode, matchData) => {
 		shareModalOpen,
 		setShareModalOpen,
 		boardWidth,
-
+		handleBoardChange,
+		handlePiecesChange,
 		...gameState,
 	};
 };

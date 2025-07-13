@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Chessboard } from "react-chessboard";
 import { Stack } from "@mui/material";
-//import { styles } from "../../styles/styles";
+import { styles } from "../../styles/styles";
 import { useLocalChessGame } from "./hooks/useLocalChessGame.js";
 import { useVersusBot } from "./hooks/useVersusBot.js";
 import { useMultiplayerGame } from "./hooks/useMultiplayerChessGame.js";
@@ -49,9 +49,7 @@ const ChessboardComponent = ({
 
 	const {
 		selectedPieceSet,
-		setSelectedPieceSet,
 		selectedTheme,
-		setSelectedTheme,
 		isSettingsModalOpen,
 		setIsSettingsModalOpen,
 		isSettingsHovered,
@@ -62,6 +60,8 @@ const ChessboardComponent = ({
 		playerColor,
 		opponent,
 		roomCode,
+		handleBoardChange,
+		handlePiecesChange,
 	} = useChessboardState(gameMode, matchData);
 
 	useMultiplayerSocket(
@@ -143,20 +143,9 @@ const ChessboardComponent = ({
 			openSettings: () => setIsSettingsModalOpen(true),
 			closeSettings: () => {
 				setIsSettingsModalOpen(false);
-				setSelectedPieceSet(
-					localStorage.getItem("selectedPieces") || "tatiana"
-				);
-				setSelectedTheme(
-					localStorage.getItem("selectedBoard") || "grey"
-				);
 			},
 		}),
-		[
-			setShareModalOpen,
-			setIsSettingsModalOpen,
-			setSelectedPieceSet,
-			setSelectedTheme,
-		]
+		[setShareModalOpen, setIsSettingsModalOpen]
 	);
 
 	const boardControlProps = useMemo(() => {
@@ -194,7 +183,7 @@ const ChessboardComponent = ({
 	}, [chessGame, modalHandlers, gameMode, isMultiplayer]);
 
 	const customSquareStyles = useMemo(() => {
-		const styles = {
+		const squareStyles = {
 			...chessGame?.highlightedSquares,
 			...chessGame?.rightClickedSquares,
 			...chessGame?.optionSquares,
@@ -207,18 +196,18 @@ const ChessboardComponent = ({
 
 		if (chessGame?.premoves) {
 			chessGame.premoves.forEach((premove) => {
-				styles[premove.sourceSquare] = {
+				squareStyles[premove.sourceSquare] = {
 					backgroundColor: "rgba(255, 0, 0, 0.3)",
-					...styles[premove.sourceSquare],
+					...squareStyles[premove.sourceSquare],
 				};
-				styles[premove.targetSquare] = {
+				squareStyles[premove.targetSquare] = {
 					backgroundColor: "rgba(255, 0, 0, 0.3)",
-					...styles[premove.targetSquare],
+					...squareStyles[premove.targetSquare],
 				};
 			});
 		}
 
-		return styles;
+		return squareStyles;
 	}, [
 		chessGame?.highlightedSquares,
 		chessGame?.rightClickedSquares,
@@ -354,6 +343,8 @@ const ChessboardComponent = ({
 				<SettingsModal
 					isOpen={isSettingsModalOpen}
 					onClose={modalHandlers.closeSettings}
+					onBoardChange={handleBoardChange}
+					onPiecesChange={handlePiecesChange}
 				/>
 				<ShareModal
 					isOpen={shareModalOpen}

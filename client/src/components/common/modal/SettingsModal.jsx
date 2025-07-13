@@ -15,12 +15,19 @@ import {
 import { CircleFlag } from "react-circle-flags";
 import FlagSelectorModal from "./FlagSelectorModal";
 import { generateRandomUsername } from "../../../data/randomName";
+import { validateUsername } from "../../../utils/usernameValidation";
 import { useTheme } from "@mui/material/styles";
 import { ThemeContext } from "../../../theme/ThemeContext";
 
-function SettingsModal({ isOpen, onClose }) {
+function SettingsModal({ isOpen, onClose, onBoardChange, onPiecesChange }) {
 	const theme = useTheme();
 	const { switchColorMode } = useContext(ThemeContext);
+
+	const getBooleanFromStorage = (key, defaultValue = false) => {
+		const stored = window.localStorage.getItem(key);
+		if (stored === null) return defaultValue;
+		return stored === "true";
+	};
 
 	const [selectedBoard, setSelectedBoard] = useState(
 		window.localStorage.getItem("selectedBoard") || "grey"
@@ -28,14 +35,12 @@ function SettingsModal({ isOpen, onClose }) {
 	const [selectedPieces, setSelectedPieces] = useState(
 		window.localStorage.getItem("selectedPieces") || "tatiana"
 	);
-	const [premoves, setPremove] = useState(
-		window.localStorage.getItem("premoves") === "true" || true
+	const [premoves, setPremoves] = useState(
+		getBooleanFromStorage("premoves", true)
 	);
-	const [sounds, setSounds] = useState(
-		window.localStorage.getItem("sounds") === "true" || true
-	);
+	const [sounds, setSounds] = useState(getBooleanFromStorage("sounds", true));
 	const [enableChatFilter, setEnableChatFilter] = useState(
-		window.localStorage.getItem("enableChatFilter") === "true" || true
+		getBooleanFromStorage("enableChatFilter", true)
 	);
 	const [flagSelectorOpen, setFlagSelectorOpen] = useState(false);
 
@@ -43,6 +48,7 @@ function SettingsModal({ isOpen, onClose }) {
 	const [username, setUsername] = useState(
 		window.localStorage.getItem("username") || "Guest"
 	);
+	const [usernameError, setUsernameError] = useState(null);
 
 	const handleFlagButtonClick = () => {
 		setFlagSelectorOpen(true);
@@ -53,36 +59,105 @@ function SettingsModal({ isOpen, onClose }) {
 	};
 
 	const handleUsernameChange = (event) => {
-		setUsername(event.target.value);
+		const newUsername = event.target.value;
+		setUsername(newUsername);
+
+		if (usernameError) {
+			setUsernameError(null);
+		}
 	};
 
-	const handleConfirm = () => {
-		if (!username.trim()) {
-			setUsername(generateRandomUsername());
+	const handlePremovesChange = (event) => {
+		const newValue = event.target.checked;
+		setPremoves(newValue);
+		window.localStorage.setItem("premoves", newValue.toString());
+	};
+
+	const handleSoundsChange = (event) => {
+		const newValue = event.target.checked;
+		setSounds(newValue);
+		window.localStorage.setItem("sounds", newValue.toString());
+	};
+
+	const handleChatFilterChange = (event) => {
+		const newValue = event.target.checked;
+		setEnableChatFilter(newValue);
+		window.localStorage.setItem("enableChatFilter", newValue.toString());
+	};
+
+	const handleBoardChange = (event) => {
+		const newValue = event.target.value;
+		setSelectedBoard(newValue);
+		window.localStorage.setItem("selectedBoard", newValue);
+
+		if (onBoardChange) {
+			onBoardChange(newValue);
+		}
+	};
+
+	const handlePiecesChange = (event) => {
+		const newValue = event.target.value;
+		setSelectedPieces(newValue);
+		window.localStorage.setItem("selectedPieces", newValue);
+
+		if (onPiecesChange) {
+			onPiecesChange(newValue);
+		}
+	};
+
+	const handleOkay = () => {
+		let finalUsername = username.trim();
+
+		if (!finalUsername) {
+			finalUsername = generateRandomUsername();
 		}
 
-		window.localStorage.setItem("username", username);
-		window.localStorage.setItem("selectedBoard", selectedBoard);
-		window.localStorage.setItem("selectedPieces", selectedPieces);
-		window.localStorage.setItem("premoves", premoves);
-		window.localStorage.setItem("sounds", sounds);
-		window.localStorage.setItem("enableChatFilter", enableChatFilter);
+		const validationError = validateUsername(finalUsername);
+		if (validationError) {
+			setUsernameError(validationError);
+			return;
+		}
+
+		if (finalUsername !== username) {
+			setUsername(finalUsername);
+		}
+
+		window.localStorage.setItem("username", finalUsername);
+
+		window.dispatchEvent(
+			new CustomEvent("settingsChanged", {
+				detail: {
+					username: finalUsername,
+				},
+			})
+		);
 
 		onClose();
 	};
 
-	useEffect(() => {
-		window.localStorage.setItem("selectedBoard", selectedBoard);
-		window.localStorage.setItem("selectedPieces", selectedPieces);
-		window.localStorage.setItem("premoves", premoves);
-		window.localStorage.setItem("sounds", sounds);
-		window.localStorage.setItem("enableChatFilter", enableChatFilter);
-	}, [selectedBoard, selectedPieces, premoves, sounds, enableChatFilter]);
-
-	const handleUIThemeChange = (newUITheme) => {
-		window.localStorage.setItem("selectedUITheme", newUITheme);
+	const handleUIThemeChange = () => {
+		const newTheme = theme.palette.mode === "dark" ? "light" : "dark";
+		window.localStorage.setItem("selectedUITheme", newTheme);
 		switchColorMode();
 	};
+
+	useEffect(() => {
+		if (isOpen) {
+			setSelectedBoard(
+				window.localStorage.getItem("selectedBoard") || "grey"
+			);
+			setSelectedPieces(
+				window.localStorage.getItem("selectedPieces") || "tatiana"
+			);
+			setPremoves(getBooleanFromStorage("premoves", true));
+			setSounds(getBooleanFromStorage("sounds", true));
+			setEnableChatFilter(
+				getBooleanFromStorage("enableChatFilter", true)
+			);
+			setUsername(window.localStorage.getItem("username") || "Guest");
+			setUsernameError(null);
+		}
+	}, [isOpen]);
 
 	return (
 		<Modal open={isOpen} onClose={onClose}>
@@ -124,10 +199,12 @@ function SettingsModal({ isOpen, onClose }) {
 						</IconButton>
 						<TextField
 							id="outlined-helperText"
-							label="Username"
+							label={usernameError || "Username"}
 							sx={{ marginLeft: 1 }}
 							value={username}
 							onChange={handleUsernameChange}
+							error={!!usernameError}
+							inputProps={{ maxLength: 14 }}
 						/>
 					</Box>
 					<Box
@@ -141,7 +218,7 @@ function SettingsModal({ isOpen, onClose }) {
 						<Typography sx={{ fontSize: 16 }}>Board</Typography>
 						<Select
 							value={selectedBoard}
-							onChange={(e) => setSelectedBoard(e.target.value)}
+							onChange={handleBoardChange}
 							style={{ maxHeight: 38, width: 210 }}
 						>
 							<MenuItem value="grey">Calm Grey</MenuItem>
@@ -166,7 +243,7 @@ function SettingsModal({ isOpen, onClose }) {
 						<Typography sx={{ fontSize: 16 }}>Pieces</Typography>
 						<Select
 							value={selectedPieces}
-							onChange={(e) => setSelectedPieces(e.target.value)}
+							onChange={handlePiecesChange}
 							style={{ maxHeight: 38, width: 210 }}
 						>
 							<MenuItem value="tatiana">Tatiana</MenuItem>
@@ -188,7 +265,7 @@ function SettingsModal({ isOpen, onClose }) {
 						<Typography sx={{ fontSize: 16 }}>Premoves</Typography>
 						<Switch
 							checked={premoves}
-							onChange={() => setPremove(!premoves)}
+							onChange={handlePremovesChange}
 						/>
 					</Box>
 
@@ -216,7 +293,7 @@ function SettingsModal({ isOpen, onClose }) {
 						<Typography sx={{ fontSize: 16 }}>Sounds</Typography>
 						<Switch
 							checked={sounds}
-							onChange={() => setSounds(!sounds)}
+							onChange={handleSoundsChange}
 						/>
 					</Box>
 
@@ -232,9 +309,7 @@ function SettingsModal({ isOpen, onClose }) {
 						</Typography>
 						<Switch
 							checked={enableChatFilter}
-							onChange={() =>
-								setEnableChatFilter(!enableChatFilter)
-							}
+							onChange={handleChatFilterChange}
 						/>
 					</Box>
 					<Box
@@ -245,8 +320,8 @@ function SettingsModal({ isOpen, onClose }) {
 							mb: -1,
 						}}
 					>
-						<Button onClick={handleConfirm} variant="contained">
-							CONFIRM
+						<Button onClick={handleOkay} variant="contained">
+							OKAY
 						</Button>
 					</Box>
 					<FlagSelectorModal
@@ -263,6 +338,8 @@ function SettingsModal({ isOpen, onClose }) {
 SettingsModal.propTypes = {
 	isOpen: PropTypes.bool.isRequired,
 	onClose: PropTypes.func.isRequired,
+	onBoardChange: PropTypes.func,
+	onPiecesChange: PropTypes.func,
 };
 
 export default SettingsModal;

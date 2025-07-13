@@ -52,18 +52,15 @@ export const strings2 = [
 	"Visionary",
 ];
 
-export function getRandomElement(array) {
-	return array[Math.floor(Math.random() * array.length)];
+const validUsernames = [];
+for (const s1 of strings1) {
+	for (const s2 of strings2) {
+		if (s1.length + s2.length <= 14) {
+			validUsernames.push(s1 + s2);
+		}
+	}
 }
 
 export function generateRandomUsername() {
-	let randomString1, randomString2, combinedUsername;
-
-	do {
-		randomString1 = getRandomElement(strings1);
-		randomString2 = getRandomElement(strings2);
-		combinedUsername = randomString1 + randomString2;
-	} while (combinedUsername.length > 14);
-
-	return combinedUsername;
+	return validUsernames[Math.floor(Math.random() * validUsernames.length)];
 }

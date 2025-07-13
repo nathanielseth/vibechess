@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { CircleFlag } from "react-circle-flags";
 import { generateRandomUsername } from "../../data/randomName";
+import { validateUsername } from "../../utils/usernameValidation";
 import VibeChessLogo from "../../icons/vibechess.svg";
 import FlagSelectorModal from "../common/modal/FlagSelectorModal";
 
@@ -34,8 +35,9 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 	const handleSubmit = () => {
 		let newUsername = username.trim() || generateRandomUsername();
 
-		if (newUsername.length < 2) {
-			setError("Please use at least 2 characters.");
+		const validationError = validateUsername(newUsername);
+		if (validationError) {
+			setError(validationError);
 			return;
 		}
 
@@ -55,7 +57,6 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 			icon: "👋🏼",
 			style: { background: "#f24040" },
 		});
-
 		onSubmit();
 	};
 
@@ -84,7 +85,6 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 			>
 				<span style={{ color: "#f24040" }}>Vibe</span>Chess
 			</Typography>
-
 			<Box
 				display="flex"
 				flexDirection="column"
@@ -101,9 +101,8 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 					}}
 					fullWidth
 					error={!!error}
-					helperText={error}
 					autoComplete="off"
-					label="What should we call you?"
+					label={error || "What should we call you?"}
 					inputProps={{ maxLength: 14 }}
 					variant="outlined"
 					sx={{
@@ -135,7 +134,6 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 						),
 					}}
 				/>
-
 				<Button
 					onClick={handleSubmit}
 					variant="contained"
@@ -153,7 +151,6 @@ const WelcomeScreen = ({ setUsernameCallback, setFlagCallback, onSubmit }) => {
 					Enter VibeChess
 				</Button>
 			</Box>
-
 			<FlagSelectorModal
 				open={isFlagModalOpen}
 				onClose={() => setFlagModalOpen(false)}
