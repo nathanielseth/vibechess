@@ -287,7 +287,7 @@ const ChessboardComponent = ({
 							position={chessGame?.game?.fen()}
 							onPieceDrop={onDrop}
 							onSquareClick={onSquareClick}
-							customBoardStyle={{ borderRadius: "10px" }}
+							customBoardStyle={{ borderRadius: "12px" }}
 							customSquareStyles={customSquareStyles}
 							customDarkSquareStyle={{
 								backgroundColor:

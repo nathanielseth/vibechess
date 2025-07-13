@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export const useChessboardState = (gameMode, matchData) => {
 	const [selectedPieceSet, setSelectedPieceSet] = useState(
@@ -18,6 +18,8 @@ export const useChessboardState = (gameMode, matchData) => {
 		opponent: null,
 		roomCode: null,
 	});
+
+	const lastProcessedMatchData = useRef(null);
 
 	const handleBoardChange = useCallback((newTheme) => {
 		setSelectedTheme(newTheme);
@@ -43,7 +45,13 @@ export const useChessboardState = (gameMode, matchData) => {
 	useEffect(() => {
 		if (!matchData || gameMode !== "multiplayer") return;
 
+		if (lastProcessedMatchData.current?.roomCode === matchData.roomCode) {
+			return;
+		}
+
 		console.log("Processing matchData:", matchData);
+		lastProcessedMatchData.current = matchData;
+
 		setGameState({
 			playerColor: matchData.yourColor,
 			roomCode: matchData.roomCode,

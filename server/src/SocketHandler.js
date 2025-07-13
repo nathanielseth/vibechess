@@ -60,7 +60,7 @@ export class SocketHandler {
 
 	handleCreateRoom(
 		socket,
-		{ timeControl, playerName, preferredColor, flag }
+		{ timeControl, increment, playerName, preferredColor, flag }
 	) {
 		if (
 			!validateTimeControl(timeControl) ||
@@ -73,6 +73,7 @@ export class SocketHandler {
 
 		const result = this.gm.createPrivateRoom(
 			timeControl,
+			increment,
 			playerName,
 			preferredColor,
 			flag,
@@ -129,6 +130,7 @@ export class SocketHandler {
 			socket.emit("gameInitialized", {
 				gameState,
 				playerColor: player.color,
+				increment: room.increment,
 				opponent: opponent
 					? {
 							name: opponent.name,

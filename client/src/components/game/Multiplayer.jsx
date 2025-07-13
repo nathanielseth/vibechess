@@ -14,7 +14,11 @@ const Multiplayer = () => {
 	const [gameMode] = useState("multiplayer");
 	const [matchData, setMatchData] = useState(null);
 	const [isGameReady, setIsGameReady] = useState(false);
+
 	const gameInitialized = useRef(false);
+	const hasJoinedRoom = useRef(false);
+	const listenersSetup = useRef(false);
+	const matchDataProcessed = useRef(false);
 
 	const { socket, isConnected, emit, on } = useSocketContext();
 
@@ -26,24 +30,33 @@ const Multiplayer = () => {
 			return;
 		}
 
+		if (matchDataProcessed.current) return;
+		matchDataProcessed.current = true;
+
 		setMatchData(data);
 		console.log("📦 Match data received:", data);
-
 		gameInitialized.current = false;
 		setIsGameReady(false);
+		hasJoinedRoom.current = false;
+	}, [location.state, navigate]);
 
-		if (!socket || !isConnected) return;
+	useEffect(() => {
+		if (!socket || !isConnected || !matchData || listenersSetup.current)
+			return;
 
-		console.log("🔌 Socket connected, initializing game...");
+		console.log("🔌 Setting up socket listeners...");
+		listenersSetup.current = true;
 
 		const cleanup = [];
 
 		cleanup.push(
 			on("gameInitialized", (data) => {
-				console.log("🎮 Game initialized:", data);
-				setIsGameReady(true);
-				gameInitialized.current = true;
-				notifySound.play();
+				if (!gameInitialized.current) {
+					console.log("🎮 Game initialized:", data);
+					setIsGameReady(true);
+					gameInitialized.current = true;
+					notifySound.play();
+				}
 			})
 		);
 
@@ -62,33 +75,48 @@ const Multiplayer = () => {
 			})
 		);
 
-		const joinTimer = setTimeout(() => {
-			if (socket?.id) {
-				const username = localStorage.getItem("username") || "Player";
-				const selectedFlag = localStorage.getItem("selectedFlag");
+		return () => {
+			cleanup.forEach((fn) => fn && fn());
+			listenersSetup.current = false;
+		};
+	}, [socket, isConnected, matchData, navigate, on]);
 
-				console.log(
-					`🚪 Joining room: ${data.roomCode} with socket ID: ${socket.id}`
-				);
-				emit("joinRoom", {
-					roomCode: data.roomCode,
-					playerName: username,
-					flag: selectedFlag,
-				});
-			}
+	useEffect(() => {
+		if (!socket?.id || !isConnected || !matchData || hasJoinedRoom.current)
+			return;
+
+		const joinTimer = setTimeout(() => {
+			if (hasJoinedRoom.current) return;
+
+			const username = localStorage.getItem("username") || "Player";
+			const selectedFlag = localStorage.getItem("selectedFlag");
+
+			console.log(
+				`🚪 Joining room: ${matchData.roomCode} with socket ID: ${socket.id}`
+			);
+
+			emit("joinRoom", {
+				roomCode: matchData.roomCode,
+				playerName: username,
+				flag: selectedFlag,
+			});
+
+			hasJoinedRoom.current = true;
 		}, 200);
 
 		return () => {
 			clearTimeout(joinTimer);
-			cleanup.forEach((fn) => fn && fn());
 		};
-	}, [location.state, socket, isConnected, navigate, emit, on]);
+	}, [socket?.id, isConnected, matchData, emit]);
 
 	useEffect(() => {
 		if (!isConnected && gameInitialized.current) {
 			console.log("🔄 Connection lost, resetting...");
 			setIsGameReady(false);
 			gameInitialized.current = false;
+			hasJoinedRoom.current = false;
+			listenersSetup.current = false;
+			matchDataProcessed.current = false;
 			toast.info("Reconnecting...");
 		}
 	}, [isConnected]);

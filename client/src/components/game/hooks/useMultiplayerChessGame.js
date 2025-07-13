@@ -27,7 +27,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	const [moveFrom, setMoveFrom] = useState("");
 	const [rightClickedSquares, setRightClickedSquares] = useState({});
 	const [boardOrientation, setBoardOrientation] = useState(
-		playerColor || "white"
+		playerColor === "black" ? "black" : "white"
 	);
 
 	const getInitialTime = useCallback(() => {
@@ -245,6 +245,8 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 				blackTime: serverState.blackTimeRemaining,
 				timestamp: serverState.timestamp,
 			});
+
+			//const increment = serverState.increment || matchData?.increment || 0;
 
 			const newHistory =
 				serverState.moves?.length > 0

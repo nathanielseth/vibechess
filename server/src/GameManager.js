@@ -13,9 +13,10 @@ export class GameManager {
 		this.startTimer();
 	}
 
-	createGameState(timeControlMinutes) {
+	createGameState(timeControlMinutes, increment = 0) {
 		const chess = new Chess();
 		const timeInCentiseconds = timeControlMinutes * 60 * 100;
+		const incrementInCentiseconds = increment * 100;
 		const now = Date.now();
 
 		return {
@@ -23,6 +24,7 @@ export class GameManager {
 			fen: chess.fen(),
 			currentPlayer: "white",
 			moves: [],
+			increment: incrementInCentiseconds,
 			isGameOver: false,
 			gameOverReason: null,
 			winner: null,
@@ -39,13 +41,21 @@ export class GameManager {
 		};
 	}
 
-	createPrivateRoom(timeControl, playerName, preferredColor, flag, socketId) {
+	createPrivateRoom(
+		timeControl,
+		increment,
+		playerName,
+		preferredColor,
+		flag,
+		socketId
+	) {
 		const roomCode = generateRoomCode();
-		const gameState = this.createGameState(timeControl);
+		const gameState = this.createGameState(timeControl, increment);
 
 		const room = {
 			roomCode,
 			gameState,
+			increment,
 			players: [
 				{
 					id: socketId,
@@ -245,6 +255,16 @@ export class GameManager {
 
 	applyMove(room, move) {
 		room.gameState.fen = room.gameState.chess.fen();
+
+		const currentPlayer = room.gameState.currentPlayer;
+		const increment = room.gameState.increment || 0;
+
+		if (currentPlayer === "white") {
+			room.gameState.whiteTimeRemaining += increment;
+		} else {
+			room.gameState.blackTimeRemaining += increment;
+		}
+
 		room.gameState.currentPlayer =
 			room.gameState.currentPlayer === "white" ? "black" : "white";
 		room.gameState.lastMove = move;
@@ -260,6 +280,7 @@ export class GameManager {
 			fen: room.gameState.fen,
 			currentPlayer: room.gameState.currentPlayer,
 			moves: room.gameState.moves,
+			increment: room.gameState.increment,
 			isGameOver: room.gameState.isGameOver,
 			gameOverReason: room.gameState.gameOverReason,
 			winner: room.gameState.winner,
