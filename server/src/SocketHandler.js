@@ -11,6 +11,52 @@ export class SocketHandler {
 		this.gm = gameManager;
 		this.io = gameManager.io;
 	}
+	/**
+	 * @param {string} roomCode - The room code to look up
+	 * @param {string} socketId - The socket ID for fallback lookup
+	 * @returns {Object|null} - The room object or null if not found
+	 */
+	findRoom(roomCode, socketId) {
+		if (roomCode) {
+			const room = this.gm.rooms.get(roomCode);
+			if (room) return room;
+		}
+
+		const playerRoomCode = this.gm.playerRooms.get(socketId);
+		return playerRoomCode ? this.gm.rooms.get(playerRoomCode) : null;
+	}
+	/**
+	 * @param {Object} socket - The socket object
+	 * @param {string} roomCode - The room code
+	 * @param {string} errorEvent - Event name for error emission
+	 * @param {string} errorMessage - Error message for room not found
+	 * @param {Function} callback - Function to execute if room is found
+	 */
+	withRoom(socket, roomCode, errorEvent, errorMessage, callback) {
+		const room = this.findRoom(roomCode, socket.id);
+		if (!room) {
+			socket.emit(errorEvent, { message: errorMessage });
+			return;
+		}
+		callback(room);
+	}
+
+	/**
+	 * @param {Object} room - The room object
+	 * @param {string} socketId - The socket ID
+	 * @param {Object} socket - The socket object
+	 * @param {string} errorEvent - Event name for error emission
+	 * @param {string} errorMessage - Error message for player not found
+	 * @param {Function} callback - Function to execute if player is found
+	 */
+	withPlayer(room, socketId, socket, errorEvent, errorMessage, callback) {
+		const player = room.players.find((p) => p.id === socketId);
+		if (!player) {
+			socket.emit(errorEvent, { message: errorMessage });
+			return;
+		}
+		callback(player);
+	}
 
 	handleCreateRoom(
 		socket,
@@ -46,18 +92,6 @@ export class SocketHandler {
 				players: result.room.players,
 			},
 		});
-	}
-
-	handleLeaveRoom(socket, { roomCode }) {
-		const room = this.gm.rooms.get(roomCode);
-		if (!room || !room.isPrivate) return;
-
-		if (room.waitingForOpponent) {
-			this.gm.rooms.delete(roomCode);
-			this.gm.playerRooms.delete(socket.id);
-		} else {
-			socket.to(roomCode).emit("roomClosed");
-		}
 	}
 
 	handleJoinRoom(socket, { roomCode, playerName, flag }) {
@@ -112,72 +146,81 @@ export class SocketHandler {
 	}
 
 	handleRejoinRoom(socket, { roomCode, flag }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) {
-			socket.emit("initializationError", { message: "Room not found" });
-			return;
-		}
+		this.withRoom(
+			socket,
+			roomCode,
+			"initializationError",
+			"Room not found",
+			(room) => {
+				this.withPlayer(
+					room,
+					socket.id,
+					socket,
+					"initializationError",
+					"Player not found in room",
+					(player) => {
+						if (flag) player.flag = normalizeFlag(flag);
 
-		const player = room.players.find((p) => p.id === socket.id);
-		if (!player) {
-			socket.emit("initializationError", {
-				message: "Player not found in room",
-			});
-			return;
-		}
+						socket.join(room.roomCode);
+						this.gm.playerRooms.set(socket.id, room.roomCode);
 
-		if (flag) player.flag = normalizeFlag(flag);
+						if (
+							room.gameState.isPaused &&
+							!room.gameState.isGameOver
+						) {
+							room.gameState.isPaused = false;
+							room.gameState.lastMoveTimestamp = Date.now();
+						}
 
-		socket.join(room.roomCode);
-		this.gm.playerRooms.set(socket.id, room.roomCode);
+						const gameState =
+							this.gm.getGameStateForBroadcast(room);
+						const opponent = room.players.find(
+							(p) => p.id !== socket.id
+						);
 
-		if (room.gameState.isPaused && !room.gameState.isGameOver) {
-			room.gameState.isPaused = false;
-			room.gameState.lastMoveTimestamp = Date.now();
-		}
-
-		const gameState = this.gm.getGameStateForBroadcast(room);
-		const opponent = room.players.find((p) => p.id !== socket.id);
-
-		setTimeout(() => {
-			socket.emit("gameInitialized", {
-				gameState,
-				playerColor: player.color,
-				opponent: opponent
-					? {
-							name: opponent.name,
-							color: opponent.color,
-							flag: opponent.flag,
-					  }
-					: null,
-				roomCode: room.roomCode,
-			});
-			socket.emit("chatHistory", {
-				messages:
-					this.gm.chatManager?.getChatHistory(room.roomCode) || [],
-			});
-		}, 100);
+						setTimeout(() => {
+							socket.emit("gameInitialized", {
+								gameState,
+								playerColor: player.color,
+								opponent: opponent
+									? {
+											name: opponent.name,
+											color: opponent.color,
+											flag: opponent.flag,
+									  }
+									: null,
+								roomCode: room.roomCode,
+							});
+							socket.emit("chatHistory", {
+								messages:
+									this.gm.chatManager?.getChatHistory(
+										room.roomCode
+									) || [],
+							});
+						}, 100);
+					}
+				);
+			}
+		);
 	}
 
 	handleMakeMove(socket, { roomCode, move }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) {
-			socket.emit("moveRejected", { reason: "Room not found" });
-			return;
-		}
+		this.withRoom(
+			socket,
+			roomCode,
+			"moveRejected",
+			"Room not found",
+			(room) => {
+				const validation = this.gm.validateMove(room, socket.id, move);
+				if (!validation.valid) {
+					socket.emit("moveRejected", { reason: validation.reason });
+					return;
+				}
 
-		const validation = this.gm.validateMove(room, socket.id, move);
-		if (!validation.valid) {
-			socket.emit("moveRejected", { reason: validation.reason });
-			return;
-		}
-
-		this.gm.applyMove(room, validation.move);
-		this.gm.broadcastGameState(room.roomCode);
+				this.gm.applyMove(room, validation.move);
+				this.gm.broadcastGameState(room.roomCode);
+			}
+		);
 	}
 
 	handleFindMatch(socket, { timeControl, playerName, flag }) {
@@ -270,136 +313,166 @@ export class SocketHandler {
 	}
 
 	handleSurrender(socket, { roomCode }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) {
-			socket.emit("error", { message: "Room not found" });
-			return;
-		}
+		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
+			this.withPlayer(
+				room,
+				socket.id,
+				socket,
+				"error",
+				"Invalid surrender request",
+				(player) => {
+					if (room.gameState.isGameOver) {
+						socket.emit("error", {
+							message: "Invalid surrender request",
+						});
+						return;
+					}
 
-		const player = room.players.find((p) => p.id === socket.id);
-		if (!player || room.gameState.isGameOver) {
-			socket.emit("error", { message: "Invalid surrender request" });
-			return;
-		}
+					room.gameState.surrenderedPlayer = player.color;
+					this.gm.checkGameOver(room);
+					this.gm.broadcastGameState(room.roomCode);
 
-		room.gameState.surrenderedPlayer = player.color;
-		this.gm.checkGameOver(room);
-		this.gm.broadcastGameState(room.roomCode);
-
-		this.io.to(room.roomCode).emit("playerSurrendered", {
-			playerName: player.name,
-			playerColor: player.color,
-			winner: player.color === "white" ? "black" : "white",
+					this.io.to(room.roomCode).emit("playerSurrendered", {
+						playerName: player.name,
+						playerColor: player.color,
+						winner: player.color === "white" ? "black" : "white",
+					});
+				}
+			);
 		});
 	}
 
 	handleDrawOffer(socket, { roomCode }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) {
-			socket.emit("error", { message: "Room not found" });
-			return;
-		}
+		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
+			this.withPlayer(
+				room,
+				socket.id,
+				socket,
+				"error",
+				"Invalid draw offer",
+				(player) => {
+					if (room.gameState.isGameOver) {
+						socket.emit("error", { message: "Invalid draw offer" });
+						return;
+					}
 
-		const player = room.players.find((p) => p.id === socket.id);
-		if (!player || room.gameState.isGameOver) {
-			socket.emit("error", { message: "Invalid draw offer" });
-			return;
-		}
+					room.gameState.drawOffers.add(player.color);
 
-		room.gameState.drawOffers.add(player.color);
-
-		if (room.gameState.drawOffers.size === 2) {
-			this.gm.checkGameOver(room);
-			this.gm.broadcastGameState(room.roomCode);
-		} else {
-			const opponent = room.players.find((p) => p.id !== socket.id);
-			if (opponent) {
-				this.io.to(opponent.id).emit("drawOffered", {
-					from: player.name,
-					fromColor: player.color,
-				});
-			}
-		}
+					if (room.gameState.drawOffers.size === 2) {
+						this.gm.checkGameOver(room);
+						this.gm.broadcastGameState(room.roomCode);
+					} else {
+						const opponent = room.players.find(
+							(p) => p.id !== socket.id
+						);
+						if (opponent) {
+							this.io.to(opponent.id).emit("drawOffered", {
+								from: player.name,
+								fromColor: player.color,
+							});
+						}
+					}
+				}
+			);
+		});
 	}
 
 	handleAcceptDraw(socket, { roomCode }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) return;
+		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
+			this.withPlayer(
+				room,
+				socket.id,
+				socket,
+				"error",
+				"Invalid draw acceptance",
+				(player) => {
+					if (room.gameState.isGameOver) return;
 
-		const player = room.players.find((p) => p.id === socket.id);
-		if (!player || room.gameState.isGameOver) return;
+					room.gameState.drawOffers.add(player.color);
 
-		room.gameState.drawOffers.add(player.color);
-
-		if (room.gameState.drawOffers.size === 2) {
-			this.gm.checkGameOver(room);
-			this.gm.broadcastGameState(room.roomCode);
-		}
+					if (room.gameState.drawOffers.size === 2) {
+						this.gm.checkGameOver(room);
+						this.gm.broadcastGameState(room.roomCode);
+					}
+				}
+			);
+		});
 	}
 
 	handleDeclineDraw(socket, { roomCode }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) return;
+		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
+			this.withPlayer(
+				room,
+				socket.id,
+				socket,
+				"error",
+				"Invalid draw decline",
+				(player) => {
+					room.gameState.drawOffers.clear();
 
-		const player = room.players.find((p) => p.id === socket.id);
-		if (!player) return;
-
-		room.gameState.drawOffers.clear();
-
-		const opponent = room.players.find((p) => p.id !== socket.id);
-		if (opponent) {
-			this.io.to(opponent.id).emit("drawDeclined", {
-				by: player.name,
-				byColor: player.color,
-			});
-		}
+					const opponent = room.players.find(
+						(p) => p.id !== socket.id
+					);
+					if (opponent) {
+						this.io.to(opponent.id).emit("drawDeclined", {
+							by: player.name,
+							byColor: player.color,
+						});
+					}
+				}
+			);
+		});
 	}
 
 	handleRematchRequest(socket, { roomCode }) {
-		const room =
-			this.gm.rooms.get(roomCode) ||
-			this.gm.rooms.get(this.gm.playerRooms.get(socket.id));
-		if (!room) return;
+		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
+			this.withPlayer(
+				room,
+				socket.id,
+				socket,
+				"error",
+				"Invalid rematch request",
+				(player) => {
+					if (!room.gameState.isGameOver) return;
 
-		const player = room.players.find((p) => p.id === socket.id);
-		if (!player || !room.gameState.isGameOver) return;
+					room.rematchRequests.add(player.color);
 
-		room.rematchRequests.add(player.color);
+					if (room.rematchRequests.size === 2) {
+						room.gameState = this.gm.createGameState(
+							room.timeControl / 6000
+						);
 
-		if (room.rematchRequests.size === 2) {
-			room.gameState = this.gm.createGameState(room.timeControl / 6000);
+						const [player1, player2] = room.players;
+						[player1.color, player2.color] = [
+							player2.color,
+							player1.color,
+						];
 
-			const [player1, player2] = room.players;
-			[player1.color, player2.color] = [player2.color, player1.color];
+						room.rematchRequests.clear();
 
-			room.rematchRequests.clear();
+						this.gm.broadcastGameState(room.roomCode);
 
-			this.gm.broadcastGameState(room.roomCode);
-
-			this.io.to(room.roomCode).emit("rematchStarted", {
-				players: room.players.map((p) => ({
-					name: p.name,
-					color: p.color,
-					flag: p.flag,
-				})),
-			});
-		} else {
-			const opponent = room.players.find((p) => p.id !== socket.id);
-			if (opponent) {
-				this.io.to(opponent.id).emit("rematchRequested", {
-					from: player.name,
-					fromColor: player.color,
-				});
-			}
-		}
+						this.io.to(room.roomCode).emit("rematchStarted", {
+							players: room.players.map((p) => ({
+								name: p.name,
+								color: p.color,
+								flag: p.flag,
+							})),
+						});
+					} else {
+						const opponent = room.players.find(
+							(p) => p.id !== socket.id
+						);
+						if (opponent) {
+							this.io.to(opponent.id).emit("rematchRequested", {
+								from: player.name,
+								fromColor: player.color,
+							});
+						}
+					}
+				}
+			);
+		});
 	}
 
 	handleDisconnect(socket) {

@@ -246,15 +246,13 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 				timestamp: serverState.timestamp,
 			});
 
-			if (serverState.moves?.length > 0) {
-				const newHistory = createMoveHistory(serverState.moves);
-				setHistory(newHistory);
-				setCurrentIndex(newHistory.length - 1);
-			} else {
-				setHistory([{ fen: new Chess().fen(), lastMove: null }]);
-				setCurrentIndex(0);
-			}
+			const newHistory =
+				serverState.moves?.length > 0
+					? createMoveHistory(serverState.moves)
+					: [{ fen: new Chess().fen(), lastMove: null }];
 
+			setHistory(newHistory);
+			setCurrentIndex(newHistory.length - 1);
 			setLastMove(serverState.lastMove || null);
 			setMoveHighlights(serverState.lastMove);
 

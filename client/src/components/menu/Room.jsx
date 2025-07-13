@@ -13,7 +13,9 @@ const Room = () => {
 	const navigate = useNavigate();
 	const { socket } = useSocketContext();
 
-	const [roomState, setRoomState] = useState(null);
+	const [isCreating, setIsCreating] = useState(false);
+	const [roomCode, setRoomCode] = useState(null);
+	const [error, setError] = useState(null);
 	const [isCopied, setIsCopied] = useState(false);
 	const [selectedIncrement, setSelectedIncrement] = useState(0);
 	const [preferredColor, setPreferredColor] = useState("white");
@@ -24,18 +26,12 @@ const Room = () => {
 		window.localStorage.getItem("selectedPieces") || "tatiana";
 
 	const handleCreateRoom = useCallback(() => {
-		if (
-			!socket ||
-			hasEmittedCreate.current ||
-			roomState === "creating" ||
-			roomState?.roomCode
-		) {
-			return;
-		}
+		if (!socket || isCreating || roomCode) return;
 
 		const playerName = localStorage.getItem("username");
 		hasEmittedCreate.current = true;
-		setRoomState("creating");
+		setIsCreating(true);
+		setError(null);
 
 		socket.emit("createRoom", {
 			timeControl: selectedTimeControl,
@@ -49,30 +45,35 @@ const Room = () => {
 		selectedTimeControl,
 		selectedIncrement,
 		preferredColor,
-		roomState,
+		isCreating,
+		roomCode,
 	]);
 
 	const handleUpdateRoomSettings = useCallback(() => {
-		if (!socket || !roomState?.roomCode) return;
+		if (!socket || !roomCode) return;
 
 		socket.emit("updateRoomSettings", {
-			roomCode: roomState.roomCode,
+			roomCode,
 			increment: selectedIncrement,
 			preferredColor,
 		});
-	}, [socket, roomState, selectedIncrement, preferredColor]);
+	}, [socket, roomCode, selectedIncrement, preferredColor]);
 
 	useEffect(() => {
 		if (!socket) return;
 
 		const handleRoomCreated = (data) => {
 			console.log("Room created:", data);
-			setRoomState(data);
+			setRoomCode(data.roomCode);
+			setIsCreating(false);
+			setError(null);
 		};
 
 		const handleError = (data) => {
 			console.error("Room creation error:", data.message);
-			setRoomState(null);
+			setError(data.message);
+			setIsCreating(false);
+			setRoomCode(null);
 			hasEmittedCreate.current = false;
 		};
 
@@ -108,7 +109,7 @@ const Room = () => {
 		socket.on("gameStarted", handleGameStarted);
 		socket.on("gameInitialized", handleGameInitialized);
 
-		if (!hasEmittedCreate.current && !roomState) {
+		if (!hasEmittedCreate.current && !isCreating && !roomCode) {
 			setTimeout(() => {
 				handleCreateRoom();
 			}, 100);
@@ -126,18 +127,20 @@ const Room = () => {
 		navigate,
 		selectedTimeControl,
 		selectedIncrement,
-		roomState,
+		isCreating,
+		roomCode,
 	]);
 
 	useEffect(() => {
-		if (roomState?.roomCode && roomState !== "creating") {
+		if (roomCode && !isCreating) {
 			handleUpdateRoomSettings();
 		}
 	}, [
 		selectedIncrement,
 		preferredColor,
 		handleUpdateRoomSettings,
-		roomState,
+		roomCode,
+		isCreating,
 	]);
 
 	const handleColorSelect = (color) => {
@@ -149,16 +152,17 @@ const Room = () => {
 	};
 
 	const handleRoomCodeCopy = () => {
-		if (roomState?.roomCode) {
-			navigator.clipboard?.writeText(roomState.roomCode);
+		if (roomCode) {
+			navigator.clipboard?.writeText(roomCode);
 			setIsCopied(true);
 			setTimeout(() => setIsCopied(false), 5000);
 		}
 	};
 
-	const getRoomCode = () => {
-		if (roomState === "creating") return "Creating...";
-		if (roomState?.roomCode) return roomState.roomCode;
+	const getRoomCodeDisplay = () => {
+		if (error) return `Error: ${error}`;
+		if (isCreating) return "Creating...";
+		if (roomCode) return roomCode;
 		return "Creating...";
 	};
 
@@ -199,29 +203,25 @@ const Room = () => {
 				>
 					<Box
 						border="2px solid"
-						borderColor="secondary.main"
+						borderColor={error ? "error.main" : "secondary.main"}
 						borderRadius={1}
 						sx={{
-							cursor: roomState?.roomCode ? "pointer" : "default",
+							cursor: roomCode ? "pointer" : "default",
 							transition: "all 200ms",
 							"&:hover": {
-								transform: roomState?.roomCode
-									? "scale(1.1)"
-									: "none",
+								transform: roomCode ? "scale(1.1)" : "none",
 							},
 						}}
 						px={3}
 						py={2}
-						onClick={
-							roomState?.roomCode ? handleRoomCodeCopy : undefined
-						}
+						onClick={roomCode ? handleRoomCodeCopy : undefined}
 					>
 						<Typography
-							color="secondary.main"
+							color={error ? "error.main" : "secondary.main"}
 							variant="h4"
 							textAlign="center"
 						>
-							Room Code: {getRoomCode()}
+							Room Code: {getRoomCodeDisplay()}
 						</Typography>
 					</Box>
 				</Tooltip>

@@ -166,8 +166,6 @@ export class GameManager {
 
 	checkGameOver(room) {
 		const { chess } = room.gameState;
-		this.updateTimer(room.gameState);
-
 		let reason = null;
 		let winner = null;
 		let endedBy = "natural";
@@ -204,13 +202,11 @@ export class GameManager {
 		}
 
 		if (reason) {
-			Object.assign(room.gameState, {
-				isGameOver: true,
-				gameOverReason: reason,
-				winner,
-				gameEndedBy: endedBy,
-				isPaused: true,
-			});
+			room.gameState.isGameOver = true;
+			room.gameState.gameOverReason = reason;
+			room.gameState.winner = winner;
+			room.gameState.gameEndedBy = endedBy;
+			room.gameState.isPaused = true;
 			return true;
 		}
 
@@ -225,8 +221,6 @@ export class GameManager {
 		}
 		if (room.gameState.isGameOver)
 			return { valid: false, reason: "Game is over" };
-		if (this.checkGameOver(room))
-			return { valid: false, reason: "Time expired" };
 
 		const moveObject = { from: moveData.from, to: moveData.to };
 		const piece = room.gameState.chess.get(moveData.from);
@@ -250,23 +244,16 @@ export class GameManager {
 	}
 
 	applyMove(room, move) {
-		this.updateTimer(room.gameState);
-
-		Object.assign(room.gameState, {
-			fen: room.gameState.chess.fen(),
-			currentPlayer:
-				room.gameState.currentPlayer === "white" ? "black" : "white",
-			lastMove: move,
-			lastMoveTimestamp: Date.now(),
-		});
-
+		room.gameState.fen = room.gameState.chess.fen();
+		room.gameState.currentPlayer =
+			room.gameState.currentPlayer === "white" ? "black" : "white";
+		room.gameState.lastMove = move;
+		room.gameState.lastMoveTimestamp = Date.now();
 		room.gameState.moves.push(move);
 		room.gameState.drawOffers.clear();
-		this.checkGameOver(room);
 	}
 
 	getGameStateForBroadcast(room) {
-		this.updateTimer(room.gameState);
 		const kingInCheck = getKingInCheck(room.gameState.chess);
 
 		return {
@@ -295,6 +282,15 @@ export class GameManager {
 		this.io
 			.to(roomCode)
 			.emit("gameState", { gameState, players: room.players });
+	}
+
+	broadcastTimeUpdate(room) {
+		this.io.to(room.roomCode).emit("timeUpdate", {
+			whiteTimeRemaining: room.gameState.whiteTimeRemaining,
+			blackTimeRemaining: room.gameState.blackTimeRemaining,
+			currentPlayer: room.gameState.currentPlayer,
+			timestamp: Date.now(),
+		});
 	}
 
 	removeFromQueue(socketId) {
@@ -326,21 +322,21 @@ export class GameManager {
 
 	startTimer() {
 		this.gameTimer = setInterval(() => {
-			for (const [roomCode, room] of this.rooms.entries()) {
-				if (!room.gameState.isGameOver && !room.gameState.isPaused) {
-					if (this.checkGameOver(room)) {
-						this.broadcastGameState(roomCode);
-					} else {
-						const gameState = this.getGameStateForBroadcast(room);
-						this.io.to(roomCode).emit("timeUpdate", {
-							whiteTimeRemaining: gameState.whiteTimeRemaining,
-							blackTimeRemaining: gameState.blackTimeRemaining,
-							currentPlayer: gameState.currentPlayer,
-							timestamp: gameState.timestamp,
-						});
-					}
+			const activeRooms = Array.from(this.rooms.values()).filter(
+				(room) => !room.gameState.isGameOver && !room.gameState.isPaused
+			);
+
+			if (activeRooms.length === 0) return;
+
+			activeRooms.forEach((room) => {
+				this.updateTimer(room.gameState);
+
+				if (this.checkGameOver(room)) {
+					this.broadcastGameState(room.roomCode);
+				} else {
+					this.broadcastTimeUpdate(room);
 				}
-			}
+			});
 		}, 100);
 	}
 
