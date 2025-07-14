@@ -7,12 +7,12 @@ export const useMenuSounds = () => {
 	const sounds = useMemo(
 		() => ({
 			music: new Howl({
-				src: ["/sound/music.mp3"],
+				src: ["sound/music.mp3"],
 				loop: true,
 				volume: 0.5,
 			}),
 			click: new Howl({
-				src: ["/sound/click.mp3"],
+				src: ["sound/click.mp3"],
 				volume: 0.7,
 			}),
 		}),

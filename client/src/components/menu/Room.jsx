@@ -246,7 +246,7 @@ const Room = () => {
 								transform: "scale(1.1)",
 							},
 							marginRight: "15px",
-							backgroundImage: `url(/piece/${selectedPieceSet}/wN.svg)`,
+							backgroundImage: `url(./piece/${selectedPieceSet}/wN.svg)`,
 							backgroundSize: "cover",
 							bgcolor: "secondary.main",
 							opacity: preferredColor === "white" ? 1.0 : 0.3,
@@ -263,7 +263,7 @@ const Room = () => {
 							"&:hover": {
 								transform: "scale(1.1)",
 							},
-							backgroundImage: `url(/piece/${selectedPieceSet}/bN.svg)`,
+							backgroundImage: `url(./piece/${selectedPieceSet}/bN.svg)`,
 							backgroundSize: "cover",
 							bgcolor: "primary.main",
 							opacity: preferredColor === "black" ? 1.0 : 0.3,

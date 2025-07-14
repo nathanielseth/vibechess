@@ -55,7 +55,7 @@ const App = () => {
 		<ThemeContextProvider value={theme}>
 			<CssBaseline />
 			<SocketProvider>
-				<Router>
+				<Router basename="/vibechess">
 					<Suspense fallback={<Loading />}>
 						<Routes>
 							<Route

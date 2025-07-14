@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import io from "socket.io-client";
 
-const useSocket = (serverUrl = "http://localhost:5000") => {
+const useSocket = (
+	serverUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000"
+) => {
 	const [socket, setSocket] = useState(null);
 	const [isConnected, setIsConnected] = useState(false);
 	const [connectionError, setConnectionError] = useState(null);

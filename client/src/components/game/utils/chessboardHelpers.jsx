@@ -35,7 +35,7 @@ export const createCustomPieces = (selectedPieceSet) => {
 				style={{
 					width: squareWidth,
 					height: squareWidth,
-					backgroundImage: `url(/piece/${selectedPieceSet}/${piece}.svg)`,
+					backgroundImage: `url(./piece/${selectedPieceSet}/${piece}.svg)`,
 					backgroundSize: "100%",
 				}}
 			/>

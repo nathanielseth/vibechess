@@ -1,22 +1,22 @@
 import { Howl } from "howler";
 
 export const moveSound = new Howl({
-	src: ["/sound/move.mp3"],
+	src: ["./sound/move.mp3"],
 	volume: 0.7,
 });
 
 export const captureSound = new Howl({
-	src: ["/sound/capture.mp3"],
+	src: ["./sound/capture.mp3"],
 	volume: 0.7,
 });
 
 export const tenSecondsSound = new Howl({
-	src: ["/sound/tenseconds.mp3"],
+	src: ["./sound/tenseconds.mp3"],
 	volume: 1.0,
 });
 
 export const notifySound = new Howl({
-	src: ["/sound/notify.mp3"],
+	src: ["./sound/notify.mp3"],
 	volume: 0.2,
 });
 
