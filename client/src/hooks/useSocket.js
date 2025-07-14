@@ -30,9 +30,8 @@ const useSocket = (
 			reconnectionAttempts: 10,
 			timeout: 30000,
 			forceNew: false,
-			transports: ["websocket"],
-			upgrade: false,
-			rememberUpgrade: true,
+			transports: ["polling", "websocket"],
+			upgrade: true,
 		});
 
 		socketRef.current = newSocket;
