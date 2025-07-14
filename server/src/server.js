@@ -10,9 +10,9 @@ import { ChatManager } from "./ChatManager.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const CORS_ORIGIN = (process.env.CORS_ORIGIN || "http://localhost:3000")
-	.split(",")
-	.map((origin) => origin.trim());
+const CORS_ORIGIN = process.env.CORS_ORIGIN?.split(",") || [
+	"http://localhost:3000",
+];
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,48 +40,118 @@ const io = new Server(httpServer, {
 	},
 });
 
-const gameManager = new GameManager(io);
-const chatManager = new ChatManager(gameManager);
-const socketHandler = new SocketHandler(gameManager);
+let gameManager, chatManager, socketHandler;
 
-gameManager.setChatManager(chatManager);
-chatManager.gm = gameManager;
+try {
+	gameManager = new GameManager(io);
+	chatManager = new ChatManager(gameManager);
+	socketHandler = new SocketHandler(gameManager);
+
+	gameManager.setChatManager(chatManager);
+	chatManager.gm = gameManager;
+
+	console.log("✅ Managers initialized successfully");
+} catch (error) {
+	console.error("❌ Failed to initialize managers:", error);
+	process.exit(1);
+}
+
+const logError = (eventName, error, socketId = null) => {
+	const timestamp = new Date().toISOString();
+	const socketInfo = socketId ? ` [Socket: ${socketId}]` : "";
+	console.error(
+		`[${timestamp}] ❌ Error in ${eventName}${socketInfo}:`,
+		error
+	);
+};
+
+const createSocketHandler = (eventName, handler) => {
+	return async (socket, data) => {
+		try {
+			await handler(socket, data);
+		} catch (error) {
+			logError(eventName, error, socket.id);
+
+			socket.emit("error", {
+				event: eventName,
+				message: "An error occurred while processing your request",
+				timestamp: new Date().toISOString(),
+			});
+		}
+	};
+};
 
 io.on("connection", (socket) => {
-	socket.on("joinRoom", (data) => socketHandler.handleJoinRoom(socket, data));
-	socket.on("rejoinRoom", (data) =>
-		socketHandler.handleRejoinRoom(socket, data)
-	);
-	socket.on("makeMove", (data) => socketHandler.handleMakeMove(socket, data));
-	socket.on("findMatch", (data) =>
-		socketHandler.handleFindMatch(socket, data)
-	);
-	socket.on("surrender", (data) =>
-		socketHandler.handleSurrender(socket, data)
-	);
-	socket.on("offerDraw", (data) =>
-		socketHandler.handleDrawOffer(socket, data)
-	);
-	socket.on("acceptDraw", (data) =>
-		socketHandler.handleAcceptDraw(socket, data)
-	);
-	socket.on("declineDraw", (data) =>
-		socketHandler.handleDeclineDraw(socket, data)
-	);
-	socket.on("requestRematch", (data) =>
-		socketHandler.handleRematchRequest(socket, data)
-	);
-	socket.on("createRoom", (data) =>
-		socketHandler.handleCreateRoom(socket, data)
-	);
-	socket.on("updateRoomSettings", (data) =>
-		socketHandler.handleUpdateRoomSettings(socket, data)
-	);
-	socket.on("disconnect", () => socketHandler.handleDisconnect(socket));
-	socket.on("ping", () => socket.emit("pong"));
-	socket.on("chatMessage", (data) =>
-		chatManager.handleChatMessage(socket, data)
-	);
+	console.log(`🔗 Client connected: ${socket.id}`);
+
+	const handlers = {
+		joinRoom: createSocketHandler("joinRoom", (socket, data) =>
+			socketHandler.handleJoinRoom(socket, data)
+		),
+		rejoinRoom: createSocketHandler("rejoinRoom", (socket, data) =>
+			socketHandler.handleRejoinRoom(socket, data)
+		),
+		makeMove: createSocketHandler("makeMove", (socket, data) =>
+			socketHandler.handleMakeMove(socket, data)
+		),
+		findMatch: createSocketHandler("findMatch", (socket, data) =>
+			socketHandler.handleFindMatch(socket, data)
+		),
+		surrender: createSocketHandler("surrender", (socket, data) =>
+			socketHandler.handleSurrender(socket, data)
+		),
+		offerDraw: createSocketHandler("offerDraw", (socket, data) =>
+			socketHandler.handleDrawOffer(socket, data)
+		),
+		acceptDraw: createSocketHandler("acceptDraw", (socket, data) =>
+			socketHandler.handleAcceptDraw(socket, data)
+		),
+		declineDraw: createSocketHandler("declineDraw", (socket, data) =>
+			socketHandler.handleDeclineDraw(socket, data)
+		),
+		requestRematch: createSocketHandler("requestRematch", (socket, data) =>
+			socketHandler.handleRematchRequest(socket, data)
+		),
+		createRoom: createSocketHandler("createRoom", (socket, data) =>
+			socketHandler.handleCreateRoom(socket, data)
+		),
+		updateRoomSettings: createSocketHandler(
+			"updateRoomSettings",
+			(socket, data) =>
+				socketHandler.handleUpdateRoomSettings(socket, data)
+		),
+		chatMessage: createSocketHandler("chatMessage", (socket, data) =>
+			chatManager.handleChatMessage(socket, data)
+		),
+		disconnect: createSocketHandler("disconnect", (socket) =>
+			socketHandler.handleDisconnect(socket)
+		),
+	};
+
+	Object.entries(handlers).forEach(([event, handler]) => {
+		socket.on(event, (data) => handler(socket, data));
+	});
+
+	socket.on("ping", () => {
+		try {
+			socket.emit("pong");
+		} catch (error) {
+			logError("ping", error, socket.id);
+		}
+	});
+
+	socket.on("error", (error) => {
+		logError("socket", error, socket.id);
+	});
+
+	socket.on("disconnect", (reason) => {
+		console.log(`🔌 Client disconnected: ${socket.id} (${reason})`);
+		handlers.disconnect(socket);
+	});
+});
+
+io.engine.on("connection_error", (error) => {
+	logError("connection", error);
 });
 
 function keepAlive() {
@@ -109,16 +179,59 @@ if (process.env.NODE_ENV === "production") {
 	console.log("🔄 Keep-alive pings enabled");
 }
 
-process.on("SIGINT", () => {
-	gameManager.cleanup();
-	chatManager.cleanup();
-	httpServer.close(() => {
-		console.log("Server closed gracefully");
-		process.exit(0);
-	});
+process.on("uncaughtException", (error) => {
+	console.error("💥 Uncaught Exception:", error);
+
+	try {
+		gameManager?.cleanup();
+		chatManager?.cleanup();
+	} catch (cleanupError) {
+		console.error("❌ Cleanup error:", cleanupError);
+	}
+
+	process.exit(1);
 });
 
-httpServer.listen(PORT, () => {
-	console.log(`♟️ Chess server listening on port ${PORT}`);
-	console.log(`🌐 Allowed origins: ${CORS_ORIGIN.join(", ")}`);
+process.on("unhandledRejection", (reason, promise) => {
+	console.error("💥 Unhandled Rejection at:", promise, "reason:", reason);
+
+	if (process.env.NODE_ENV !== "production") {
+		process.exit(1);
+	}
+});
+
+process.on("SIGINT", () => {
+	console.log("\n🛑 Received SIGINT, shutting down gracefully...");
+
+	try {
+		gameManager?.cleanup();
+		chatManager?.cleanup();
+
+		httpServer.close(() => {
+			console.log("✅ Server closed gracefully");
+			process.exit(0);
+		});
+
+		setTimeout(() => {
+			console.log("⏰ Forcing exit after timeout");
+			process.exit(1);
+		}, 10000);
+	} catch (error) {
+		console.error("❌ Error during shutdown:", error);
+		process.exit(1);
+	}
+});
+
+httpServer
+	.listen(PORT, () => {
+		console.log(`♟️ Chess server listening on port ${PORT}`);
+		console.log(`🌐 Allowed origins: ${CORS_ORIGIN.join(", ")}`);
+	})
+	.on("error", (error) => {
+		console.error("❌ Server startup error:", error);
+		process.exit(1);
+	});
+
+httpServer.on("error", (error) => {
+	console.error("❌ HTTP Server error:", error);
 });
