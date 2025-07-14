@@ -28,8 +28,11 @@ const useSocket = (
 			reconnection: true,
 			reconnectionDelay: 1000,
 			reconnectionAttempts: 10,
-			timeout: 10000,
+			timeout: 30000,
 			forceNew: false,
+			transports: ["polling", "websocket"],
+			upgrade: true,
+			rememberUpgrade: false,
 		});
 
 		socketRef.current = newSocket;

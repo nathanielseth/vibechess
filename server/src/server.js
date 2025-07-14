@@ -3,7 +3,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
-
 import { GameManager } from "./GameManager.js";
 import { SocketHandler } from "./SocketHandler.js";
 import { ChatManager } from "./ChatManager.js";
@@ -24,6 +23,14 @@ app.use(
 		credentials: true,
 	})
 );
+
+app.get("/health", (req, res) => {
+	res.status(200).json({
+		status: "alive",
+		timestamp: new Date().toISOString(),
+		uptime: process.uptime(),
+	});
+});
 
 const io = new Server(httpServer, {
 	cors: {
@@ -76,6 +83,31 @@ io.on("connection", (socket) => {
 		chatManager.handleChatMessage(socket, data)
 	);
 });
+
+function keepAlive() {
+	const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+
+	fetch(`${url}/health`)
+		.then((response) => {
+			if (response.ok) {
+				console.log(
+					`✅ Keep-alive ping successful at ${new Date().toISOString()}`
+				);
+			} else {
+				console.log(
+					`⚠️ Keep-alive ping failed with status: ${response.status}`
+				);
+			}
+		})
+		.catch((error) => {
+			console.log(`❌ Keep-alive ping error: ${error.message}`);
+		});
+}
+
+if (process.env.NODE_ENV === "production") {
+	setInterval(keepAlive, 14 * 60 * 1000);
+	console.log("🔄 Keep-alive pings enabled");
+}
 
 process.on("SIGINT", () => {
 	gameManager.cleanup();
