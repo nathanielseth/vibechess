@@ -11,16 +11,59 @@ const GameOverModal = ({
 	onRematch,
 	endReason,
 	winner,
-	//gameMode,
+	players = [],
+	playerColor,
+	gameMode,
 }) => {
 	const navigate = useNavigate();
 	const selectedFlag = window.localStorage.getItem("selectedFlag");
 
 	const handleMenu = () => navigate("/");
-
 	const handleRematch = () => {
 		onRematch();
 		onClose();
+	};
+
+	const getPlayerByColor = (color) => {
+		if (gameMode === "multiplayer" && players.length > 0) {
+			return players.find((p) => p.color === color);
+		}
+		return null;
+	};
+
+	const whitePlayer = getPlayerByColor("white");
+	const blackPlayer = getPlayerByColor("black");
+
+	const getWinnerMessage = () => {
+		if (!winner) return endReason || "Game Over";
+
+		if (gameMode === "local") {
+			return `${winner.toUpperCase()} WON!`;
+		}
+
+		// For multiplayer/versusbot
+		const winnerPlayer = players.find((p) => p.color === winner);
+		const currentPlayer = players.find((p) => p.color === playerColor);
+
+		if (winner === playerColor) {
+			return `${currentPlayer?.name || "You"} WON!`;
+		} else {
+			return `${winnerPlayer?.name || "Opponent"} WON!`;
+		}
+	};
+
+	const getPlayerName = (player, defaultName) => {
+		if (gameMode === "multiplayer" && player?.name) {
+			return player.name;
+		}
+		return defaultName;
+	};
+
+	const getPlayerFlag = (player) => {
+		if (gameMode === "multiplayer" && player?.flag) {
+			return player.flag;
+		}
+		return selectedFlag || "us";
 	};
 
 	return (
@@ -43,41 +86,53 @@ const GameOverModal = ({
 					{/* Top Box */}
 					<Box mb={4}>
 						<Typography variant="h4">
-							{winner && winner !== "passandplay"
-								? `${winner} WON!`
-								: endReason === "nobody won this one.."
-								? "DRAW!"
-								: "YOU WON!"}
+							{getWinnerMessage()}
 						</Typography>
 						<Typography variant="subtitle1">{endReason}</Typography>
 					</Box>
 
-					{/* Middle Box */}
+					{/* Middle Box - Player Info */}
 					<Grid container spacing={2} justifyContent="center" mb={4}>
 						{/* White Player */}
 						<Grid item xs={6}>
 							<CircleFlag
-								countryCode={selectedFlag}
+								countryCode={getPlayerFlag(whitePlayer)}
 								height="90"
 							/>
 							<Typography variant="subtitle2">
-								White Player
+								{getPlayerName(whitePlayer, "White Player")}
 							</Typography>
+							{winner === "white" && (
+								<Typography
+									variant="caption"
+									color="success.main"
+								>
+									Winner
+								</Typography>
+							)}
 						</Grid>
 
 						{/* Black Player */}
 						<Grid item xs={6}>
 							<CircleFlag
-								countryCode={selectedFlag}
+								countryCode={getPlayerFlag(blackPlayer)}
 								height="90"
 							/>
 							<Typography variant="subtitle2">
-								Black Player
+								{getPlayerName(blackPlayer, "Black Player")}
 							</Typography>
+							{winner === "black" && (
+								<Typography
+									variant="caption"
+									color="success.main"
+								>
+									Winner
+								</Typography>
+							)}
 						</Grid>
 					</Grid>
 
-					{/* Bottom Box */}
+					{/* Bottom Box - Action Buttons */}
 					<Grid container spacing={2} justifyContent="center">
 						<Grid item xs={6}>
 							<Button
@@ -116,6 +171,8 @@ GameOverModal.propTypes = {
 	onNewGame: PropTypes.func,
 	endReason: PropTypes.string,
 	winner: PropTypes.string,
+	players: PropTypes.array,
+	playerColor: PropTypes.string,
 	gameMode: PropTypes.string,
 };
 

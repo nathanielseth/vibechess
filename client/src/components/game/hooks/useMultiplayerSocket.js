@@ -15,7 +15,7 @@ export const useMultiplayerSocket = (
 		(data) => {
 			if (!data?.gameState) return;
 
-			const { gameState } = data;
+			const { gameState, players } = data;
 
 			chessGame.game.load(gameState.fen);
 			chessGame.setCurrentPlayer(gameState.currentPlayer);
@@ -71,26 +71,16 @@ export const useMultiplayerSocket = (
 			if (gameState.isGameOver) {
 				chessGame.setIsGameOver(true);
 				chessGame.setGameEndReason(gameState.gameOverReason);
+				chessGame.setWinner(gameState.winner || null);
 
-				const getGameOverMessage = () => {
-					if (!gameState.winner)
-						return gameState.gameOverReason || "Game Over";
-
-					const isPlayerWinner = gameState.winner === playerColor;
-					const winnerText = isPlayerWinner ? "You" : "Opponent";
-					return `${winnerText} won by ${gameState.gameOverReason}`;
-				};
-
-				toast.info(getGameOverMessage(), {
-					position: "top-center",
-					autoClose: 5000,
-				});
+				chessGame.setPlayers(players || []);
 			} else {
 				chessGame.setIsGameOver(false);
 				chessGame.setGameEndReason(null);
+				chessGame.setWinner(null);
 			}
 		},
-		[chessGame, playerColor]
+		[chessGame]
 	);
 
 	// move rejection from server

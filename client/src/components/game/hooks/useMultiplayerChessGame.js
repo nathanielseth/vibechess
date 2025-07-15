@@ -21,6 +21,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	const [isGameOver, setIsGameOver] = useState(false);
 	const [gameEndReason, setGameEndReason] = useState(null);
 	const [pgn, setPgn] = useState("");
+	const [players, setPlayers] = useState([]);
 	const [currentPlayer, setCurrentPlayer] = useState("white");
 	const [highlightedSquares, setHighlightedSquares] = useState({});
 	const [optionSquares, setOptionSquares] = useState({});
@@ -29,6 +30,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	const [boardOrientation, setBoardOrientation] = useState(
 		playerColor === "black" ? "black" : "white"
 	);
+	const [winner, setWinner] = useState(null);
 
 	const getInitialTime = useCallback(() => {
 		const gameState = matchData?.gameState;
@@ -68,7 +70,13 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 
 	// Timer animation
 	const animateTimer = useCallback(() => {
-		if (isGameOver) return;
+		if (isGameOver) {
+			if (animationRef.current) {
+				cancelAnimationFrame(animationRef.current);
+				animationRef.current = null;
+			}
+			return;
+		}
 
 		const now = Date.now();
 		const elapsed = now - serverTimeRef.current.timestamp;
@@ -99,11 +107,17 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 	useEffect(() => {
 		if (!isGameOver) {
 			animationRef.current = requestAnimationFrame(animateTimer);
+		} else {
+			if (animationRef.current) {
+				cancelAnimationFrame(animationRef.current);
+				animationRef.current = null;
+			}
 		}
 
 		return () => {
 			if (animationRef.current) {
 				cancelAnimationFrame(animationRef.current);
+				animationRef.current = null;
 			}
 		};
 	}, [animateTimer, isGameOver]);
@@ -165,6 +179,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		setCurrentPlayer(serverState.currentPlayer);
 		setIsGameOver(serverState.isGameOver);
 		setGameEndReason(serverState.gameOverReason);
+		setWinner(serverState.winner);
 		setKingInCheck(checkKingInCheck(newGame));
 
 		updateServerTimes({
@@ -237,6 +252,7 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 
 			setGame(newGame);
 			setCurrentPlayer(serverState.currentPlayer);
+			setWinner(serverState.winner || null);
 			setIsGameOver(serverState.isGameOver);
 			setGameEndReason(serverState.gameOverReason);
 			setKingInCheck(checkKingInCheck(newGame));
@@ -338,6 +354,14 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		setBoardOrientation((prev) => (prev === "white" ? "black" : "white"));
 	}, []);
 
+	useEffect(() => {
+		return () => {
+			if (animationRef.current) {
+				cancelAnimationFrame(animationRef.current);
+			}
+		};
+	}, []);
+
 	return {
 		game,
 		lastMove,
@@ -351,10 +375,14 @@ export const useMultiplayerGame = (matchData, socket, playerColor) => {
 		history,
 		currentIndex,
 		kingInCheck,
+		winner,
+		setWinner,
 		isGameOver,
 		gameEndReason,
 		pgn,
 		currentPlayer,
+		players,
+		setPlayers,
 
 		whiteTime: displayWhiteTime,
 		blackTime: displayBlackTime,

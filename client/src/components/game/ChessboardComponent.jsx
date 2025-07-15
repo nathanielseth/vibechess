@@ -358,6 +358,9 @@ const ChessboardComponent = ({
 						onRematch={chessGame?.resetGame}
 						onNewGame={chessGame?.resetGame}
 						endReason={chessGame?.gameEndReason}
+						winner={chessGame?.winner}
+						players={chessGame?.players || []}
+						playerColor={playerColor}
 						gameMode={gameMode}
 					/>
 				)}

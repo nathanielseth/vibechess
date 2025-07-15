@@ -37,6 +37,16 @@ export const createCustomPieces = (selectedPieceSet) => {
 					height: squareWidth,
 					backgroundImage: `url(./piece/${selectedPieceSet}/${piece}.svg)`,
 					backgroundSize: "100%",
+					cursor: "grab",
+				}}
+				onMouseDown={(e) => {
+					e.target.style.cursor = "grabbing";
+				}}
+				onMouseUp={(e) => {
+					e.target.style.cursor = "grab";
+				}}
+				onMouseLeave={(e) => {
+					e.target.style.cursor = "grab";
 				}}
 			/>
 		);
