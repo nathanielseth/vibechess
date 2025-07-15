@@ -314,6 +314,20 @@ export class SocketHandler {
 		}
 
 		const opponent = this.gm.matchmakingQueue[opponentIndex];
+
+		if (opponent.socketId === socket.id) {
+			console.warn(
+				`[MATCHMAKING] Prevented self-match for socket ${socket.id}`
+			);
+			this.gm.matchmakingQueue.splice(opponentIndex, 1);
+			this.gm.addToQueue(socket.id, playerName, timeControl, flag);
+			socket.emit("queueJoined", {
+				position: this.gm.matchmakingQueue.length,
+				timeControl,
+			});
+			return;
+		}
+
 		this.gm.matchmakingQueue.splice(opponentIndex, 1);
 
 		const roomCode = generateRoomCode();

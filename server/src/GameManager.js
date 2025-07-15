@@ -320,23 +320,25 @@ export class GameManager {
 	}
 
 	removeFromQueue(socketId) {
-		const index = this.matchmakingQueue.findIndex(
-			(p) => p.socketId === socketId
+		const originalLength = this.matchmakingQueue.length;
+		this.matchmakingQueue = this.matchmakingQueue.filter(
+			(player) => player.socketId !== socketId
 		);
-		if (index !== -1) {
-			this.matchmakingQueue.splice(index, 1);
-			return true;
-		}
-		return false;
+		return this.matchmakingQueue.length !== originalLength;
 	}
 
-	findMatchingOpponent(timeControl, socketId) {
-		return this.matchmakingQueue.findIndex(
-			(p) => p.timeControl === timeControl && p.socketId !== socketId
-		);
+	findMatchingOpponent(timeControl, currentSocketId) {
+		return this.matchmakingQueue.findIndex((queuedPlayer) => {
+			return (
+				queuedPlayer.timeControl === timeControl &&
+				queuedPlayer.socketId !== currentSocketId
+			);
+		});
 	}
 
 	addToQueue(socketId, playerName, timeControl, flag) {
+		this.removeFromQueue(socketId);
+
 		this.matchmakingQueue.push({
 			socketId,
 			playerName,
