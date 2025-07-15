@@ -11,7 +11,6 @@ import {
 	Tooltip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { toast } from "react-toastify";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import FreeBreakfastIcon from "@mui/icons-material/FreeBreakfast";
 import MusicNoteRoundedIcon from "@mui/icons-material/MusicNote";
@@ -38,6 +37,7 @@ import { ThemeContext } from "../../theme/ThemeContext";
 import MenuButton from "./MenuButton";
 import SettingsModal from "../common/modal/SettingsModal";
 import TimeControlModal from "./TimeControlModal";
+import FAQModal from "../common/modal/FAQModal";
 import useSocketContext from "../../context/useSocketContext";
 
 import { useMenuSounds } from "../../hooks/useMenuSounds";
@@ -54,6 +54,7 @@ const Menu = () => {
 
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [isTimeControlModalOpen, setIsTimeControlModalOpen] = useState(false);
+	const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
 	const [isRotating, setIsRotating] = useState(false);
 
 	const { isMusicMuted, playClickSound, handleMusicToggle } = useMenuSounds();
@@ -111,7 +112,10 @@ const Menu = () => {
 				icon: QuizIcon,
 				title: "FAQs",
 				color: "#2176ff",
-				onClick: () => toast.info("FAQs coming soon!"),
+				onClick: () => {
+					playClickSound();
+					setIsFAQModalOpen(true);
+				},
 			},
 			{
 				icon: GitHubIcon,
@@ -149,7 +153,13 @@ const Menu = () => {
 				onClick: handleMusicToggle,
 			},
 		],
-		[theme.palette.mode, isMusicMuted, switchColorMode, handleMusicToggle]
+		[
+			theme.palette.mode,
+			switchColorMode,
+			isMusicMuted,
+			handleMusicToggle,
+			playClickSound,
+		]
 	);
 
 	const rotationStyle = isRotating ? rotatingImageRotate : {};
@@ -399,6 +409,14 @@ const Menu = () => {
 			<SettingsModal
 				isOpen={isSettingsModalOpen}
 				onClose={handleCloseSettingsModal}
+			/>
+
+			<FAQModal
+				isOpen={isFAQModalOpen}
+				onClose={() => {
+					playClickSound();
+					setIsFAQModalOpen(false);
+				}}
 			/>
 		</Box>
 	);
