@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nathanielseth/VibeChess" target="_blank">VibeChess</a> is a free real-time online chess web app focused on quick and casual chess.
+  <a href="https://nathanielseth.github.io/vibechess/" target="_blank">VibeChess</a> is a free real-time online chess web app focused on quick and casual chess.
 </p>
 
   <p align="center">
@@ -27,21 +27,25 @@
 -   [react-chessboard](https://github.com/Clariity/react-chessboard)
 -   [stockfish.js](https://github.com/nmrugg/stockfish.js)
 
-# WIP Features
+# Features
 
--   **Real-Time Games:** Play in real-time matches with friends or be paired with a random opponent through matchmaking.
+-   **Real-Time Games:** Play in real-time matches with friends or be paired with a random opponent through matchmaking!
 
--   **Play Against Computer:** Test your skills against Stockfish, the powerful computer chess engine.
+-   **Play Against Computer:** Test your skills against Stockfish, the powerful computer chess engine!
 
--   **Live Chat:** Communicate with fellow users during games.
+-   **Live Chat:** Communicate with fellow users during games!
 
--   **More Features In Progress...**
+-   *More Features In Progress...*
 
 # Setup
 
-> Ensure you have installed [Node.js](https://nodejs.org/)
-
 ## Client
+
+Navigate to the client directory:
+
+```bash
+cd client
+```
 
 Install the dependencies:
 
@@ -63,15 +67,19 @@ Navigate to the server directory:
 cd server
 ```
 
-Run the server (available at http://localhost:5000):
+Install the dependencies:
 
 ```bash
-npm start
+npm install
+```
+
+Run the server:
+
+```bash
+npm run dev
 ```
 
 ## Contributing
-
-> This is my first react project, and I am still learning. That being said, any suggestions for improvements and contributions are welcome!
 
 Before submitting a pull request, consider starting a discussion or opening an issue to discuss proposed changes.
 
