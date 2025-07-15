@@ -1,121 +1,51 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Chess } from "chess.js";
 import { toast } from "react-toastify";
 import {
-	isKingInCheck as checkKingInCheck,
 	findBestMove as findBestMoveUtil,
 	generatePGN,
-	moveSound,
-	captureSound,
-	notifySound,
 } from "../../../data/utils.js";
 import Engine from "../../game/utils/engine.js";
+import { useChessGameBase } from "./useChessGameBase.js";
 
 export const useLocalChessGame = () => {
-	const [game, setGame] = useState(() => new Chess());
+	const base = useChessGameBase("local");
 	const engine = useMemo(() => new Engine(), []);
-	const [lastMove, setLastMove] = useState(null);
-	const [history, setHistory] = useState([
-		{ fen: new Chess().fen(), lastMove: null },
-	]);
-	const [currentIndex, setCurrentIndex] = useState(0);
-	const [kingInCheck, setKingInCheck] = useState(null);
-	const [isGameOver, setIsGameOver] = useState(false);
-	const [gameEndReason, setGameEndReason] = useState(null);
-	const [pgn, setPgn] = useState("");
-	const [currentPlayer, setCurrentPlayer] = useState("white");
 
-	const [highlightedSquares, setHighlightedSquares] = useState({});
-	const [optionSquares, setOptionSquares] = useState({});
-	const [moveFrom, setMoveFrom] = useState("");
-	const [rightClickedSquares, setRightClickedSquares] = useState({});
-
-	// local game settings
 	const [analysisMode, setAnalysisMode] = useState(false);
 	const [autoFlip, setAutoFlip] = useState(false);
 	const [bestMove, setBestMove] = useState(null);
-	const [boardOrientation, setBoardOrientation] = useState("white");
 
-	const toastId = useRef(null);
-
-	// king in check detection
-	const isKingInCheck = useCallback(() => {
-		return checkKingInCheck(game);
-	}, [game]);
-
-	const gameFen = game.fen();
-	const isGameOverOrNot = !game.isGameOver() || game.isGameOver();
-
-	// analysis mode logic
 	const findBestMove = useCallback(() => {
-		findBestMoveUtil(engine, game, analysisMode, setBestMove, () => {});
-	}, [engine, game, analysisMode]);
+		findBestMoveUtil(
+			engine,
+			base.game,
+			analysisMode,
+			setBestMove,
+			() => {}
+		);
+	}, [engine, base.game, analysisMode]);
 
 	useEffect(() => {
-		if (isGameOverOrNot && analysisMode) {
+		if (!base.game.isGameOver() && analysisMode) {
 			setTimeout(findBestMove, 300);
 		}
-	}, [gameFen, findBestMove, game, analysisMode, isGameOverOrNot]);
-
-	// game over logi
-	const checkGameOver = useCallback(() => {
-		let reason = null;
-
-		if (game.isCheckmate()) {
-			const loserColor = game.turn() === "w" ? "Black" : "White";
-			const moves = history.length - 1;
-			reason = `${loserColor} got checkmated in ${moves} moves`;
-		} else if (game.isStalemate()) {
-			reason = "oops... that's a stalemate...";
-		} else if (game.isDraw() || game.isThreefoldRepetition()) {
-			reason = "nobody won this one..";
-		}
-
-		setGameEndReason(reason);
-
-		if (reason) {
-			toastId.current = toast.info(reason, {
-				position: toast.POSITION.TOP_CENTER,
-				autoClose: 2000,
-			});
-
-			setTimeout(() => {
-				setIsGameOver(true);
-			}, 1000);
-		}
-	}, [game, history]);
-
-	// sfx
-	useEffect(() => {
-		if (lastMove && currentIndex > history.length - 2) {
-			moveSound.play();
-			if (lastMove.captured) {
-				captureSound.play();
-			}
-			setKingInCheck(isKingInCheck());
-		}
-	}, [lastMove, currentIndex, history, isKingInCheck]);
+	}, [findBestMove, analysisMode, base.game]);
 
 	useEffect(() => {
-		if (isGameOver) {
-			notifySound.play();
-		}
-	}, [isGameOver]);
+		base.checkGameOver();
+	}, [base.game, base.checkGameOver, base]);
 
-	// update PGN and check game over
-	useEffect(() => {
-		checkGameOver();
-		setPgn(generatePGN(history, "passandplay"));
-	}, [game, checkGameOver, history]);
-
-	// game move logic
 	const makeMove = useCallback(
 		(sourceSquare, targetSquare, promotion = "q") => {
-			if (currentIndex !== history.length - 1 || isGameOver) {
+			if (
+				base.currentIndex !== base.history.length - 1 ||
+				base.isGameOver
+			) {
 				return false;
 			}
 
-			const gameCopy = new Chess(game.fen());
+			const gameCopy = new Chess(base.game.fen());
 			const move = gameCopy.move({
 				from: sourceSquare,
 				to: targetSquare,
@@ -123,164 +53,127 @@ export const useLocalChessGame = () => {
 			});
 
 			if (move) {
-				setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
-				setLastMove(move);
-				setHistory((prevHistory) => [
+				base.setCurrentPlayer(
+					base.currentPlayer === "white" ? "black" : "white"
+				);
+				base.setLastMove(move);
+				base.setHistory((prevHistory) => [
 					...prevHistory,
 					{ fen: gameCopy.fen(), lastMove: move },
 				]);
-				setHighlightedSquares({
-					[sourceSquare]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-					[targetSquare]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-				});
-				setKingInCheck(checkKingInCheck(gameCopy));
-				setCurrentIndex(history.length);
-				setGame(gameCopy);
-				setOptionSquares({});
-				setMoveFrom("");
+				base.highlightMove(sourceSquare, targetSquare);
+				base.setCurrentIndex(base.history.length);
+				base.setGame(gameCopy);
+				base.clearUIState();
 
 				return move;
 			}
 
 			return false;
 		},
-		[currentIndex, history, isGameOver, game, currentPlayer]
+		[base]
 	);
 
 	const resetGame = useCallback(() => {
 		const newGame = new Chess();
-		setGame(newGame);
-		setLastMove(null);
-		setRightClickedSquares({});
-		setHighlightedSquares({});
-		setOptionSquares({});
-		setMoveFrom("");
-		setHistory([{ fen: newGame.fen(), lastMove: null }]);
-		setCurrentIndex(0);
-		setKingInCheck(null);
+		base.setGame(newGame);
+		base.setLastMove(null);
+		base.setHighlightedSquares({});
+		base.clearUIState();
+		base.setHistory([{ fen: newGame.fen(), lastMove: null }]);
+		base.setCurrentIndex(0);
+		base.setKingInCheck(null);
 		setAutoFlip(false);
-		setIsGameOver(false);
-		setGameEndReason(null);
-		setPgn("");
-		setCurrentPlayer("white");
+		base.setIsGameOver(false);
+		base.setGameEndReason(null);
+		base.setPgn("");
+		base.setCurrentPlayer("white");
 
-		toastId.current = toast.info("The game has restarted", {
+		base.toastId.current = toast.info("The game has restarted", {
 			position: toast.POSITION.TOP_CENTER,
 			autoClose: 2000,
 		});
-	}, []);
+	}, [base]);
 
 	const undoMove = useCallback(() => {
-		if (currentIndex > 0) {
-			const newHistory = history.slice(0, -1);
-			const newIndex = currentIndex - 1;
+		if (base.currentIndex > 0) {
+			const newHistory = base.history.slice(0, -1);
+			const newIndex = base.currentIndex - 1;
 
 			const newGame = new Chess();
 			for (let i = 1; i <= newIndex; i++) {
-				newGame.move(history[i].lastMove);
+				newGame.move(base.history[i].lastMove);
 			}
 
-			setGame(newGame);
-			setHistory(newHistory);
-			setCurrentIndex(newIndex);
-			setLastMove(null);
-			setHighlightedSquares({});
-			setRightClickedSquares({});
-			setOptionSquares({});
-			setMoveFrom("");
-			setKingInCheck(checkKingInCheck(newGame));
-			setPgn(generatePGN(newHistory));
-			setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
+			base.setGame(newGame);
+			base.setHistory(newHistory);
+			base.setCurrentIndex(newIndex);
+			base.setLastMove(null);
+			base.setHighlightedSquares({});
+			base.clearUIState();
+			base.setKingInCheck(base.isKingInCheck);
+			base.setPgn(generatePGN(newHistory));
+			base.setCurrentPlayer(
+				base.currentPlayer === "white" ? "black" : "white"
+			);
 		}
-	}, [currentIndex, history, currentPlayer]);
-
-	const navigateMove = useCallback(
-		(moveIndex) => {
-			setGame(new Chess(history[moveIndex].fen));
-			setCurrentIndex(moveIndex);
-			setOptionSquares({});
-
-			if (moveIndex === history.length - 1 && lastMove) {
-				setHighlightedSquares({
-					[lastMove.from]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-					[lastMove.to]: {
-						backgroundColor: "rgba(252, 220, 77, 0.4)",
-					},
-				});
-			} else {
-				setHighlightedSquares({});
-			}
-		},
-		[history, lastMove]
-	);
-
-	const toggleBoardOrientation = useCallback(() => {
-		setBoardOrientation((prev) => (prev === "white" ? "black" : "white"));
-	}, []);
+	}, [base]);
 
 	const toggleAutoFlip = useCallback(() => {
 		if (!autoFlip) {
-			toastId.current = toast.info("Auto-flip is enabled!", {
+			base.toastId.current = toast.info("Auto-flip is enabled!", {
 				position: toast.POSITION.TOP_CENTER,
 				autoClose: 2000,
 			});
 		}
 		setAutoFlip(!autoFlip);
-	}, [autoFlip]);
+	}, [autoFlip, base.toastId]);
 
 	const toggleAnalysisMode = useCallback(() => {
 		if (!analysisMode) {
-			toastId.current = toast.info("Stockfish evaluation enabled!", {
+			base.toastId.current = toast.info("Stockfish evaluation enabled!", {
 				position: toast.POSITION.TOP_CENTER,
 				autoClose: 4000,
 			});
 		}
 		setAnalysisMode(!analysisMode);
-	}, [analysisMode]);
+	}, [analysisMode, base.toastId]);
 
 	return {
-		game,
-		lastMove,
-		history,
-		currentIndex,
-		kingInCheck,
-		isGameOver,
-		gameEndReason,
-		pgn,
-		currentPlayer,
+		game: base.game,
+		lastMove: base.lastMove,
+		history: base.history,
+		currentIndex: base.currentIndex,
+		kingInCheck: base.kingInCheck,
+		isGameOver: base.isGameOver,
+		gameEndReason: base.gameEndReason,
+		pgn: base.pgn,
+		currentPlayer: base.currentPlayer,
+		boardOrientation: base.boardOrientation,
 
-		highlightedSquares,
-		optionSquares,
-		moveFrom,
-		rightClickedSquares,
+		highlightedSquares: base.highlightedSquares,
+		optionSquares: base.optionSquares,
+		moveFrom: base.moveFrom,
+		rightClickedSquares: base.rightClickedSquares,
 
 		analysisMode,
 		autoFlip,
 		bestMove,
-		boardOrientation,
 
 		makeMove,
 		resetGame,
 		undoMove,
-		navigateMove,
-		toggleBoardOrientation,
+		navigateMove: base.navigateMove,
+		toggleBoardOrientation: base.toggleBoardOrientation,
 		toggleAutoFlip,
 		toggleAnalysisMode,
 
-		// Setters for external use
-		setHighlightedSquares,
-		setOptionSquares,
-		setMoveFrom,
-		setRightClickedSquares,
-		setIsGameOver,
+		setHighlightedSquares: base.setHighlightedSquares,
+		setOptionSquares: base.setOptionSquares,
+		setMoveFrom: base.setMoveFrom,
+		setRightClickedSquares: base.setRightClickedSquares,
+		setIsGameOver: base.setIsGameOver,
 
-		// Computed
-		isKingInCheck: isKingInCheck(),
+		isKingInCheck: base.isKingInCheck,
 	};
 };

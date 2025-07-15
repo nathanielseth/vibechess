@@ -129,17 +129,17 @@ export class EngineService {
 	}
 
 	makeBotMove(gameState, difficulty, callbacks) {
-		const { dispatch, executeBotMove, isBotTurn } = callbacks;
+		const { setIsThinking, executeBotMove, isBotTurn } = callbacks;
 
 		if (gameState.isThinking || gameState.isGameOver || !isBotTurn())
 			return;
 
-		dispatch({ type: "SET_THINKING", payload: true });
+		setIsThinking(true);
 
 		if (this.ponderEngineRef) {
 			this.ponderEngineRef.stop();
 		}
-		dispatch({ type: "SET_PONDERING", payload: false });
+		// Note: setIsPondering should be called from the hook, not here
 
 		const currentFen = gameState.game.fen();
 		const operationId = this.operationState.getNextId();
@@ -170,7 +170,7 @@ export class EngineService {
 
 				if (move) {
 					executeBotMove(gameCopy, move, from, to);
-					dispatch({ type: "SET_THINKING", payload: false });
+					setIsThinking(false);
 					this.ponderState.reset();
 					return;
 				}
@@ -195,7 +195,7 @@ export class EngineService {
 				gameState.isGameOver ||
 				!isBotTurn()
 			) {
-				dispatch({ type: "SET_THINKING", payload: false });
+				setIsThinking(false);
 				return;
 			}
 
@@ -245,7 +245,7 @@ export class EngineService {
 					}
 				}
 
-				dispatch({ type: "SET_THINKING", payload: false });
+				setIsThinking(false);
 				this.operationState.currentMoveOperation = null;
 			};
 
@@ -257,7 +257,7 @@ export class EngineService {
 	}
 
 	async startPondering(gameState, difficulty, callbacks) {
-		const { dispatch, isPlayerTurn } = callbacks;
+		const { setIsPondering, isPlayerTurn } = callbacks;
 
 		if (gameState.isGameOver || !isPlayerTurn() || gameState.isPondering)
 			return;
@@ -290,7 +290,7 @@ export class EngineService {
 			this.ponderState.resultingPosition = hypotheticalGame.fen();
 			this.ponderState.isActive = true;
 
-			dispatch({ type: "SET_PONDERING", payload: true });
+			setIsPondering(true);
 
 			this.initializeEngines();
 
@@ -311,7 +311,7 @@ export class EngineService {
 					!this.ponderState.isActive ||
 					!isPlayerTurn()
 				) {
-					dispatch({ type: "SET_PONDERING", payload: false });
+					setIsPondering(false);
 					return;
 				}
 
