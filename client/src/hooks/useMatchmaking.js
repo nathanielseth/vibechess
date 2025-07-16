@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import useSocketContext from "../context/useSocketContext";
 
-export const useMatchmaking = () => {
+export const useMatchmaking = (startSearchSound, stopSearchSound) => {
 	const [isSearching, setIsSearching] = useState(false);
 	const { socket, isConnected, emit, on } = useSocketContext();
 	const navigate = useNavigate();
@@ -12,7 +12,7 @@ export const useMatchmaking = () => {
 		if (isSearching) {
 			emit("cancelMatchmaking");
 			setIsSearching(false);
-			toast.info("Matchmaking cancelled");
+			stopSearchSound();
 			return;
 		}
 
@@ -30,22 +30,20 @@ export const useMatchmaking = () => {
 		}
 
 		setIsSearching(true);
-
-		toast.info("Searching for opponent...", {
-			position: "top-right",
-			autoClose: false,
-			hideProgressBar: false,
-			closeOnClick: false,
-			pauseOnHover: false,
-			draggable: false,
-		});
-
+		startSearchSound();
 		emit("findMatch", {
 			timeControl: 10,
 			playerName: username,
 			flag: selectedFlag,
 		});
-	}, [isSearching, socket, isConnected, emit]);
+	}, [
+		isSearching,
+		socket,
+		isConnected,
+		emit,
+		startSearchSound,
+		stopSearchSound,
+	]);
 
 	useEffect(() => {
 		if (!socket || !isConnected) return;
@@ -53,6 +51,7 @@ export const useMatchmaking = () => {
 		const handleMatchFound = (data) => {
 			console.log("Match found:", data);
 			setIsSearching(false);
+			stopSearchSound();
 			toast.dismiss();
 			toast.success("Match found!");
 			setTimeout(() => navigate("/multiplayer", { state: data }), 1000);
@@ -64,12 +63,14 @@ export const useMatchmaking = () => {
 
 		const handleMatchmakingCancelled = () => {
 			setIsSearching(false);
+			stopSearchSound();
 			toast.dismiss();
 		};
 
 		const handleConnectionError = () => {
 			if (isSearching) {
 				setIsSearching(false);
+				stopSearchSound();
 				toast.dismiss();
 				toast.error("Connection lost. Please try again.");
 			}
@@ -86,15 +87,24 @@ export const useMatchmaking = () => {
 		return () => {
 			cleanup.forEach((fn) => fn && fn());
 		};
-	}, [socket, isConnected, on, navigate, isSearching]);
+	}, [socket, isConnected, on, navigate, isSearching, stopSearchSound]);
 
 	useEffect(() => {
 		if (!isConnected && isSearching) {
 			setIsSearching(false);
+			stopSearchSound();
 			toast.dismiss();
 			toast.error("Lost connection. Please try again.");
 		}
-	}, [isConnected, isSearching]);
+	}, [isConnected, isSearching, stopSearchSound]);
+
+	useEffect(() => {
+		return () => {
+			if (isSearching) {
+				stopSearchSound();
+			}
+		};
+	}, [isSearching, stopSearchSound]);
 
 	return {
 		isSearching,

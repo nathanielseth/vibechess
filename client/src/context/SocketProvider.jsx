@@ -105,17 +105,7 @@ const SocketProvider = ({ children }) => {
 					clearTimers();
 					dismissActiveToast();
 
-					const connectionTime = connectionStartTime.current
-						? Math.round(
-								(Date.now() - connectionStartTime.current) /
-									1000
-						  )
-						: 0;
-
-					const message =
-						connectionTime > 5
-							? `Server online! (took ${connectionTime}s)`
-							: "Server online!";
+					const message = "Server online!";
 
 					showToast("success", message, {
 						autoClose: TIMINGS.SUCCESS_TOAST_DURATION,

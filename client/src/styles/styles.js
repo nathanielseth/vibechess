@@ -30,14 +30,13 @@ export const styles = {
 	buttonTextStyles: {
 		fontSize: "1.6rem",
 		marginBottom: "0px",
-		textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
+		textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
 	},
 	iconStyles: {
 		width: "5.3vw",
 		height: "auto",
 		marginBottom: "25px",
 		transition: "filter 0.3s",
-		"&:hover": { filter: "brightness(0)" },
 		alignItems: "center",
 		justifyContent: "center",
 	},

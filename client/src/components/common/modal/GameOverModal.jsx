@@ -16,23 +16,13 @@ const GameOverModal = ({
 	gameMode,
 }) => {
 	const navigate = useNavigate();
-	const selectedFlag = window.localStorage.getItem("selectedFlag");
+	const selectedFlag = window.localStorage.getItem("selectedFlag") || "ph";
 
 	const handleMenu = () => navigate("/");
 	const handleRematch = () => {
 		onRematch();
 		onClose();
 	};
-
-	const getPlayerByColor = (color) => {
-		if (gameMode === "multiplayer" && players.length > 0) {
-			return players.find((p) => p.color === color);
-		}
-		return null;
-	};
-
-	const whitePlayer = getPlayerByColor("white");
-	const blackPlayer = getPlayerByColor("black");
 
 	const getWinnerMessage = () => {
 		if (!winner) return endReason || "Game Over";
@@ -41,7 +31,15 @@ const GameOverModal = ({
 			return `${winner.toUpperCase()} WON!`;
 		}
 
-		// For multiplayer/versusbot
+		if (gameMode === "versus-bot") {
+			if (winner === playerColor) {
+				return "YOU WON!";
+			} else {
+				return "BOT WON!";
+			}
+		}
+
+		// For multiplayer
 		const winnerPlayer = players.find((p) => p.color === winner);
 		const currentPlayer = players.find((p) => p.color === playerColor);
 
@@ -52,19 +50,67 @@ const GameOverModal = ({
 		}
 	};
 
-	const getPlayerName = (player, defaultName) => {
-		if (gameMode === "multiplayer" && player?.name) {
-			return player.name;
+	const getPlayerInfo = (color) => {
+		if (gameMode === "local") {
+			return {
+				name: `${
+					color.charAt(0).toUpperCase() + color.slice(1)
+				} Player`,
+				flag: selectedFlag,
+			};
 		}
-		return defaultName;
+
+		if (gameMode === "versus-bot") {
+			if (color === playerColor) {
+				return {
+					name: "You",
+					flag: selectedFlag,
+				};
+			} else {
+				return {
+					name: "Bot",
+					flag: "gb", // Default bot flag
+				};
+			}
+		}
+
+		// For multiplayer
+		const player = players.find((p) => p.color === color);
+		return {
+			name:
+				player?.name ||
+				`${color.charAt(0).toUpperCase() + color.slice(1)} Player`,
+			flag: player?.flag || selectedFlag,
+		};
 	};
 
-	const getPlayerFlag = (player) => {
-		if (gameMode === "multiplayer" && player?.flag) {
-			return player.flag;
-		}
-		return selectedFlag || "us";
+	const shouldShowBothPlayers = () => {
+		return gameMode === "multiplayer" || !winner;
 	};
+
+	const getDisplayPlayers = () => {
+		const whitePlayer = getPlayerInfo("white");
+		const blackPlayer = getPlayerInfo("black");
+
+		if (shouldShowBothPlayers()) {
+			return [
+				{ ...whitePlayer, color: "white" },
+				{ ...blackPlayer, color: "black" },
+			];
+		}
+
+		// For local and versus-bot, show only the winner
+		if (winner === "white") {
+			return [{ ...whitePlayer, color: "white" }];
+		} else if (winner === "black") {
+			return [{ ...blackPlayer, color: "black" }];
+		}
+
+		// Fallback - shouldn't happen but just in case
+		return [{ ...whitePlayer, color: "white" }];
+	};
+
+	const displayPlayers = getDisplayPlayers();
 
 	return (
 		<Modal open={isOpen} onClose={onClose} autoFocus={false}>
@@ -93,43 +139,29 @@ const GameOverModal = ({
 
 					{/* Middle Box - Player Info */}
 					<Grid container spacing={2} justifyContent="center" mb={4}>
-						{/* White Player */}
-						<Grid item xs={6}>
-							<CircleFlag
-								countryCode={getPlayerFlag(whitePlayer)}
-								height="90"
-							/>
-							<Typography variant="subtitle2">
-								{getPlayerName(whitePlayer, "White Player")}
-							</Typography>
-							{winner === "white" && (
-								<Typography
-									variant="caption"
-									color="success.main"
-								>
-									Winner
+						{displayPlayers.map((player) => (
+							<Grid
+								item
+								xs={shouldShowBothPlayers() ? 6 : 12}
+								key={player.color}
+							>
+								<CircleFlag
+									countryCode={player.flag}
+									height="90"
+								/>
+								<Typography variant="subtitle2">
+									{player.name}
 								</Typography>
-							)}
-						</Grid>
-
-						{/* Black Player */}
-						<Grid item xs={6}>
-							<CircleFlag
-								countryCode={getPlayerFlag(blackPlayer)}
-								height="90"
-							/>
-							<Typography variant="subtitle2">
-								{getPlayerName(blackPlayer, "Black Player")}
-							</Typography>
-							{winner === "black" && (
-								<Typography
-									variant="caption"
-									color="success.main"
-								>
-									Winner
-								</Typography>
-							)}
-						</Grid>
+								{winner === player.color && (
+									<Typography
+										variant="caption"
+										color="success.main"
+									>
+										Winner
+									</Typography>
+								)}
+							</Grid>
+						))}
 					</Grid>
 
 					{/* Bottom Box - Action Buttons */}
@@ -168,7 +200,6 @@ GameOverModal.propTypes = {
 	isOpen: PropTypes.bool.isRequired,
 	onClose: PropTypes.func.isRequired,
 	onRematch: PropTypes.func,
-	onNewGame: PropTypes.func,
 	endReason: PropTypes.string,
 	winner: PropTypes.string,
 	players: PropTypes.array,

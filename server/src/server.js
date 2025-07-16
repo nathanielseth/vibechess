@@ -97,6 +97,9 @@ io.on("connection", (socket) => {
 		findMatch: createSocketHandler("findMatch", (socket, data) =>
 			socketHandler.handleFindMatch(socket, data)
 		),
+		cancelMatchmaking: createSocketHandler("cancelMatchmaking", (socket) =>
+			socketHandler.handleCancelMatchmaking(socket)
+		),
 		surrender: createSocketHandler("surrender", (socket, data) =>
 			socketHandler.handleSurrender(socket, data)
 		),

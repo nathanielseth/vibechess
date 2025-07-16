@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Chess } from "chess.js";
-import { toast } from "react-toastify";
 import {
 	isKingInCheck as checkKingInCheck,
 	generatePGN,
@@ -19,6 +18,7 @@ export const useChessGameBase = (gameMode = "local") => {
 	const [kingInCheck, setKingInCheck] = useState(null);
 	const [isGameOver, setIsGameOver] = useState(false);
 	const [gameEndReason, setGameEndReason] = useState(null);
+	const [winner, setWinner] = useState(null);
 	const [pgn, setPgn] = useState("");
 	const [currentPlayer, setCurrentPlayer] = useState("white");
 	const [boardOrientation, setBoardOrientation] = useState("white");
@@ -30,37 +30,28 @@ export const useChessGameBase = (gameMode = "local") => {
 
 	const toastId = useRef(null);
 
-	const checkGameOver = useCallback(
-		(customMessage) => {
-			let reason = null;
+	const checkGameOver = useCallback(() => {
+		let reason = null;
+		let gameWinner = null;
 
-			if (game.isCheckmate()) {
-				const loserColor = game.turn() === "w" ? "Black" : "White";
-				const moves = history.length - 1;
-				reason =
-					customMessage ||
-					`${loserColor} got checkmated in ${moves} moves`;
-			} else if (game.isStalemate()) {
-				reason = "Game ended in stalemate";
-			} else if (game.isDraw() || game.isThreefoldRepetition()) {
-				reason = "Game ended in a draw";
-			}
+		if (game.isCheckmate()) {
+			const loserColor = game.turn();
+			gameWinner = loserColor === "w" ? "black" : "white";
+			const moves = history.length - 1;
+			reason = `Checkmate in ${moves} moves`;
+		} else if (game.isStalemate()) {
+			reason = "Stalemate";
+		} else if (game.isDraw() || game.isThreefoldRepetition()) {
+			reason = "Draw";
+		}
 
+		if (reason) {
 			setGameEndReason(reason);
-
-			if (reason) {
-				toastId.current = toast.info(reason, {
-					position: toast.POSITION.TOP_CENTER,
-					autoClose: gameMode === "versus-bot" ? 3000 : 2000,
-				});
-
-				setTimeout(() => {
-					setIsGameOver(true);
-				}, 1000);
-			}
-		},
-		[game, history, gameMode]
-	);
+			setWinner(gameWinner);
+			setIsGameOver(true);
+			notifySound.play();
+		}
+	}, [game, history]);
 
 	useEffect(() => {
 		if (lastMove && currentIndex > history.length - 2) {
@@ -71,12 +62,6 @@ export const useChessGameBase = (gameMode = "local") => {
 			setKingInCheck(checkKingInCheck(game));
 		}
 	}, [lastMove, currentIndex, history, game]);
-
-	useEffect(() => {
-		if (isGameOver) {
-			notifySound.play();
-		}
-	}, [isGameOver]);
 
 	// Update PGN
 	useEffect(() => {
@@ -138,6 +123,8 @@ export const useChessGameBase = (gameMode = "local") => {
 		setIsGameOver,
 		gameEndReason,
 		setGameEndReason,
+		winner,
+		setWinner,
 		pgn,
 		setPgn,
 		currentPlayer,

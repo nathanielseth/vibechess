@@ -6,9 +6,31 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { styles } from "../../styles/styles";
 
 const MenuButton = React.memo(
-	({ onClick, icon, label, backgroundColor, description }) => {
+	({
+		onClick,
+		icon,
+		label,
+		backgroundColor,
+		description,
+		isAnimating = false,
+	}) => {
 		const theme = useTheme();
 		const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+		// Bounce animation keyframes
+		const bounceAnimation = {
+			"@keyframes bounce": {
+				"0%, 100%": {
+					transform: "translateY(0)",
+					animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)",
+				},
+				"50%": {
+					transform: "translateY(-8px)",
+					animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+				},
+			},
+		};
+
 		return (
 			<Slide direction="up" in={true} mountOnEnter unmountOnExit>
 				<Button
@@ -19,8 +41,16 @@ const MenuButton = React.memo(
 						backgroundColor,
 						position: "relative",
 						overflow: "hidden",
+						animation: isAnimating
+							? "bounce 0.812s infinite"
+							: "none",
+						...bounceAnimation,
+						"& img": {
+							filter: "drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.3))",
+						},
 						"&:hover": {
 							"& img": { filter: "brightness(0%)" },
+							"& h5": { textShadow: "none" },
 							"& .description": {
 								position: "relative",
 								visibility: "visible",
@@ -104,6 +134,7 @@ MenuButton.propTypes = {
 	label: PropTypes.string.isRequired,
 	backgroundColor: PropTypes.string.isRequired,
 	description: PropTypes.string.isRequired,
+	isAnimating: PropTypes.bool,
 };
 
 export default MenuButton;

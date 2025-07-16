@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Chess } from "chess.js";
-import { toast } from "react-toastify";
 import {
 	findBestMove as findBestMoveUtil,
 	generatePGN,
@@ -34,7 +33,7 @@ export const useLocalChessGame = () => {
 
 	useEffect(() => {
 		base.checkGameOver();
-	}, [base.game, base.checkGameOver, base]);
+	}, [base]);
 
 	const makeMove = useCallback(
 		(sourceSquare, targetSquare, promotion = "q") => {
@@ -66,12 +65,18 @@ export const useLocalChessGame = () => {
 				base.setGame(gameCopy);
 				base.clearUIState();
 
+				if (autoFlip) {
+					base.setBoardOrientation(
+						base.currentPlayer === "white" ? "black" : "white"
+					);
+				}
+
 				return move;
 			}
 
 			return false;
 		},
-		[base]
+		[base, autoFlip]
 	);
 
 	const resetGame = useCallback(() => {
@@ -83,16 +88,13 @@ export const useLocalChessGame = () => {
 		base.setHistory([{ fen: newGame.fen(), lastMove: null }]);
 		base.setCurrentIndex(0);
 		base.setKingInCheck(null);
-		setAutoFlip(false);
 		base.setIsGameOver(false);
 		base.setGameEndReason(null);
+		base.setWinner(null);
 		base.setPgn("");
 		base.setCurrentPlayer("white");
-
-		base.toastId.current = toast.info("The game has restarted", {
-			position: toast.POSITION.TOP_CENTER,
-			autoClose: 2000,
-		});
+		base.setBoardOrientation("white");
+		setAutoFlip(false);
 	}, [base]);
 
 	const undoMove = useCallback(() => {
@@ -108,7 +110,9 @@ export const useLocalChessGame = () => {
 			base.setGame(newGame);
 			base.setHistory(newHistory);
 			base.setCurrentIndex(newIndex);
-			base.setLastMove(null);
+			base.setLastMove(
+				newIndex > 0 ? newHistory[newIndex].lastMove : null
+			);
 			base.setHighlightedSquares({});
 			base.clearUIState();
 			base.setKingInCheck(base.isKingInCheck);
@@ -116,28 +120,20 @@ export const useLocalChessGame = () => {
 			base.setCurrentPlayer(
 				base.currentPlayer === "white" ? "black" : "white"
 			);
+
+			base.setIsGameOver(false);
+			base.setGameEndReason(null);
+			base.setWinner(null);
 		}
 	}, [base]);
 
 	const toggleAutoFlip = useCallback(() => {
-		if (!autoFlip) {
-			base.toastId.current = toast.info("Auto-flip is enabled!", {
-				position: toast.POSITION.TOP_CENTER,
-				autoClose: 2000,
-			});
-		}
 		setAutoFlip(!autoFlip);
-	}, [autoFlip, base.toastId]);
+	}, [autoFlip]);
 
 	const toggleAnalysisMode = useCallback(() => {
-		if (!analysisMode) {
-			base.toastId.current = toast.info("Stockfish evaluation enabled!", {
-				position: toast.POSITION.TOP_CENTER,
-				autoClose: 4000,
-			});
-		}
 		setAnalysisMode(!analysisMode);
-	}, [analysisMode, base.toastId]);
+	}, [analysisMode]);
 
 	return {
 		game: base.game,
@@ -147,6 +143,7 @@ export const useLocalChessGame = () => {
 		kingInCheck: base.kingInCheck,
 		isGameOver: base.isGameOver,
 		gameEndReason: base.gameEndReason,
+		winner: base.winner,
 		pgn: base.pgn,
 		currentPlayer: base.currentPlayer,
 		boardOrientation: base.boardOrientation,

@@ -239,9 +239,17 @@ const ChessboardComponent = ({
 				time={time}
 				isCurrentPlayer={isCurrentPlayer}
 				isTop={isTop}
+				history={chessGame?.history}
+				currentIndex={chessGame?.currentIndex}
 			/>
 		),
-		[gameMode, playerColor, opponent]
+		[
+			gameMode,
+			playerColor,
+			opponent,
+			chessGame?.history,
+			chessGame?.currentIndex,
+		]
 	);
 
 	if (!isGameReady) {

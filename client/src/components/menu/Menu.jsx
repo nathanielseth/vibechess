@@ -45,6 +45,22 @@ import { useMatchmaking } from "../../hooks/useMatchmaking";
 import { useRoomJoining } from "../../hooks/useRoomJoining";
 import { useMenuNavigation } from "../../hooks/useMenuNavigation";
 
+const useAnimatedEllipsis = (isActive) => {
+	const [dotCount, setDotCount] = useState(1);
+
+	React.useEffect(() => {
+		if (!isActive) return;
+
+		const interval = setInterval(() => {
+			setDotCount((prev) => (prev % 3) + 1);
+		}, 500);
+
+		return () => clearInterval(interval);
+	}, [isActive]);
+
+	return isActive ? ".".repeat(dotCount) : "";
+};
+
 const Menu = () => {
 	const theme = useTheme();
 	const navigate = useNavigate();
@@ -57,8 +73,17 @@ const Menu = () => {
 	const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
 	const [isRotating, setIsRotating] = useState(false);
 
-	const { isMusicMuted, playClickSound, handleMusicToggle } = useMenuSounds();
-	const { isSearching, handleMatchmakeClick } = useMatchmaking();
+	const {
+		isMusicMuted,
+		playClickSound,
+		handleMusicToggle,
+		startSearchSound,
+		stopSearchSound,
+	} = useMenuSounds();
+	const { isSearching, handleMatchmakeClick } = useMatchmaking(
+		startSearchSound,
+		stopSearchSound
+	);
 	const { enteredRoomCode, setEnteredRoomCode, handleJoinRoom } =
 		useRoomJoining();
 	const {
@@ -67,6 +92,8 @@ const Menu = () => {
 		handleVersusBotClick,
 		handleSettingsClick,
 	} = useMenuNavigation(playClickSound);
+
+	const animatedEllipsis = useAnimatedEllipsis(isSearching);
 
 	const handleImageClick = useCallback(() => {
 		setIsRotating((prev) => !prev);
@@ -165,6 +192,10 @@ const Menu = () => {
 	const rotationStyle = isRotating ? rotatingImageRotate : {};
 	const iconSize = isMobile ? 24 : 26;
 
+	const matchmakingLabel = isSearching
+		? `FINDING OPPONENT${animatedEllipsis}`
+		: "MATCHMAKING";
+
 	return (
 		<Box
 			sx={{
@@ -254,14 +285,14 @@ const Menu = () => {
 				<MenuButton
 					onClick={handleMatchmakeWrapper}
 					icon={MatchmakingIcon}
-					label={isSearching ? "CANCEL SEARCH" : "MATCHMAKING"}
+					label={matchmakingLabel}
 					backgroundColor={isSearching ? "#ff6b6b" : "secondary.main"}
 					description={
 						isSearching
-							? "Cancel current search"
+							? "Click to cancel search"
 							: "Search for an opponent through random matchmaking."
 					}
-					disabled={!isConnected}
+					isAnimating={isSearching}
 				/>
 
 				{/* Private Room */}

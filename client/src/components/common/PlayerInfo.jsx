@@ -3,6 +3,8 @@ import PropTypes from "prop-types";
 import { Stack, Typography, Box } from "@mui/material";
 import { CircleFlag } from "react-circle-flags";
 import { formatTime } from "../game/utils/chessboardUtils";
+import CapturedPieces from "./CapturedPieces";
+import { useCapturedPieces } from "../game/hooks/useCapturedPieces";
 
 const PlayerInfo = ({
 	gameMode,
@@ -11,7 +13,14 @@ const PlayerInfo = ({
 	time,
 	isCurrentPlayer,
 	isTop = false,
+	history,
+	currentIndex,
 }) => {
+	const { getCapturedPiecesForPlayer } = useCapturedPieces(
+		history,
+		currentIndex
+	);
+
 	const getDisplayInfo = () => {
 		if (gameMode === "multiplayer") {
 			if (isTop) {
@@ -33,6 +42,10 @@ const PlayerInfo = ({
 	};
 
 	const { name, flag } = getDisplayInfo();
+	const actualPlayerColor = player;
+	const opponentColor = actualPlayerColor === "white" ? "black" : "white";
+	const capturedByThisPlayer = getCapturedPiecesForPlayer(actualPlayerColor);
+	const capturedByTheOpponent = getCapturedPiecesForPlayer(opponentColor);
 
 	return (
 		<Stack flexDirection="row" justifyContent="space-between">
@@ -40,10 +53,21 @@ const PlayerInfo = ({
 				sx={{ margin: 1 }}
 				alignItems="center"
 				gap={1}
-				direction={{ xs: "column", md: "row" }}
+				direction="row"
 			>
 				{flag && <CircleFlag countryCode={flag} height="35" />}
-				<Typography variant="h4">{name}</Typography>
+				<Box display="flex" alignItems="center">
+					<Typography variant="h4">{name}</Typography>
+				</Box>
+				{history && currentIndex !== undefined && (
+					<Box display="flex" alignItems="center" sx={{ ml: 0.5 }}>
+						<CapturedPieces
+							capturedByPlayer={capturedByThisPlayer}
+							capturedByOpponent={capturedByTheOpponent}
+							isCompact={true}
+						/>
+					</Box>
+				)}
 			</Stack>
 			<Stack
 				sx={{
@@ -78,6 +102,13 @@ PlayerInfo.propTypes = {
 	time: PropTypes.number.isRequired,
 	isCurrentPlayer: PropTypes.bool.isRequired,
 	isTop: PropTypes.bool,
+	history: PropTypes.arrayOf(
+		PropTypes.shape({
+			fen: PropTypes.string.isRequired,
+			lastMove: PropTypes.object,
+		})
+	),
+	currentIndex: PropTypes.number,
 };
 
 export default PlayerInfo;

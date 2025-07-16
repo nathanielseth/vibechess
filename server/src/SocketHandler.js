@@ -386,6 +386,11 @@ export class SocketHandler {
 		});
 	}
 
+	handleCancelMatchmaking(socket) {
+		this.gm.removeFromQueue(socket.id);
+		socket.emit("matchmakingCancelled");
+	}
+
 	handleSurrender(socket, { roomCode }) {
 		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
 			this.withPlayer(

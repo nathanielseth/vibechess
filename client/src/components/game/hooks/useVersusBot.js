@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Chess } from "chess.js";
-import { toast } from "react-toastify";
 import {
 	isKingInCheck as checkKingInCheck,
 	moveSound,
@@ -134,29 +133,25 @@ export const useVersusBot = (playerColor = "white", difficulty = 10) => {
 
 	const checkBotGameOver = useCallback(() => {
 		let reason = null;
+		let gameWinner = null;
 
 		if (base.game.isCheckmate()) {
-			const winner = base.game.turn() === "w" ? "Black" : "White";
-			const isPlayerWin = winner.toLowerCase() === playerColor;
+			const loserColor = base.game.turn();
+			gameWinner = loserColor === "w" ? "black" : "white";
 			const moves = base.history.length - 1;
-			reason = isPlayerWin
-				? `You won by checkmate in ${moves} moves!`
-				: `Bot won by checkmate in ${moves} moves`;
+			reason = `Checkmate in ${moves} moves`;
 		} else if (base.game.isStalemate()) {
-			reason = "Game ended in stalemate";
+			reason = "Stalemate";
 		} else if (base.game.isDraw() || base.game.isThreefoldRepetition()) {
-			reason = "Game ended in a draw";
+			reason = "Draw";
 		}
 
 		if (reason) {
 			base.setGameEndReason(reason);
+			base.setWinner(gameWinner);
 			base.setIsGameOver(true);
-			base.toastId.current = toast.info(reason, {
-				position: toast.POSITION.TOP_CENTER,
-				autoClose: 3000,
-			});
 		}
-	}, [playerColor, base]);
+	}, [base]);
 
 	useEffect(() => {
 		checkBotGameOver();
@@ -264,6 +259,7 @@ export const useVersusBot = (playerColor = "white", difficulty = 10) => {
 		base.setKingInCheck(null);
 		base.setIsGameOver(false);
 		base.setGameEndReason(null);
+		base.setWinner(null);
 		base.setPgn("");
 		base.setCurrentPlayer("white");
 		base.setBoardOrientation("white");
@@ -274,11 +270,6 @@ export const useVersusBot = (playerColor = "white", difficulty = 10) => {
 			engineServiceRef.current.ponderState.reset();
 		}
 		clearPremoves();
-
-		base.toastId.current = toast.info("New game started against bot", {
-			position: toast.POSITION.TOP_CENTER,
-			autoClose: 2000,
-		});
 	}, [stopAllOperations, base, clearPremoves]);
 
 	const undoMove = useCallback(() => {
@@ -320,6 +311,7 @@ export const useVersusBot = (playerColor = "white", difficulty = 10) => {
 		kingInCheck: base.kingInCheck,
 		isGameOver: base.isGameOver,
 		gameEndReason: base.gameEndReason,
+		winner: base.winner,
 		pgn: base.pgn,
 		currentPlayer: base.currentPlayer,
 		boardOrientation: base.boardOrientation,
