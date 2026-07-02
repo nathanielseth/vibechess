@@ -164,6 +164,13 @@ export class GameManager {
 		const now = Date.now();
 		const elapsed = Math.floor((now - gameState.lastMoveTimestamp) / 10);
 
+		if (gameState.surrenderedPlayer) {
+			gameState.isPaused = true;
+			return;
+		}
+
+		if (elapsed <= 0) return;
+
 		if (gameState.currentPlayer === "white") {
 			gameState.whiteTimeRemaining = Math.max(
 				0,
@@ -179,20 +186,83 @@ export class GameManager {
 		gameState.lastMoveTimestamp = now;
 	}
 
+	handleResignation(roomCode, playerId) {
+		const room = this.rooms.get(roomCode);
+		if (!room) return;
+
+		const player = room.players.find((p) => p.id === playerId);
+		if (!player) return;
+
+		room.gameState.surrenderedPlayer = player.color;
+		room.gameState.isGameOver = true;
+		room.gameState.gameOverReason = "resignation";
+		room.gameState.winner = player.color === "white" ? "black" : "white";
+		room.gameState.gameEndedBy = "resignation";
+		room.gameState.isPaused = true;
+
+		this.broadcastGameState(roomCode);
+	}
+
+	handleDrawOffer(roomCode, playerId) {
+		const room = this.rooms.get(roomCode);
+		if (!room) return;
+
+		const player = room.players.find((p) => p.id === playerId);
+		if (!player) return;
+
+		room.gameState.drawOffers.add(player.color);
+
+		if (room.gameState.drawOffers.size === 2) {
+			room.gameState.isGameOver = true;
+			room.gameState.gameOverReason = "draw by agreement";
+			room.gameState.winner = null;
+			room.gameState.gameEndedBy = "draw-offer";
+			room.gameState.isPaused = true;
+			this.broadcastGameState(roomCode);
+		} else {
+			const opponent = room.players.find((p) => p.id !== playerId);
+			if (opponent) {
+				this.io.to(opponent.id).emit("drawOffer", {
+					from: player.name,
+					playerColor: player.color,
+				});
+			}
+		}
+	}
+
+	handleDrawResponse(roomCode, playerId, accepted) {
+		const room = this.rooms.get(roomCode);
+		if (!room) return;
+
+		const player = room.players.find((p) => p.id === playerId);
+		if (!player) return;
+
+		if (accepted) {
+			room.gameState.drawOffers.add(player.color);
+			room.gameState.isGameOver = true;
+			room.gameState.gameOverReason = "draw by agreement";
+			room.gameState.winner = null;
+			room.gameState.gameEndedBy = "draw-offer";
+			room.gameState.isPaused = true;
+			this.broadcastGameState(roomCode);
+		} else {
+			room.gameState.drawOffers.clear();
+			const opponent = room.players.find((p) => p.id !== playerId);
+			if (opponent) {
+				this.io.to(opponent.id).emit("drawDeclined", {
+					from: player.name,
+				});
+			}
+		}
+	}
+
 	checkGameOver(room) {
 		const { chess } = room.gameState;
 		let reason = null;
 		let winner = null;
 		let endedBy = "natural";
 
-		if (room.gameState.surrenderedPlayer) {
-			winner =
-				room.gameState.surrenderedPlayer === "white"
-					? "black"
-					: "white";
-			reason = "resignation";
-			endedBy = "resignation";
-		} else if (room.gameState.whiteTimeRemaining <= 0) {
+		if (room.gameState.whiteTimeRemaining <= 0) {
 			winner = "black";
 			reason = "timeout";
 			endedBy = "timeout";
@@ -200,6 +270,13 @@ export class GameManager {
 			winner = "white";
 			reason = "timeout";
 			endedBy = "timeout";
+		} else if (room.gameState.surrenderedPlayer) {
+			winner =
+				room.gameState.surrenderedPlayer === "white"
+					? "black"
+					: "white";
+			reason = "resignation";
+			endedBy = "resignation";
 		} else if (room.gameState.drawOffers.size === 2) {
 			reason = "draw by agreement";
 			endedBy = "draw-offer";
@@ -222,6 +299,9 @@ export class GameManager {
 			room.gameState.winner = winner;
 			room.gameState.gameEndedBy = endedBy;
 			room.gameState.isPaused = true;
+
+			room.gameState.lastMoveTimestamp = Date.now();
+
 			return true;
 		}
 
@@ -311,12 +391,14 @@ export class GameManager {
 	}
 
 	broadcastTimeUpdate(room) {
-		this.io.to(room.roomCode).emit("timeUpdate", {
+		const timeData = {
 			whiteTimeRemaining: room.gameState.whiteTimeRemaining,
 			blackTimeRemaining: room.gameState.blackTimeRemaining,
 			currentPlayer: room.gameState.currentPlayer,
 			timestamp: Date.now(),
-		});
+		};
+
+		this.io.to(room.roomCode).emit("timeUpdate", timeData);
 	}
 
 	removeFromQueue(socketId) {
@@ -350,21 +432,30 @@ export class GameManager {
 
 	startTimer() {
 		this.gameTimer = setInterval(() => {
-			const activeRooms = Array.from(this.rooms.values()).filter(
-				(room) => !room.gameState.isGameOver && !room.gameState.isPaused
-			);
+			const activeRooms = [];
+
+			for (const room of this.rooms.values()) {
+				if (!room.gameState.isGameOver && !room.gameState.isPaused) {
+					activeRooms.push(room);
+				}
+			}
 
 			if (activeRooms.length === 0) return;
 
-			activeRooms.forEach((room) => {
-				this.updateTimer(room.gameState);
+			const batchSize = 10;
+			for (let i = 0; i < activeRooms.length; i += batchSize) {
+				const batch = activeRooms.slice(i, i + batchSize);
 
-				if (this.checkGameOver(room)) {
-					this.broadcastGameState(room.roomCode);
-				} else {
-					this.broadcastTimeUpdate(room);
-				}
-			});
+				batch.forEach((room) => {
+					this.updateTimer(room.gameState);
+
+					if (this.checkGameOver(room)) {
+						this.broadcastGameState(room.roomCode);
+					} else {
+						this.broadcastTimeUpdate(room);
+					}
+				});
+			}
 		}, 100);
 	}
 
@@ -392,6 +483,12 @@ export class GameManager {
 	cleanup() {
 		if (this.gameTimer) {
 			clearInterval(this.gameTimer);
+			this.gameTimer = null;
+		}
+
+		for (const room of this.rooms.values()) {
+			room.gameState.isGameOver = true;
+			room.gameState.isPaused = true;
 		}
 	}
 }

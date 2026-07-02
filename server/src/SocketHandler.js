@@ -391,167 +391,53 @@ export class SocketHandler {
 		socket.emit("matchmakingCancelled");
 	}
 
-	handleSurrender(socket, { roomCode }) {
-		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
-			this.withPlayer(
-				room,
-				socket.id,
-				socket,
-				"error",
-				"Invalid surrender request",
-				(player) => {
-					if (room.gameState.isGameOver) {
-						socket.emit("error", {
-							message: "Invalid surrender request",
-						});
-						return;
-					}
+	handleResign(socket, data) {
+		try {
+			const { roomCode } = data;
+			if (!roomCode) {
+				socket.emit("error", { message: "Room code is required" });
+				return;
+			}
 
-					room.gameState.surrenderedPlayer = player.color;
-					this.gm.checkGameOver(room);
-					this.gm.broadcastGameState(room.roomCode);
-
-					this.io.to(room.roomCode).emit("playerSurrendered", {
-						playerName: player.name,
-						playerColor: player.color,
-						winner: player.color === "white" ? "black" : "white",
-					});
-				}
-			);
-		});
+			this.gm.handleResignation(roomCode, socket.id);
+		} catch (error) {
+			console.error("Error handling resignation:", error);
+			socket.emit("error", { message: "Failed to process resignation" });
+		}
 	}
 
-	handleDrawOffer(socket, { roomCode }) {
-		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
-			this.withPlayer(
-				room,
-				socket.id,
-				socket,
-				"error",
-				"Invalid draw offer",
-				(player) => {
-					if (room.gameState.isGameOver) {
-						socket.emit("error", { message: "Invalid draw offer" });
-						return;
-					}
+	handleDrawOffer(socket, data) {
+		try {
+			const { roomCode } = data;
+			if (!roomCode) {
+				socket.emit("error", { message: "Room code is required" });
+				return;
+			}
 
-					room.gameState.drawOffers.add(player.color);
-
-					if (room.gameState.drawOffers.size === 2) {
-						this.gm.checkGameOver(room);
-						this.gm.broadcastGameState(room.roomCode);
-					} else {
-						const opponent = room.players.find(
-							(p) => p.id !== socket.id
-						);
-						if (opponent) {
-							this.io.to(opponent.id).emit("drawOffered", {
-								from: player.name,
-								fromColor: player.color,
-							});
-						}
-					}
-				}
-			);
-		});
+			this.gm.handleDrawOffer(roomCode, socket.id);
+		} catch (error) {
+			console.error("Error handling draw offer:", error);
+			socket.emit("error", { message: "Failed to process draw offer" });
+		}
 	}
 
-	handleAcceptDraw(socket, { roomCode }) {
-		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
-			this.withPlayer(
-				room,
-				socket.id,
-				socket,
-				"error",
-				"Invalid draw acceptance",
-				(player) => {
-					if (room.gameState.isGameOver) return;
+	handleDrawResponse(socket, data) {
+		try {
+			const { roomCode, accepted } = data;
+			if (!roomCode || typeof accepted !== "boolean") {
+				socket.emit("error", {
+					message: "Room code and accepted status are required",
+				});
+				return;
+			}
 
-					room.gameState.drawOffers.add(player.color);
-
-					if (room.gameState.drawOffers.size === 2) {
-						this.gm.checkGameOver(room);
-						this.gm.broadcastGameState(room.roomCode);
-					}
-				}
-			);
-		});
-	}
-
-	handleDeclineDraw(socket, { roomCode }) {
-		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
-			this.withPlayer(
-				room,
-				socket.id,
-				socket,
-				"error",
-				"Invalid draw decline",
-				(player) => {
-					room.gameState.drawOffers.clear();
-
-					const opponent = room.players.find(
-						(p) => p.id !== socket.id
-					);
-					if (opponent) {
-						this.io.to(opponent.id).emit("drawDeclined", {
-							by: player.name,
-							byColor: player.color,
-						});
-					}
-				}
-			);
-		});
-	}
-
-	handleRematchRequest(socket, { roomCode }) {
-		this.withRoom(socket, roomCode, "error", "Room not found", (room) => {
-			this.withPlayer(
-				room,
-				socket.id,
-				socket,
-				"error",
-				"Invalid rematch request",
-				(player) => {
-					if (!room.gameState.isGameOver) return;
-
-					room.rematchRequests.add(player.color);
-
-					if (room.rematchRequests.size === 2) {
-						room.gameState = this.gm.createGameState(
-							room.timeControl / 6000
-						);
-
-						const [player1, player2] = room.players;
-						[player1.color, player2.color] = [
-							player2.color,
-							player1.color,
-						];
-
-						room.rematchRequests.clear();
-
-						this.gm.broadcastGameState(room.roomCode);
-
-						this.io.to(room.roomCode).emit("rematchStarted", {
-							players: room.players.map((p) => ({
-								name: p.name,
-								color: p.color,
-								flag: p.flag,
-							})),
-						});
-					} else {
-						const opponent = room.players.find(
-							(p) => p.id !== socket.id
-						);
-						if (opponent) {
-							this.io.to(opponent.id).emit("rematchRequested", {
-								from: player.name,
-								fromColor: player.color,
-							});
-						}
-					}
-				}
-			);
-		});
+			this.gm.handleDrawResponse(roomCode, socket.id, accepted);
+		} catch (error) {
+			console.error("Error handling draw response:", error);
+			socket.emit("error", {
+				message: "Failed to process draw response",
+			});
+		}
 	}
 
 	handleDisconnect(socket) {

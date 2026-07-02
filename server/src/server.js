@@ -100,20 +100,14 @@ io.on("connection", (socket) => {
 		cancelMatchmaking: createSocketHandler("cancelMatchmaking", (socket) =>
 			socketHandler.handleCancelMatchmaking(socket)
 		),
-		surrender: createSocketHandler("surrender", (socket, data) =>
-			socketHandler.handleSurrender(socket, data)
+		resign: createSocketHandler("resign", (socket, data) =>
+			socketHandler.handleResign(socket, data)
 		),
-		offerDraw: createSocketHandler("offerDraw", (socket, data) =>
+		drawOffer: createSocketHandler("drawOffer", (socket, data) =>
 			socketHandler.handleDrawOffer(socket, data)
 		),
-		acceptDraw: createSocketHandler("acceptDraw", (socket, data) =>
-			socketHandler.handleAcceptDraw(socket, data)
-		),
-		declineDraw: createSocketHandler("declineDraw", (socket, data) =>
-			socketHandler.handleDeclineDraw(socket, data)
-		),
-		requestRematch: createSocketHandler("requestRematch", (socket, data) =>
-			socketHandler.handleRematchRequest(socket, data)
+		drawResponse: createSocketHandler("drawResponse", (socket, data) =>
+			socketHandler.handleDrawResponse(socket, data)
 		),
 		createRoom: createSocketHandler("createRoom", (socket, data) =>
 			socketHandler.handleCreateRoom(socket, data)
