@@ -2,23 +2,21 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 export const useChessboardState = (gameMode, matchData) => {
 	const [selectedPieceSet, setSelectedPieceSet] = useState(
-		localStorage.getItem("selectedPieces") || "tatiana"
+		localStorage.getItem("selectedPieces") || "tatiana",
 	);
 	const [selectedTheme, setSelectedTheme] = useState(
-		localStorage.getItem("selectedBoard") || "grey"
+		localStorage.getItem("selectedBoard") || "grey",
 	);
 	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 	const [isSettingsHovered, setIsSettingsHovered] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 	const [boardWidth, setBoardWidth] = useState(480);
 
-	// multiplayer state
 	const [gameState, setGameState] = useState({
 		playerColor: null,
 		opponent: null,
 		roomCode: null,
 	});
-
 	const lastProcessedMatchData = useRef(null);
 
 	const handleBoardChange = useCallback((newTheme) => {
@@ -37,21 +35,16 @@ export const useChessboardState = (gameMode, matchData) => {
 				setSelectedPieceSet(e.newValue || "tatiana");
 			}
 		};
-
 		window.addEventListener("storage", handleStorageChange);
 		return () => window.removeEventListener("storage", handleStorageChange);
 	}, []);
 
 	useEffect(() => {
 		if (!matchData || gameMode !== "multiplayer") return;
-
-		if (lastProcessedMatchData.current?.roomCode === matchData.roomCode) {
+		if (lastProcessedMatchData.current?.roomCode === matchData.roomCode)
 			return;
-		}
 
-		console.log("Processing matchData:", matchData);
 		lastProcessedMatchData.current = matchData;
-
 		setGameState({
 			playerColor: matchData.yourColor,
 			roomCode: matchData.roomCode,
@@ -60,7 +53,7 @@ export const useChessboardState = (gameMode, matchData) => {
 						name: matchData.opponent.name,
 						color: matchData.opponent.color,
 						flag: matchData.opponent.flag?.toLowerCase(),
-				  }
+					}
 				: null,
 		});
 	}, [matchData, gameMode]);
@@ -72,7 +65,7 @@ export const useChessboardState = (gameMode, matchData) => {
 		const availableHeight = window.innerHeight;
 		const newBoardWidth = Math.max(
 			Math.min(availableWidth, availableHeight * 0.75),
-			minWidth
+			minWidth,
 		);
 		setBoardWidth(newBoardWidth);
 	}, []);

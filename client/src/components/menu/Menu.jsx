@@ -203,11 +203,11 @@ const Menu = () => {
 				flexDirection: "column",
 				alignItems: "center",
 				justifyContent: "center",
-				height: "100dvh",
+				minHeight: "100dvh",
 				margin: 0,
-				padding: 0,
-				overflowY: { xs: "auto", sm: "auto", md: "hidden" },
-				overflowX: { xs: "auto", sm: "auto", md: "hidden" },
+				padding: isMobile ? "20px 0" : 0,
+				overflowY: "auto",
+				overflowX: "hidden",
 			}}
 		>
 			{/* Title */}
@@ -216,8 +216,8 @@ const Menu = () => {
 					display: "flex",
 					alignItems: "center",
 					flexDirection: "column",
-					marginBottom: isMobile ? "0" : "20px",
-					marginTop: isMobile ? "30px" : "0px",
+					marginBottom: isMobile ? "20px" : "20px",
+					marginTop: isMobile ? "0" : "0px",
 				}}
 			>
 				<Zoom in={true}>
@@ -243,7 +243,9 @@ const Menu = () => {
 							theme.palette.mode === "dark" ? "white" : "black"
 						}
 						textAlign="center"
-						sx={{ fontSize: "3.5rem" }}
+						sx={{
+							fontSize: isMobile ? "2.5rem" : "3.5rem",
+						}}
 					>
 						<span
 							style={{
@@ -268,10 +270,11 @@ const Menu = () => {
 					alignItems: "center",
 					marginTop: "5px",
 					flexWrap: "nowrap",
-					overflowX: isMobile ? "visible" : "auto",
+					overflowX: "visible",
 					overflowY: "visible",
 					width: "100%",
 					justifyContent: "center",
+					gap: isMobile ? "10px" : "0",
 				}}
 			>
 				<MenuButton
@@ -318,14 +321,15 @@ const Menu = () => {
 							color="primary"
 							fullWidth
 							sx={{
-								width: "30vh",
+								width: isMobile ? "300px" : "30vh",
 								marginBottom: "10px",
+								marginTop: isMobile ? "10px" : 0,
 								[theme.breakpoints.down("md")]: {
-									height: "9vh",
+									height: "auto",
 								},
 								[theme.breakpoints.down("sm")]: {
-									height: "7.2vh",
-									width: "45vh",
+									height: "auto",
+									width: "300px",
 								},
 							}}
 							value={enteredRoomCode}
@@ -385,7 +389,8 @@ const Menu = () => {
 					display: "flex",
 					flexDirection: "row",
 					alignItems: "center",
-					marginTop: isMobile ? "0" : "25px",
+					marginTop: isMobile ? "20px" : "25px",
+					marginBottom: isMobile ? "20px" : 0,
 					position: "relative",
 					zIndex: 1,
 					overflow: "visible",

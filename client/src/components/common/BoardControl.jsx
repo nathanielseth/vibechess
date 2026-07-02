@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { Box, IconButton, Button, Grid, Tooltip, Stack } from "@mui/material";
+import {
+	Box,
+	IconButton,
+	Button,
+	Grid,
+	Tooltip,
+	Stack,
+	Modal,
+	Typography,
+} from "@mui/material";
 import FirstPageRoundedIcon from "@mui/icons-material/FirstPageRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -15,6 +24,7 @@ import ShareModal from "./modal/ShareModal";
 import ConfirmationModal from "../common/modal/ConfirmationModal";
 import GameOverModal from "../common/modal/GameOverModal";
 import { useTheme } from "@mui/material/styles";
+import { toast } from "react-toastify";
 
 const BoardControl = ({
 	currentIndex,
@@ -28,11 +38,18 @@ const BoardControl = ({
 	gameMode = "versus-bot",
 	handleUndoMove,
 	setIsGameOver,
+	// New props for multiplayer draw functionality
+	resign,
+	offerDraw,
+	respondToDraw,
+	drawOfferData,
+	setDrawOfferData,
 }) => {
 	const theme = useTheme();
 	const [isShareModalOpen, setShareModalOpen] = useState(false);
 	const [isConfirmationModalOpen, setConfirmationModalOpen] = useState(false);
 	const [isGameOverModalOpen, setGameOverModalOpen] = useState(false);
+	const [isDrawOfferModalOpen, setDrawOfferModalOpen] = useState(false);
 	const [confirmationMessage, setConfirmationMessage] = useState("");
 	const [resignationReason, setResignationReason] = useState("");
 	const [isResignation, setIsResignation] = useState(false);
@@ -48,18 +65,47 @@ const BoardControl = ({
 	};
 
 	const handleDraw = () => {
-		setConfirmationMessage("Offer a draw?");
-		setIsResignation(false);
-		setConfirmationModalOpen(true);
+		if (gameMode === "multiplayer") {
+			offerDraw();
+			toast.info("Draw offer sent", {
+				position: "top-center",
+				autoClose: 2000,
+			});
+		} else {
+			setConfirmationMessage("Offer a draw?");
+			setIsResignation(false);
+			setConfirmationModalOpen(true);
+		}
 	};
 
 	const handleConfirmation = () => {
-		if (resignationReason === "Resigned") {
-			setGameOverModalOpen(true);
+		if (isResignation) {
+			if (gameMode === "multiplayer") {
+				// Call the resign function from useMultiplayerSocket
+				resign();
+				// Don't set game over here - let server handle it
+			} else {
+				// For non-multiplayer, show game over modal
+				setIsGameOver(true);
+				setGameOverModalOpen(true);
+			}
 		} else {
-			// Handle other confirmation actions
+			// Handle other confirmation actions (like draw offers)
 		}
 		setConfirmationModalOpen(false);
+	};
+
+	// Handle draw offer modal
+	useEffect(() => {
+		if (drawOfferData?.isVisible) {
+			setDrawOfferModalOpen(true);
+		}
+	}, [drawOfferData]);
+
+	const handleDrawOfferResponse = (accepted) => {
+		respondToDraw(accepted);
+		setDrawOfferModalOpen(false);
+		setDrawOfferData({ isVisible: false });
 	};
 
 	const closeShareModal = () => {
@@ -275,6 +321,49 @@ const BoardControl = ({
 						endReason={resignationReason}
 					/>
 				)}
+
+				{/* Draw Offer Modal */}
+				<Modal open={isDrawOfferModalOpen} onClose={() => {}}>
+					<Box
+						sx={{
+							position: "absolute",
+							top: "50%",
+							left: "50%",
+							transform: "translate(-50%, -50%)",
+							bgcolor:
+								theme.palette.mode === "light"
+									? "#fff"
+									: "#1f2123",
+							boxShadow: 24,
+							borderRadius: 3,
+							p: 3,
+							textAlign: "center",
+							width: "300px",
+						}}
+					>
+						<Typography variant="h6" gutterBottom>
+							Draw Offer
+						</Typography>
+						<Typography sx={{ mb: 3 }}>
+							{drawOfferData?.from} offers a draw
+						</Typography>
+						<Button
+							onClick={() => handleDrawOfferResponse(false)}
+							sx={{ marginRight: 2 }}
+							variant="contained"
+							color="secondary"
+						>
+							Decline
+						</Button>
+						<Button
+							onClick={() => handleDrawOfferResponse(true)}
+							variant="contained"
+							color="primary"
+						>
+							Accept
+						</Button>
+					</Box>
+				</Modal>
 			</Stack>
 		</Stack>
 	);
@@ -292,6 +381,12 @@ BoardControl.propTypes = {
 	gameMode: PropTypes.string,
 	handleUndoMove: PropTypes.func.isRequired,
 	setIsGameOver: PropTypes.func.isRequired,
+	// New prop types for multiplayer functionality
+	resign: PropTypes.func,
+	offerDraw: PropTypes.func,
+	respondToDraw: PropTypes.func,
+	drawOfferData: PropTypes.object,
+	setDrawOfferData: PropTypes.func,
 };
 
 export default BoardControl;

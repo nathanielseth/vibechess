@@ -11,7 +11,7 @@ import {
 export const useChessGameBase = (gameMode = "local") => {
 	const [game, setGame] = useState(() => new Chess());
 	const [lastMove, setLastMove] = useState(null);
-	const [history, setHistory] = useState([
+	const [history, setHistoryRaw] = useState([
 		{ fen: new Chess().fen(), lastMove: null },
 	]);
 	const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,7 +28,28 @@ export const useChessGameBase = (gameMode = "local") => {
 	const [moveFrom, setMoveFrom] = useState("");
 	const [rightClickedSquares, setRightClickedSquares] = useState({});
 
+	const [premove, setPremove] = useState(null);
+	const [premovePosition, setPremovePosition] = useState(null);
+
 	const toastId = useRef(null);
+
+	// Guards against accidentally appending a history entry whose FEN matches
+	// the entry immediately before it (e.g. a duplicate dispatch of the same
+	// move). Silently drops the duplicate rather than logging - this can fire
+	// legitimately during fast-forward/rewind interactions.
+	const setHistory = useCallback((updater) => {
+		setHistoryRaw((prev) => {
+			const next =
+				typeof updater === "function" ? updater(prev) : updater;
+			if (
+				next.length > 1 &&
+				next[next.length - 1].fen === next[next.length - 2].fen
+			) {
+				return next.slice(0, -1);
+			}
+			return next;
+		});
+	}, []);
 
 	const checkGameOver = useCallback(() => {
 		let reason = null;
@@ -63,31 +84,28 @@ export const useChessGameBase = (gameMode = "local") => {
 		}
 	}, [lastMove, currentIndex, history, game]);
 
-	// Update PGN
 	useEffect(() => {
 		setPgn(generatePGN(history, gameMode));
 	}, [history, gameMode]);
 
-	// Common move highlighting
 	const highlightMove = useCallback((sourceSquare, targetSquare) => {
 		setHighlightedSquares({
-			[sourceSquare]: {
-				backgroundColor: "rgba(252, 220, 77, 0.4)",
-			},
-			[targetSquare]: {
-				backgroundColor: "rgba(252, 220, 77, 0.4)",
-			},
+			[sourceSquare]: { backgroundColor: "rgba(252, 220, 77, 0.4)" },
+			[targetSquare]: { backgroundColor: "rgba(252, 220, 77, 0.4)" },
 		});
 	}, []);
 
-	// Common UI clearing
 	const clearUIState = useCallback(() => {
 		setMoveFrom("");
 		setOptionSquares({});
 		setRightClickedSquares({});
 	}, []);
 
-	// Navigation logic
+	const clearPremove = useCallback(() => {
+		setPremove(null);
+		setPremovePosition(null);
+	}, []);
+
 	const navigateMove = useCallback(
 		(moveIndex) => {
 			setGame(new Chess(history[moveIndex].fen));
@@ -100,10 +118,9 @@ export const useChessGameBase = (gameMode = "local") => {
 				setHighlightedSquares({});
 			}
 		},
-		[history, lastMove, highlightMove]
+		[history, lastMove, highlightMove],
 	);
 
-	// Board orientation toggle
 	const toggleBoardOrientation = useCallback(() => {
 		setBoardOrientation((prev) => (prev === "white" ? "black" : "white"));
 	}, []);
@@ -141,9 +158,15 @@ export const useChessGameBase = (gameMode = "local") => {
 		rightClickedSquares,
 		setRightClickedSquares,
 
+		premove,
+		setPremove,
+		premovePosition,
+		setPremovePosition,
+
 		checkGameOver,
 		highlightMove,
 		clearUIState,
+		clearPremove,
 		navigateMove,
 		toggleBoardOrientation,
 

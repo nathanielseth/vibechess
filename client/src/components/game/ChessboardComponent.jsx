@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
+import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Stack } from "@mui/material";
 import { styles } from "../../styles/styles";
@@ -38,14 +39,14 @@ const ChessboardComponent = ({
 	const multiplayerGame = useMultiplayerGame(
 		matchData,
 		socket,
-		matchData?.yourColor || "white"
+		matchData?.yourColor || "white",
 	);
 	const chessGame =
 		gameMode === "multiplayer"
 			? multiplayerGame
 			: gameMode === "versus-bot"
-			? versusBotGame
-			: localGame;
+				? versusBotGame
+				: localGame;
 
 	const {
 		selectedPieceSet,
@@ -58,20 +59,30 @@ const ChessboardComponent = ({
 		setShareModalOpen,
 		boardWidth,
 		playerColor,
-		opponent,
 		roomCode,
 		handleBoardChange,
 		handlePiecesChange,
 	} = useChessboardState(gameMode, matchData);
 
-	useMultiplayerSocket(
+	const opponent = useMemo(() => {
+		if (gameMode !== "multiplayer") return null;
+		const players = multiplayerGame?.players;
+		if (!players || players.length < 2) return matchData?.opponent ?? null;
+		const me = players.find((p) => p.color === playerColor);
+		const other = players.find((p) => p.id !== me?.id);
+		return other
+			? { name: other.name, color: other.color, flag: other.flag }
+			: null;
+	}, [gameMode, multiplayerGame?.players, playerColor, matchData?.opponent]);
+
+	const { resign, offerDraw, respondToDraw } = useMultiplayerSocket(
 		socket,
 		isConnected,
 		on,
 		gameMode,
 		chessGame,
 		playerColor,
-		roomCode
+		roomCode,
 	);
 
 	const { onDrop, onSquareClick, onPieceDragBegin } = useChessboardEvents(
@@ -80,7 +91,6 @@ const ChessboardComponent = ({
 		playerColor,
 		roomCode,
 		emit,
-		selectedTheme
 	);
 
 	useEffect(() => {
@@ -97,27 +107,26 @@ const ChessboardComponent = ({
 
 	const themeColors = useMemo(
 		() => getThemeColors(selectedTheme),
-		[selectedTheme]
+		[selectedTheme],
 	);
 
 	const customPieces = useMemo(
 		() => createCustomPieces(selectedPieceSet),
-		[selectedPieceSet]
+		[selectedPieceSet],
 	);
 
 	const boardOrientation = useMemo(
 		() => getBoardOrientation(gameMode, playerColor, chessGame),
-		[gameMode, playerColor, chessGame]
+		[gameMode, playerColor, chessGame],
 	);
 
 	const currentPlayer = useMemo(
 		() => getCurrentPlayer(chessGame),
-		[chessGame]
+		[chessGame],
 	);
 
 	const isMultiplayer = gameMode === "multiplayer";
 	const isPassAndPlay = gameMode === "passandplay";
-	//const isVersusBot = gameMode === "versus-bot";
 
 	const isGameReady = chessGame?.game?.fen;
 
@@ -126,15 +135,32 @@ const ChessboardComponent = ({
 			handleSquareRightClick(
 				square,
 				chessGame?.rightClickedSquares,
-				chessGame?.setRightClickedSquares
+				chessGame?.setRightClickedSquares,
 			);
 
-			if (chessGame?.clearPremoves) {
-				chessGame.clearPremoves();
+			if (chessGame?.clearPremove) {
+				chessGame.clearPremove();
 			}
 		},
-		[chessGame]
+		[chessGame],
 	);
+
+	const currentFen = chessGame?.game?.fen();
+	const premovePosition = chessGame?.premovePosition;
+
+	const getDisplayPosition = useMemo(() => {
+		if (!premovePosition || !currentFen) {
+			return currentFen;
+		}
+
+		const tempGame = new Chess(currentFen);
+		const { from, to, piece } = premovePosition;
+
+		tempGame.remove(from);
+		tempGame.put({ type: piece[1].toLowerCase(), color: piece[0] }, to);
+
+		return tempGame.fen();
+	}, [currentFen, premovePosition]);
 
 	const modalHandlers = useMemo(
 		() => ({
@@ -145,7 +171,7 @@ const ChessboardComponent = ({
 				setIsSettingsModalOpen(false);
 			},
 		}),
-		[setShareModalOpen, setIsSettingsModalOpen]
+		[setShareModalOpen, setIsSettingsModalOpen],
 	);
 
 	const boardControlProps = useMemo(() => {
@@ -169,6 +195,11 @@ const ChessboardComponent = ({
 				toggleAnalysisMode: () => {},
 				analysisMode: false,
 				handleUndoMove: () => {},
+				resign: resign,
+				offerDraw: offerDraw,
+				respondToDraw: respondToDraw,
+				drawOfferData: multiplayerGame?.drawOfferData,
+				setDrawOfferData: multiplayerGame?.setDrawOfferData,
 			};
 		}
 
@@ -179,8 +210,21 @@ const ChessboardComponent = ({
 			toggleAnalysisMode: chessGame?.toggleAnalysisMode,
 			analysisMode: chessGame?.analysisMode,
 			handleUndoMove: chessGame?.undoMove,
+			resign: undefined,
+			offerDraw: undefined,
+			respondToDraw: undefined,
 		};
-	}, [chessGame, modalHandlers, gameMode, isMultiplayer]);
+	}, [
+		chessGame,
+		modalHandlers,
+		gameMode,
+		isMultiplayer,
+		resign,
+		offerDraw,
+		respondToDraw,
+		multiplayerGame?.drawOfferData,
+		multiplayerGame?.setDrawOfferData,
+	]);
 
 	const customSquareStyles = useMemo(() => {
 		const squareStyles = {
@@ -190,21 +234,20 @@ const ChessboardComponent = ({
 			...(chessGame?.kingInCheck
 				? {
 						[chessGame.kingInCheck]: styles.kingInCheckStyle,
-				  }
+					}
 				: {}),
 		};
 
-		if (chessGame?.premoves) {
-			chessGame.premoves.forEach((premove) => {
-				squareStyles[premove.sourceSquare] = {
-					backgroundColor: "rgba(255, 0, 0, 0.3)",
-					...squareStyles[premove.sourceSquare],
-				};
-				squareStyles[premove.targetSquare] = {
-					backgroundColor: "rgba(255, 0, 0, 0.3)",
-					...squareStyles[premove.targetSquare],
-				};
-			});
+		if (chessGame?.premove) {
+			const { sourceSquare, targetSquare } = chessGame.premove;
+			squareStyles[sourceSquare] = {
+				backgroundColor: "rgba(255, 0, 0, 0.3)",
+				...squareStyles[sourceSquare],
+			};
+			squareStyles[targetSquare] = {
+				backgroundColor: "rgba(255, 0, 0, 0.3)",
+				...squareStyles[targetSquare],
+			};
 		}
 
 		return squareStyles;
@@ -213,7 +256,7 @@ const ChessboardComponent = ({
 		chessGame?.rightClickedSquares,
 		chessGame?.optionSquares,
 		chessGame?.kingInCheck,
-		chessGame?.premoves,
+		chessGame?.premove,
 	]);
 
 	const customArrows = useMemo(() => {
@@ -249,7 +292,7 @@ const ChessboardComponent = ({
 			opponent,
 			chessGame?.history,
 			chessGame?.currentIndex,
-		]
+		],
 	);
 
 	if (!isGameReady) {
@@ -277,14 +320,14 @@ const ChessboardComponent = ({
 									"black",
 									chessGame.blackTime,
 									currentPlayer === "black",
-									true
-							  )
+									true,
+								)
 							: renderPlayerInfo(
 									"white",
 									chessGame.whiteTime,
 									currentPlayer === "white",
-									true
-							  ))}
+									true,
+								))}
 
 					{/* Chessboard */}
 					<Stack sx={{ zIndex: 1 }} direction="row">
@@ -292,7 +335,7 @@ const ChessboardComponent = ({
 							id="StyledBoard"
 							boardOrientation={boardOrientation}
 							boardWidth={boardWidth}
-							position={chessGame?.game?.fen()}
+							position={getDisplayPosition}
 							onPieceDrop={onDrop}
 							onSquareClick={onSquareClick}
 							customBoardStyle={{ borderRadius: "12px" }}
@@ -320,14 +363,14 @@ const ChessboardComponent = ({
 									"white",
 									chessGame.whiteTime,
 									currentPlayer === "white",
-									false
-							  )
+									false,
+								)
 							: renderPlayerInfo(
 									"black",
 									chessGame.blackTime,
 									currentPlayer === "black",
-									false
-							  ))}
+									false,
+								))}
 				</Stack>
 
 				{/* Control panel */}

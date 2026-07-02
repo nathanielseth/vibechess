@@ -1,6 +1,5 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
-import { Chess } from "chess.js";
 
 export const useMultiplayerSocket = (
 	socket,
@@ -9,7 +8,7 @@ export const useMultiplayerSocket = (
 	gameMode,
 	chessGame,
 	playerColor,
-	roomCode
+	roomCode,
 ) => {
 	const handleGameState = useCallback(
 		(data) => {
@@ -17,90 +16,63 @@ export const useMultiplayerSocket = (
 
 			const { gameState, players } = data;
 
-			chessGame.game.load(gameState.fen);
-			chessGame.setCurrentPlayer(gameState.currentPlayer);
-
-			// this completely resets client timer state
-			chessGame.updateServerTimes({
-				whiteTime: gameState.whiteTimeRemaining,
-				blackTime: gameState.blackTimeRemaining,
-				timestamp: gameState.timestamp || Date.now(),
-			});
-
-			// build history from server moves
-			const newHistory = [{ fen: new Chess().fen(), lastMove: null }];
-			if (gameState.moves?.length > 0) {
-				const tempGame = new Chess();
-				gameState.moves.forEach((move) => {
-					const gameMove = tempGame.move(move);
-					if (gameMove) {
-						newHistory.push({
-							fen: tempGame.fen(),
-							lastMove: gameMove,
-						});
-					}
-				});
-			}
-
-			chessGame.setHistory(newHistory);
-			chessGame.setCurrentIndex(newHistory.length - 1);
-
-			if (gameState.lastMove) {
-				const highlightColor = "rgba(252, 220, 77, 0.4)";
-				chessGame.setLastMove(gameState.lastMove);
-				chessGame.setHighlightedSquares({
-					[gameState.lastMove.from]: {
-						backgroundColor: highlightColor,
-					},
-					[gameState.lastMove.to]: {
-						backgroundColor: highlightColor,
-					},
-				});
-			} else {
-				chessGame.setLastMove(null);
-				chessGame.setHighlightedSquares({});
-			}
-
-			chessGame.setMoveFrom("");
-			chessGame.setOptionSquares({});
-			chessGame.setRightClickedSquares({});
-
-			chessGame.setKingInCheck(gameState.kingInCheck || null);
-
-			// handle game over state
-			if (gameState.isGameOver) {
-				chessGame.setIsGameOver(true);
-				chessGame.setGameEndReason(gameState.gameOverReason);
-				chessGame.setWinner(gameState.winner || null);
-
-				chessGame.setPlayers(players || []);
-			} else {
-				chessGame.setIsGameOver(false);
-				chessGame.setGameEndReason(null);
-				chessGame.setWinner(null);
+			chessGame.syncGameState(gameState);
+			if (players) {
+				chessGame.setPlayers(players);
 			}
 		},
-		[chessGame]
+		[chessGame],
 	);
 
 	// move rejection from server
 	const handleMoveRejected = useCallback(
 		(data) => {
-			toast.error(`Move rejected: ${data.reason}`, {
-				position: "top-center",
-				autoClose: 3000,
+			Promise.resolve().then(() => {
+				toast.error(`Move rejected: ${data.reason}`, {
+					position: "top-center",
+					autoClose: 3000,
+				});
 			});
 
 			chessGame.setMoveFrom("");
 			chessGame.setOptionSquares({});
 			chessGame.setRightClickedSquares({});
 		},
-		[chessGame]
+		[chessGame],
 	);
 
 	const handlePlayerDisconnected = useCallback((data) => {
 		const playerName = data.playerName || data.username || "Player";
 		toast.warning(`${playerName} disconnected`, {
+			position: "top-center",
+			autoClose: 3000,
+		});
+	}, []);
+
+	const handleGameOver = useCallback((data) => {
+		if (
+			data.reason === "resignation" ||
+			data.gameOverReason === "resignation"
+		) {
+			// game ended by resignation - server will broadcast gameState
+		}
+	}, []);
+
+	const handleDrawOffer = useCallback(
+		(data) => {
+			const { from, playerColor } = data;
+
+			chessGame.setDrawOfferData({
+				from,
+				playerColor,
+				isVisible: true,
+			});
+		},
+		[chessGame],
+	);
+
+	const handleDrawDeclined = useCallback((data) => {
+		toast.info(`${data.from} declined the draw offer`, {
 			position: "top-center",
 			autoClose: 3000,
 		});
@@ -135,13 +107,16 @@ export const useMultiplayerSocket = (
 			{ event: "gameState", handler: handleGameState },
 			{ event: "moveRejected", handler: handleMoveRejected },
 			{ event: "playerDisconnected", handler: handlePlayerDisconnected },
+			{ event: "drawOffer", handler: handleDrawOffer },
+			{ event: "drawDeclined", handler: handleDrawDeclined },
+			{ event: "gameOver", handler: handleGameOver },
 			{ event: "error", handler: handleError },
 			{ event: "reconnected", handler: handleReconnected },
 			{ event: "disconnect", handler: handleDisconnect },
 		];
 
 		const cleanupFunctions = eventHandlers.map(({ event, handler }) =>
-			on(event, handler)
+			on(event, handler),
 		);
 
 		return () => {
@@ -155,23 +130,58 @@ export const useMultiplayerSocket = (
 		handleGameState,
 		handleMoveRejected,
 		handlePlayerDisconnected,
+		handleDrawOffer,
+		handleDrawDeclined,
+		handleGameOver,
 		handleError,
 		handleReconnected,
 		handleDisconnect,
 	]);
 
+	const rejoinRoomRef = useRef(null);
 	const rejoinRoom = useCallback(() => {
 		if (socket && roomCode && gameMode === "multiplayer") {
-			socket.emit("rejoinRoom", { roomCode });
+			if (rejoinRoomRef.current) {
+				clearTimeout(rejoinRoomRef.current);
+			}
+			rejoinRoomRef.current = setTimeout(() => {
+				socket.emit("rejoinRoom", { roomCode });
+			}, 50);
 		}
 	}, [socket, roomCode, gameMode]);
 
+	const resign = useCallback(() => {
+		if (socket && roomCode && gameMode === "multiplayer") {
+			socket.emit("resign", { roomCode });
+		}
+	}, [socket, roomCode, gameMode]);
+
+	const offerDraw = useCallback(() => {
+		if (socket && roomCode && gameMode === "multiplayer") {
+			socket.emit("drawOffer", { roomCode });
+		}
+	}, [socket, roomCode, gameMode]);
+
+	const respondToDraw = useCallback(
+		(accepted) => {
+			if (socket && roomCode && gameMode === "multiplayer") {
+				socket.emit("drawResponse", { roomCode, accepted });
+			}
+		},
+		[socket, roomCode, gameMode],
+	);
+
 	useEffect(() => {
 		if (socket && isConnected && roomCode && gameMode === "multiplayer") {
-			const timer = setTimeout(rejoinRoom, 100);
-			return () => clearTimeout(timer);
+			rejoinRoom();
 		}
+
+		return () => {
+			if (rejoinRoomRef.current) {
+				clearTimeout(rejoinRoomRef.current);
+			}
+		};
 	}, [socket, isConnected, roomCode, gameMode, rejoinRoom]);
 
-	return { rejoinRoom };
+	return { rejoinRoom, resign, offerDraw, respondToDraw };
 };

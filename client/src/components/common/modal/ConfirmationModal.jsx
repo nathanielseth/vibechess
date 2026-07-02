@@ -8,13 +8,10 @@ const ConfirmationModal = ({
 	onConfirm,
 	message,
 	isResignation,
-	setIsGameOver,
 }) => {
 	const handleConfirm = () => {
+		onConfirm();
 		onClose();
-		if (isResignation) {
-			setIsGameOver(true);
-		}
 	};
 	return (
 		<Modal open={isOpen} onClose={onClose}>

@@ -113,12 +113,33 @@ export const useChessboardEvents = (
 		[chessGame.game]
 	);
 
-	const addPremove = useCallback(
+	const setPremove = useCallback(
 		(sourceSquare, targetSquare, piece, moveData) => {
+			if (
+				chessGame.premove &&
+				chessGame.premove.sourceSquare === sourceSquare &&
+				chessGame.premove.targetSquare === targetSquare
+			) {
+				if (chessGame.clearPremove) {
+					chessGame.clearPremove();
+				}
+				clearUIState();
+				return false;
+			}
+			if (chessGame.clearPremove) {
+				chessGame.clearPremove();
+			}
 			const premove = { sourceSquare, targetSquare, piece, moveData };
-			chessGame.premovesRef.current.push(premove);
-			chessGame.setPremoves([...chessGame.premovesRef.current]);
+			chessGame.setPremove(premove);
+
+			chessGame.setPremovePosition({
+				from: sourceSquare,
+				to: targetSquare,
+				piece: piece,
+			});
+
 			clearUIState();
+			return true;
 		},
 		[chessGame, clearUIState]
 	);
@@ -202,26 +223,31 @@ export const useChessboardEvents = (
 
 			const moveData = createMoveData(sourceSquare, targetSquare, piece);
 
-			// Handle multiplayer premoves
 			if (gameState.isMultiplayer && playerColor) {
 				const pieceColor = piece[0] === "w" ? "white" : "black";
 				if (pieceColor !== playerColor) return false;
 
 				const isPlayerTurn = gameState.currentTurn === playerColor;
 				if (!isPlayerTurn) {
-					addPremove(sourceSquare, targetSquare, piece, moveData);
-					return true;
+					return setPremove(
+						sourceSquare,
+						targetSquare,
+						piece,
+						moveData
+					);
 				}
 			}
-
-			// Handle bot premoves
 			if (!canMakeMove() && gameState.isVersusBot) {
 				const pieceColor = piece[0];
 				const currentTurn = chessGame.game.turn();
 
 				if (pieceColor !== currentTurn) {
-					addPremove(sourceSquare, targetSquare, piece, moveData);
-					return true;
+					return setPremove(
+						sourceSquare,
+						targetSquare,
+						piece,
+						moveData
+					);
 				}
 				return false;
 			}
@@ -236,7 +262,7 @@ export const useChessboardEvents = (
 			chessGame.game,
 			canMakeMove,
 			createMoveData,
-			addPremove,
+			setPremove,
 			executeMove,
 		]
 	);
@@ -291,6 +317,9 @@ export const useChessboardEvents = (
 			chessGame.setRightClickedSquares({});
 
 			if (!canMakeMove() || !gameState.isAtCurrentPosition) {
+				if (chessGame.clearPremove) {
+					chessGame.clearPremove();
+				}
 				clearUIState();
 				return;
 			}

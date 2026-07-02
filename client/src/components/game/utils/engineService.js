@@ -5,349 +5,272 @@ const PONDER_DELAY = 500;
 const MOVE_TIMEOUT = 5000;
 const PONDER_TIMEOUT = 30000;
 
+const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+
 export class EngineService {
 	constructor() {
-		this.mainEngineRef = null;
-		this.ponderEngineRef = null;
-		this.timeoutManager = {
-			moveTimeout: null,
-			ponderTimeout: null,
-			ponderDelayTimeout: null,
-			clearAll: function () {
-				if (this.moveTimeout) {
-					clearTimeout(this.moveTimeout);
-					this.moveTimeout = null;
-				}
-				if (this.ponderTimeout) {
-					clearTimeout(this.ponderTimeout);
-					this.ponderTimeout = null;
-				}
-				if (this.ponderDelayTimeout) {
-					clearTimeout(this.ponderDelayTimeout);
-					this.ponderDelayTimeout = null;
-				}
-			},
+		this.mainEngine = null;
+		this.ponderEngine = null;
+
+		this.unsubscribers = [];
+
+		this.timeouts = {
+			move: null,
+			ponder: null,
+			ponderDelay: null,
 		};
+
 		this.ponderState = {
 			predictedMove: null,
-			resultingPosition: null,
-			cachedResult: null,
-			isActive: false,
-			reset: function () {
-				this.predictedMove = null;
-				this.resultingPosition = null;
-				this.cachedResult = null;
-				this.isActive = false;
-			},
+			resultingFen: null,
+			cachedBestMove: null,
 		};
-		this.operationState = {
-			currentMoveOperation: null,
-			currentPonderOperation: null,
-			operationId: 0,
-			getNextId: function () {
-				return ++this.operationId;
-			},
-		};
+
+		this.currentOperationId = 0;
 	}
 
 	initializeEngines() {
-		if (!this.mainEngineRef) {
-			this.mainEngineRef = new Engine();
-		}
-		if (!this.ponderEngineRef) {
-			this.ponderEngineRef = new Engine();
-		}
+		if (!this.mainEngine) this.mainEngine = new Engine();
+		if (!this.ponderEngine) this.ponderEngine = new Engine();
+	}
+
+	_clearTimeouts() {
+		Object.keys(this.timeouts).forEach((key) => {
+			if (this.timeouts[key]) {
+				clearTimeout(this.timeouts[key]);
+				this.timeouts[key] = null;
+			}
+		});
+	}
+
+	_clearListeners() {
+		this.unsubscribers.forEach((unsub) => unsub && unsub());
+		this.unsubscribers = [];
+	}
+
+	_resetPonderState() {
+		this.ponderState.predictedMove = null;
+		this.ponderState.resultingFen = null;
+		this.ponderState.cachedBestMove = null;
 	}
 
 	stopAllOperations() {
-		if (this.mainEngineRef) {
-			this.mainEngineRef.stop();
-		}
-		if (this.ponderEngineRef) {
-			this.ponderEngineRef.stop();
-		}
+		this.currentOperationId += 1;
 
-		this.timeoutManager.clearAll();
-		this.ponderState.reset();
-		this.operationState.currentMoveOperation = null;
-		this.operationState.currentPonderOperation = null;
+		if (this.mainEngine) this.mainEngine.stop();
+		if (this.ponderEngine) this.ponderEngine.stop();
+
+		this._clearTimeouts();
+		this._clearListeners();
+		this._resetPonderState();
 	}
 
 	cleanupEngines() {
 		this.stopAllOperations();
-
-		if (this.mainEngineRef) {
-			this.mainEngineRef.terminate();
-			this.mainEngineRef = null;
+		if (this.mainEngine) {
+			this.mainEngine.terminate();
+			this.mainEngine = null;
 		}
-		if (this.ponderEngineRef) {
-			this.ponderEngineRef.terminate();
-			this.ponderEngineRef = null;
+		if (this.ponderEngine) {
+			this.ponderEngine.terminate();
+			this.ponderEngine = null;
 		}
 	}
 
-	async predictPlayerMove(gameCopy) {
+	predictPlayerMove(gameCopy) {
 		const moves = gameCopy.moves({ verbose: true });
 		if (moves.length === 0) return null;
 
-		const scoredMoves = moves.map((move) => {
+		const scored = moves.map((move) => {
 			let score = 0;
-
 			if (move.captured) {
-				const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 				score += (pieceValues[move.captured.toLowerCase()] || 0) * 10;
 			}
-
 			if (move.san.includes("+")) score += 8;
-
 			if (["e4", "e5", "d4", "d5"].includes(move.san)) score += 5;
-
 			if (
 				move.piece === "p" &&
 				(move.to[1] === "4" || move.to[1] === "5")
 			) {
 				score += 3;
 			}
-
 			if (
 				["n", "b"].includes(move.piece.toLowerCase()) &&
 				["1", "8"].includes(move.from[1])
 			) {
 				score += 4;
 			}
-
 			if (move.san === "O-O" || move.san === "O-O-O") score += 6;
-
 			return { move, score };
 		});
 
-		scoredMoves.sort((a, b) => b.score - a.score);
-
-		return scoredMoves
-			.slice(0, Math.min(3, scoredMoves.length))
-			.map((sm) => sm.move);
+		scored.sort((a, b) => b.score - a.score);
+		return scored[0].move;
 	}
 
-	makeBotMove(gameState, difficulty, callbacks) {
-		const { setIsThinking, executeBotMove, isBotTurn } = callbacks;
-
-		if (gameState.isThinking || gameState.isGameOver || !isBotTurn())
-			return;
-
-		setIsThinking(true);
-
-		if (this.ponderEngineRef) {
-			this.ponderEngineRef.stop();
-		}
-		// Note: setIsPondering should be called from the hook, not here
-
-		const currentFen = gameState.game.fen();
-		const operationId = this.operationState.getNextId();
-		this.operationState.currentMoveOperation = operationId;
-
-		const ponderState = this.ponderState;
-		if (
-			ponderState.cachedResult &&
-			ponderState.resultingPosition === currentFen &&
-			gameState.lastMove &&
-			ponderState.predictedMove &&
-			ponderState.predictedMove.from === gameState.lastMove.from &&
-			ponderState.predictedMove.to === gameState.lastMove.to
-		) {
-			const cachedMove = ponderState.cachedResult;
-			const from = cachedMove.substring(0, 2);
-			const to = cachedMove.substring(2, 4);
-			const promotion =
-				cachedMove.length > 4 ? cachedMove.substring(4) : "q";
-
-			if (!gameState.isGameOver && isBotTurn()) {
-				const gameCopy = new Chess(currentFen);
-				const move = gameCopy.move({
-					from,
-					to,
-					promotion: promotion.toLowerCase(),
-				});
-
-				if (move) {
-					executeBotMove(gameCopy, move, from, to);
-					setIsThinking(false);
-					this.ponderState.reset();
-					return;
-				}
-			}
-		}
-
-		this.ponderState.reset();
-
+	requestBotMove(fen, difficulty, { isBotTurn }) {
 		this.initializeEngines();
 
-		this.timeoutManager.moveTimeout = setTimeout(() => {
-			if (this.operationState.currentMoveOperation === operationId) {
-				if (this.mainEngineRef) {
-					this.mainEngineRef.stop();
-				}
-			}
-		}, MOVE_TIMEOUT);
+		this.currentOperationId += 1;
+		const operationId = this.currentOperationId;
 
-		this.mainEngineRef.onReady(() => {
-			if (
-				this.operationState.currentMoveOperation !== operationId ||
-				gameState.isGameOver ||
-				!isBotTurn()
-			) {
-				setIsThinking(false);
+		this._clearTimeouts();
+		this._clearListeners();
+
+		if (this.ponderEngine) this.ponderEngine.stop();
+
+		const usableCache =
+			this.ponderState.cachedBestMove &&
+			this.ponderState.resultingFen === fen;
+
+		this._resetPonderState();
+
+		return new Promise((resolve) => {
+			const isStale = () =>
+				this.currentOperationId !== operationId || !isBotTurn();
+
+			const resolveWithMove = (bestMoveUci) => {
+				if (isStale()) {
+					resolve(null);
+					return;
+				}
+				const applied = this._applyUciMove(fen, bestMoveUci);
+				resolve(applied);
+			};
+
+			if (usableCache) {
+				resolveWithMove(this.ponderState.cachedBestMove);
 				return;
 			}
 
-			this.mainEngineRef.evaluatePosition(currentFen, difficulty);
+			this.timeouts.move = setTimeout(() => {
+				if (!isStale() && this.mainEngine) this.mainEngine.stop();
+			}, MOVE_TIMEOUT);
 
-			const handleBotMove = ({ bestMove: botBestMove, uciMessage }) => {
-				if (this.operationState.currentMoveOperation !== operationId) {
+			const readyUnsub = this.mainEngine.onReady(() => {
+				if (isStale()) {
+					resolve(null);
 					return;
 				}
 
-				if (!uciMessage.startsWith("bestmove")) return;
+				this.mainEngine.evaluatePosition(fen, difficulty);
 
-				if (this.timeoutManager.moveTimeout) {
-					clearTimeout(this.timeoutManager.moveTimeout);
-					this.timeoutManager.moveTimeout = null;
-				}
+				const messageUnsub = this.mainEngine.onMessage(
+					({ bestMove, uciMessage }) => {
+						if (this.currentOperationId !== operationId) return;
+						if (!uciMessage.startsWith("bestmove")) return;
 
-				if (!botBestMove || botBestMove === "(none)") {
-					const moves = gameState.game.moves({ verbose: true });
-					if (moves.length > 0) {
-						const randomMove =
-							moves[Math.floor(Math.random() * moves.length)];
-						botBestMove =
-							randomMove.from +
-							randomMove.to +
-							(randomMove.promotion || "");
-					}
-				}
-
-				if (botBestMove && botBestMove !== "(none)") {
-					const from = botBestMove.substring(0, 2);
-					const to = botBestMove.substring(2, 4);
-					const promotion =
-						botBestMove.length > 4 ? botBestMove.substring(4) : "q";
-
-					if (!gameState.isGameOver && isBotTurn()) {
-						const gameCopy = new Chess(currentFen);
-						const move = gameCopy.move({
-							from,
-							to,
-							promotion: promotion.toLowerCase(),
-						});
-
-						if (move) {
-							executeBotMove(gameCopy, move, from, to);
+						if (this.timeouts.move) {
+							clearTimeout(this.timeouts.move);
+							this.timeouts.move = null;
 						}
-					}
-				}
 
-				setIsThinking(false);
-				this.operationState.currentMoveOperation = null;
-			};
-
-			const removeListener = this.mainEngineRef.onMessage(handleBotMove);
-			return () => {
-				if (removeListener) removeListener();
-			};
+						resolveWithMove(bestMove);
+					},
+				);
+				this.unsubscribers.push(messageUnsub);
+			});
+			this.unsubscribers.push(readyUnsub);
 		});
 	}
 
-	async startPondering(gameState, difficulty, callbacks) {
-		const { setIsPondering, isPlayerTurn } = callbacks;
+	_applyUciMove(fen, uciMove) {
+		const gameCopy = new Chess(fen);
 
-		if (gameState.isGameOver || !isPlayerTurn() || gameState.isPondering)
-			return;
+		let from, to, promotion;
+		if (!uciMove || uciMove === "(none)") {
+			const moves = gameCopy.moves({ verbose: true });
+			if (moves.length === 0) return null;
+			const randomMove = moves[Math.floor(Math.random() * moves.length)];
+			from = randomMove.from;
+			to = randomMove.to;
+			promotion = randomMove.promotion || "q";
+		} else {
+			from = uciMove.substring(0, 2);
+			to = uciMove.substring(2, 4);
+			promotion = uciMove.length > 4 ? uciMove.substring(4) : "q";
+		}
 
-		const currentFen = gameState.game.fen();
-		const operationId = this.operationState.getNextId();
-		this.operationState.currentPonderOperation = operationId;
+		const move = gameCopy.move({
+			from,
+			to,
+			promotion: promotion.toLowerCase(),
+		});
+		if (!move) return null;
 
-		this.timeoutManager.ponderDelayTimeout = setTimeout(async () => {
-			if (
-				this.operationState.currentPonderOperation !== operationId ||
-				gameState.isGameOver ||
-				!isPlayerTurn()
-			) {
+		return { move, gameCopy, from, to };
+	}
+
+	startPondering(
+		fen,
+		difficulty,
+		{ isPlayerTurn, onPonderStart, onPonderEnd },
+	) {
+		this.currentOperationId += 1;
+		const operationId = this.currentOperationId;
+
+		this.timeouts.ponderDelay = setTimeout(() => {
+			if (this.currentOperationId !== operationId || !isPlayerTurn())
 				return;
-			}
 
-			const gameCopy = new Chess(currentFen);
-			const predictedMoves = await this.predictPlayerMove(gameCopy);
+			const gameCopy = new Chess(fen);
+			const predictedMove = this.predictPlayerMove(gameCopy);
+			if (!predictedMove) return;
 
-			if (!predictedMoves || predictedMoves.length === 0) return;
-
-			const mostLikelyMove = predictedMoves[0];
-			const hypotheticalGame = new Chess(currentFen);
-			const hypotheticalMove = hypotheticalGame.move(mostLikelyMove);
-
+			const hypotheticalGame = new Chess(fen);
+			const hypotheticalMove = hypotheticalGame.move(predictedMove);
 			if (!hypotheticalMove) return;
 
-			this.ponderState.predictedMove = mostLikelyMove;
-			this.ponderState.resultingPosition = hypotheticalGame.fen();
-			this.ponderState.isActive = true;
-
-			setIsPondering(true);
+			this.ponderState.predictedMove = predictedMove;
+			this.ponderState.resultingFen = hypotheticalGame.fen();
 
 			this.initializeEngines();
+			onPonderStart?.();
 
-			this.timeoutManager.ponderTimeout = setTimeout(() => {
+			this.timeouts.ponder = setTimeout(() => {
 				if (
-					this.operationState.currentPonderOperation === operationId
+					this.currentOperationId === operationId &&
+					this.ponderEngine
 				) {
-					if (this.ponderEngineRef) {
-						this.ponderEngineRef.stop();
-					}
+					this.ponderEngine.stop();
 				}
 			}, PONDER_TIMEOUT);
 
-			this.ponderEngineRef.onReady(() => {
+			const readyUnsub = this.ponderEngine.onReady(() => {
 				if (
-					this.operationState.currentPonderOperation !==
-						operationId ||
-					!this.ponderState.isActive ||
+					this.currentOperationId !== operationId ||
 					!isPlayerTurn()
 				) {
-					setIsPondering(false);
+					onPonderEnd?.();
 					return;
 				}
 
-				this.ponderEngineRef.evaluatePosition(
-					this.ponderState.resultingPosition,
-					difficulty
+				this.ponderEngine.evaluatePosition(
+					this.ponderState.resultingFen,
+					difficulty,
 				);
 
-				const handlePonderResult = ({ bestMove, uciMessage }) => {
-					if (
-						this.operationState.currentPonderOperation !==
-						operationId
-					) {
-						return;
-					}
+				const messageUnsub = this.ponderEngine.onMessage(
+					({ bestMove, uciMessage }) => {
+						if (this.currentOperationId !== operationId) return;
 
-					if (
-						uciMessage.startsWith("bestmove") &&
-						bestMove &&
-						bestMove !== "(none)"
-					) {
-						this.ponderState.cachedResult = bestMove;
-
-						if (this.timeoutManager.ponderTimeout) {
-							clearTimeout(this.timeoutManager.ponderTimeout);
-							this.timeoutManager.ponderTimeout = null;
+						if (
+							uciMessage.startsWith("bestmove") &&
+							bestMove &&
+							bestMove !== "(none)"
+						) {
+							this.ponderState.cachedBestMove = bestMove;
+							if (this.timeouts.ponder) {
+								clearTimeout(this.timeouts.ponder);
+								this.timeouts.ponder = null;
+							}
+							onPonderEnd?.();
 						}
-					}
-				};
-
-				const removeListener =
-					this.ponderEngineRef.onMessage(handlePonderResult);
-				return () => {
-					if (removeListener) removeListener();
-				};
+					},
+				);
+				this.unsubscribers.push(messageUnsub);
 			});
+			this.unsubscribers.push(readyUnsub);
 		}, PONDER_DELAY);
 	}
 }

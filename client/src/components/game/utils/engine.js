@@ -59,8 +59,9 @@ class Engine {
 
 		if (this.isReady) {
 			callback();
+			return () => {};
 		} else {
-			this.onMessage(({ uciMessage }) => {
+			return this.onMessage(({ uciMessage }) => {
 				if (uciMessage === "readyok") {
 					callback();
 				}
